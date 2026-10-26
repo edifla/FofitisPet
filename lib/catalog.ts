@@ -207,3 +207,51 @@ export async function getCatalogFilterOptions() {
   ]);
   return { categories: ordered, brands };
 }
+
+// Abaixo ou igual a este saldo, a página mostra "Últimas unidades".
+export const FEW_LEFT = 3;
+
+// Página do produto (KAN-23). Nulo se o produto não está à venda.
+export async function getProductBySlug(slug: string) {
+  const product = await prisma.product.findFirst({
+    where: { slug, active: true, variants: { some: { active: true } } },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      species: true,
+      donationEligible: true,
+      brand: { select: { name: true, slug: true } },
+      category: {
+        select: { name: true, slug: true, parent: { select: { name: true, slug: true } } },
+      },
+      images: {
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+        select: { id: true, url: true, alt: true },
+      },
+      variants: {
+        where: { active: true },
+        orderBy: [{ priceCents: "asc" }, { createdAt: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          priceCents: true,
+          weightGrams: true,
+          attributes: true,
+          stockLevels: { where: { location: "STORE" }, select: { quantity: true } },
+        },
+      },
+    },
+  });
+  if (!product) return null;
+  return {
+    ...product,
+    variants: product.variants.map(({ stockLevels, ...variant }) => ({
+      ...variant,
+      stock: stockLevels[0]?.quantity ?? 0,
+    })),
+  };
+}
+
+export type ProductPageData = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
