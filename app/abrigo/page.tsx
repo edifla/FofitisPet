@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
+import { CampaignList } from "@/components/campaigns/campaign-list";
 import { formatBRL } from "@/lib/money";
 import { getShelterNeeds } from "@/lib/shelter";
 import { DonateButton } from "./donate-button";
@@ -22,6 +23,9 @@ export default function ShelterPage() {
           estão os itens que mais estão faltando agora.
         </p>
       </header>
+      <Suspense>
+        <CampaignList />
+      </Suspense>
       <section className="flex flex-col gap-4" aria-labelledby="necessarios">
         <h2 id="necessarios" className="text-lg font-semibold">
           Itens mais necessários

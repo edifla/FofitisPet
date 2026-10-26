@@ -14,6 +14,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         <Link href="/admin/marcas">Marcas</Link>
         <Link href="/admin/estoque">Estoque</Link>
         <Link href="/admin/abrigo">Abrigo</Link>
+        <Link href="/admin/campanhas">Campanhas</Link>
         <Link href="/admin/animais">Animais</Link>
         <Link href="/admin/adocoes">Adoções</Link>
       </nav>

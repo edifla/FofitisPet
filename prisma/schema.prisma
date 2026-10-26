@@ -624,3 +624,27 @@ model CartItem {
   // O mesmo produto pode estar duas vezes: uma para o cliente e outra para o abrigo.
   @@unique([cartId, variantId, donation])
 }
+
+// ---------------------------------------------------------------------------
+// Campanhas de ração (KAN-42)
+// ---------------------------------------------------------------------------
+
+// Meta em kg de ração doada ao abrigo num período. O progresso é calculado a partir das doações
+// entregues (pedidos SHELTER) com itens de alimentação, não é gravado.
+model Campaign {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  description String
+  goalGrams   Int
+  // Só conta ração para esta espécie; nulo conta toda a ração.
+  species     Species?
+  startsAt    DateTime  @db.Date
+  // Último dia da campanha, inclusive. Nulo: sem data para acabar.
+  endsAt      DateTime? @db.Date
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([active, startsAt])
+}
