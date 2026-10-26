@@ -80,3 +80,13 @@ export const temperamentLabels: Record<Temperament, string> = {
 
 export const toOptions = (labels: Record<string, string>) =>
   Object.entries(labels).map(([value, label]) => ({ value, label }));
+
+// Espécie de um animal só, no singular (KAN-37).
+export const animalSpeciesLabels: Record<Species, string> = {
+  DOG: "Cão",
+  CAT: "Gato",
+  BIRD: "Pássaro",
+  FISH: "Peixe",
+  SMALL_PET: "Pequeno pet",
+  OTHER: "Outro",
+};
