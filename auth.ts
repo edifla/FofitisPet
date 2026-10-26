@@ -1,8 +1,9 @@
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth, { CredentialsSignin, type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import type { Role } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { hitAll, ipFrom, LIMITS } from "@/lib/rate-limit";
 import { loginSchema } from "@/lib/validation/auth";
 
 declare module "next-auth" {
@@ -27,6 +28,11 @@ declare module "@auth/core/jwt" {
 // tempo nos dois casos e não revelar quais e-mails estão cadastrados.
 const dummyHash = hashPassword("senha-inexistente-0");
 
+// Login bloqueado pelo limite de tentativas (KAN-122). O código chega à action de login.
+export class LoginRateLimited extends CredentialsSignin {
+  code = "rate_limited";
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   pages: { signIn: "/entrar" },
@@ -40,9 +46,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: { email: {}, password: {} },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
+        // Aqui, e não só na action, porque o endpoint do Auth.js pode ser chamado direto.
+        const limit = await hitAll([
+          [`login:ip:${ipFrom(request.headers)}`, LIMITS.loginByIp],
+          [`login:email:${parsed.data.email}`, LIMITS.loginByEmail],
+        ]);
+        if (!limit.allowed) throw new LoginRateLimited();
 
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email },

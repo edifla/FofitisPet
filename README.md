@@ -80,6 +80,12 @@ O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em cada p
 
 Os testes em [`tests/`](tests) cobrem os fluxos críticos (KAN-47): checkout, compra para o abrigo, adoção e webhooks de pagamento. Eles chamam a camada de serviço e as rotas de API contra um Postgres de verdade, num banco separado criado na hora (`<banco>_test`, ao lado do `DATABASE_URL`), então não mexem nos dados de desenvolvimento. Com o banco no ar (`npm run db:up`), rode `npm test`.
 
+## Segurança
+
+- **Autorização**: o `proxy.ts` só faz uma checagem rápida pelo cookie; a que vale é a de `lib/dal.ts` (`requireUser`/`requireAdmin`), chamada em cada página, Server Action e rota. O teste `tests/security.test.ts` falha se uma action, página ou leitura do admin ficar sem essa checagem.
+- **Entrada**: formulários validados com Zod no servidor; argumentos de Server Actions ligados com `.bind` (ids, número do pedido) passam por `lib/validation/args.ts`, porque também vêm do navegador.
+- **Limite de tentativas** (`lib/rate-limit.ts`, guardado no banco): login por IP e por e-mail (também no endpoint do Auth.js), cadastro, recuperação de senha, checkout, pagamento com cartão e Pix, reenvio de comprovante e formulário de adoção. O IP vem de `x-forwarded-for`, que só é confiável atrás de um proxy como o da Vercel. Os contadores vencidos são apagados pela rotina `/api/pedidos/expirar`.
+
 ## Como contribuir
 
 1. Crie uma branch a partir do `master` com a chave do card do Jira, por exemplo `feat/KAN-22-catalogo`.

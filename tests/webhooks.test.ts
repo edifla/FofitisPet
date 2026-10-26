@@ -133,14 +133,14 @@ describe("webhook de pagamento", () => {
     expect((await runCron("Bearer errado")).status).toBe(401);
 
     // Com o Pix ainda válido, o cliente pode estar pagando: o pedido não expira.
-    expect(await (await runCron("Bearer cron-dos-testes")).json()).toEqual({ canceled: 0 });
+    expect(await (await runCron("Bearer cron-dos-testes")).json()).toMatchObject({ canceled: 0 });
     expect(await orderStatus(order.id)).toBe("PENDING_PAYMENT");
 
     await prisma.payment.updateMany({
       where: { providerPaymentId },
       data: { pixExpiresAt: new Date(Date.now() - 60 * 1000) },
     });
-    expect(await (await runCron("Bearer cron-dos-testes")).json()).toEqual({ canceled: 1 });
+    expect(await (await runCron("Bearer cron-dos-testes")).json()).toMatchObject({ canceled: 1 });
     delete process.env.CRON_SECRET;
     expect(await orderStatus(order.id)).toBe("CANCELED");
     expect(await stockOf(variant.id, "STORE")).toBe(3);

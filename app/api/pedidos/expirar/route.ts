@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { expireStaleOrders } from "@/lib/orders";
+import { pruneRateLimits } from "@/lib/rate-limit";
 
 // Rotina periódica (cron) que cancela pedidos não pagos fora do prazo e devolve o estoque
 // (KAN-110). Protegida por "Authorization: Bearer <CRON_SECRET>". GET para funcionar com o cron
@@ -15,7 +16,9 @@ async function handle(request: Request) {
   }
 
   const canceled = await expireStaleOrders();
-  return Response.json({ canceled });
+  // Aproveita a rotina para apagar contadores de tentativas vencidos (KAN-122).
+  const rateLimitsPruned = await pruneRateLimits();
+  return Response.json({ canceled, rateLimitsPruned });
 }
 
 export { handle as GET, handle as POST };

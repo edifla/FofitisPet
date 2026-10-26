@@ -701,3 +701,17 @@ model TransparencyPhoto {
 
   @@index([takenOn])
 }
+
+// ---------------------------------------------------------------------------
+// Limite de tentativas (KAN-122)
+// ---------------------------------------------------------------------------
+
+// Contador por janela fixa, ex.: "login:ip:1.2.3.4". Fica no banco para valer entre várias
+// instâncias do servidor. Linhas vencidas são apagadas pela rotina periódica.
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}

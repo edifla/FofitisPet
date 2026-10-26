@@ -3,11 +3,12 @@
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { Prisma } from "@/app/generated/prisma/client";
-import { signIn, signOut } from "@/auth";
+import { LoginRateLimited, signIn, signOut } from "@/auth";
 import { attachCartToUser, clearCartCookie } from "@/lib/cart";
 import { safeCallbackUrl } from "@/lib/dal";
 import { appUrl, sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { clientIp, hit, LIMITS, tooManyMessage } from "@/lib/rate-limit";
 import { hashPassword } from "@/lib/password";
 import { createPasswordResetToken, resetPasswordWithToken } from "@/lib/password-reset";
 import {
@@ -32,6 +33,8 @@ export async function signup(_state: FormState, formData: FormData): Promise<For
   if (!parsed.success) {
     return { errors: fieldErrors(parsed.error), values };
   }
+  const limit = await hit(`signup:ip:${await clientIp()}`, LIMITS.signupByIp);
+  if (!limit.allowed) return { message: tooManyMessage(limit.retryAfterSeconds), values };
 
   const { name, email, password } = parsed.data;
   try {
@@ -66,6 +69,12 @@ export async function login(_state: FormState, formData: FormData): Promise<Form
   try {
     await signIn("credentials", { ...parsed.data, redirect: false });
   } catch (error) {
+    if (error instanceof AuthError && (error as LoginRateLimited).code === "rate_limited") {
+      return {
+        message: "Muitas tentativas de login. Espere alguns minutos e tente de novo.",
+        values,
+      };
+    }
     // Mesma mensagem para e-mail inexistente e senha errada, para não revelar quem tem conta.
     if (error instanceof AuthError) {
       return { message: "E-mail ou senha incorretos.", values };
@@ -90,12 +99,17 @@ export async function requestPasswordReset(
   if (!parsed.success) {
     return { errors: fieldErrors(parsed.error), values };
   }
+  const byIp = await hit(`reset:ip:${await clientIp()}`, LIMITS.passwordResetByIp);
+  if (!byIp.allowed) return { message: tooManyMessage(byIp.retryAfterSeconds), values };
+  // Por e-mail, o excesso só deixa de mandar o link: a resposta é a mesma, para não revelar
+  // quais e-mails têm conta nem servir para lotar a caixa de alguém.
+  const byEmail = await hit(`reset:email:${parsed.data.email}`, LIMITS.passwordResetByEmail);
 
   const user = await prisma.user.findUnique({
     where: { email: parsed.data.email },
     select: { id: true, name: true, email: true },
   });
-  if (user) {
+  if (user && byEmail.allowed) {
     const token = await createPasswordResetToken(user.id);
     await sendEmail({
       to: user.email,
