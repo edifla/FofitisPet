@@ -32,6 +32,8 @@ npm run dev
 
 O `npm install` já gera o Prisma Client (script `postinstall`).
 
+Para ter contas de teste no banco local, rode `npm run db:seed`. As contas e senhas estão no topo de [`prisma/seed.mjs`](prisma/seed.mjs).
+
 Abra [http://localhost:3000](http://localhost:3000) no navegador.
 
 ## Scripts
@@ -49,6 +51,8 @@ Abra [http://localhost:3000](http://localhost:3000) no navegador.
 | `npm run db:down`      | Para o Postgres                     |
 | `npm run db:migrate`   | Cria e aplica migrations do Prisma  |
 | `npm run db:studio`    | Abre o Prisma Studio                |
+| `npm run db:seed`      | Cria as contas de teste locais      |
+| `npm run user:promote` | Torna uma conta admin (`-- email`)  |
 
 ## Banco de dados
 
@@ -59,6 +63,13 @@ Abra [http://localhost:3000](http://localhost:3000) no navegador.
 ```ts
 import { prisma } from "@/lib/prisma";
 ```
+
+## Contas e acesso
+
+- Login por e-mail e senha com [Auth.js](https://authjs.dev) (sessão JWT em cookie). A configuração fica em [`auth.ts`](auth.ts).
+- Toda checagem de permissão passa por [`lib/dal.ts`](lib/dal.ts) (`requireUser`, `requireAdmin`). O [`proxy.ts`](proxy.ts) só redireciona cedo quem não tem sessão.
+- Para criar o primeiro admin, cadastre a conta em `/cadastro` e rode `npm run user:promote -- email@exemplo.com`.
+- Sem serviço de e-mail ainda (KAN-54): os e-mails, como o de recuperação de senha, aparecem no log do `npm run dev`.
 
 ## Integração contínua
 

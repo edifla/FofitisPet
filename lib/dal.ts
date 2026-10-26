@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -35,6 +35,13 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireUser(callbackUrl = "/conta"): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect(`/entrar?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  return user;
+}
+
+// Para quem não é admin, a área administrativa simplesmente não existe (404).
+export async function requireAdmin(callbackUrl = "/admin"): Promise<CurrentUser> {
+  const user = await requireUser(callbackUrl);
+  if (user.role !== "ADMIN") notFound();
   return user;
 }
 
