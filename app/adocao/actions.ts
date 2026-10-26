@@ -2,6 +2,8 @@
 
 import { createAdoptionRequest } from "@/lib/adoption-requests";
 import { getCurrentUser } from "@/lib/dal";
+import { idArg } from "@/lib/validation/args";
+import { clientIp, hit, LIMITS, tooManyMessage } from "@/lib/rate-limit";
 import { adoptionInterestSchema, fieldErrors, type FormState } from "@/lib/validation/adoption";
 
 const TEXT_FIELDS = [
@@ -50,8 +52,11 @@ export async function submitAdoptionInterest(
     };
   }
 
+  const limit = await hit(`adoption:ip:${await clientIp()}`, LIMITS.adoptionByIp);
+  if (!limit.allowed) return { message: tooManyMessage(limit.retryAfterSeconds), values };
+
   const user = await getCurrentUser();
-  const result = await createAdoptionRequest(animalId, user?.id ?? null, parsed.data);
+  const result = await createAdoptionRequest(idArg(animalId), user?.id ?? null, parsed.data);
   if (!result.ok) return { message: failures[result.reason], values };
   return { success: true };
 }

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { CheckoutError, placeDonationOrder, placeOrder } from "@/lib/checkout";
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { hit, LIMITS, tooManyMessage } from "@/lib/rate-limit";
 import { addressSchema, fieldErrors, type FormState } from "@/lib/validation/address";
 
 const FIELDS = [
@@ -47,6 +48,8 @@ export async function createAddress(_state: FormState, formData: FormData): Prom
 
 export async function confirmOrder(_state: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser("/checkout");
+  const limit = await hit(`checkout:user:${user.id}`, LIMITS.checkoutByUser);
+  if (!limit.allowed) return { message: tooManyMessage(limit.retryAfterSeconds) };
   let order: { number: number };
   try {
     order = await placeOrder(user.id, {
@@ -65,6 +68,8 @@ export async function confirmOrder(_state: FormState, formData: FormData): Promi
 // Confirma a doação ao abrigo (KAN-31) com o total que o cliente está vendo.
 export async function confirmDonation(_state: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser("/checkout/doacao");
+  const limit = await hit(`checkout:user:${user.id}`, LIMITS.checkoutByUser);
+  if (!limit.allowed) return { message: tooManyMessage(limit.retryAfterSeconds) };
   let order: { number: number };
   try {
     order = await placeDonationOrder(user.id, {

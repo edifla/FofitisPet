@@ -10,6 +10,7 @@ import {
   setItemDonation,
   setItemQuantity,
 } from "@/lib/cart";
+import { booleanArg, idArg } from "@/lib/validation/args";
 import type { FormState } from "@/lib/validation/form";
 
 const addSchema = z.object({
@@ -49,7 +50,7 @@ export async function addToCart(_state: FormState, formData: FormData): Promise<
 }
 
 export async function removeFromCart(itemId: string) {
-  await removeItem(itemId);
+  await removeItem(idArg(itemId));
   refresh();
 }
 
@@ -68,7 +69,7 @@ export async function updateCartQuantity(
   if (!parsed.success) return { message: `Use uma quantidade entre 0 e ${MAX_QUANTITY_PER_ITEM}.` };
 
   try {
-    const { quantity, limited } = await setItemQuantity(itemId, parsed.data);
+    const { quantity, limited } = await setItemQuantity(idArg(itemId), parsed.data);
     refresh();
     if (limited) {
       return { success: true, message: `Só há ${quantity} unidade(s) disponível(is).` };
@@ -83,7 +84,7 @@ export async function updateCartQuantity(
 // Move um item entre a compra e a doação ao abrigo (KAN-30).
 export async function moveCartItem(itemId: string, donation: boolean) {
   try {
-    await setItemDonation(itemId, donation);
+    await setItemDonation(idArg(itemId), booleanArg(donation));
   } catch (error) {
     // Formulário sem JavaScript não mostra a mensagem; o carrinho atualizado já explica.
     if (!(error instanceof CartError)) throw error;

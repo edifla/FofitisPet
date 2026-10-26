@@ -10,11 +10,16 @@ import {
   startPixPayment,
 } from "@/lib/payments/service";
 import { prisma } from "@/lib/prisma";
+import { hit, LIMITS, tooManyMessage } from "@/lib/rate-limit";
+import { orderNumberArg } from "@/lib/validation/args";
 import { cardBrand, cardSchema, fieldErrors } from "@/lib/validation/card";
 import type { FormState } from "@/lib/validation/form";
 
 export async function payWithPix(orderNumber: number): Promise<FormState> {
+  orderNumberArg(orderNumber);
   const user = await requireUser(`/pedidos/${orderNumber}`);
+  const limit = await hit(`pix:user:${user.id}`, LIMITS.pixByUser);
+  if (!limit.allowed) return { message: tooManyMessage(limit.retryAfterSeconds) };
   try {
     await startPixPayment(user.id, orderNumber);
   } catch (error) {
@@ -27,6 +32,7 @@ export async function payWithPix(orderNumber: number): Promise<FormState> {
 
 // Só em desenvolvimento (gateway simulado).
 export async function simulatePixPaid(orderNumber: number): Promise<FormState> {
+  orderNumberArg(orderNumber);
   const user = await requireUser(`/pedidos/${orderNumber}`);
   try {
     await simulatePixApproval(user.id, orderNumber);
@@ -44,6 +50,7 @@ export async function payWithCardAction(
   _state: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  orderNumberArg(orderNumber);
   const user = await requireUser(`/pedidos/${orderNumber}`);
   const read = (name: string) => String(formData.get(name) ?? "");
   const values = {
@@ -57,6 +64,9 @@ export async function payWithCardAction(
     cvv: read("cvv"),
   });
   if (!parsed.success) return { errors: fieldErrors(parsed.error), values };
+  // Conta só tentativas com cartão bem preenchido: são as que chegam ao gateway.
+  const limit = await hit(`card:user:${user.id}`, LIMITS.cardByUser);
+  if (!limit.allowed) return { message: tooManyMessage(limit.retryAfterSeconds), values };
 
   const { cardNumber, holderName, expiry, cvv, installments } = parsed.data;
   let result;
@@ -77,12 +87,15 @@ export async function payWithCardAction(
 
 // Reenvia o comprovante de uma doação já entregue ao abrigo (KAN-35). Só para o próprio doador.
 export async function resendDonationReceipt(orderNumber: number): Promise<FormState> {
+  orderNumberArg(orderNumber);
   const user = await requireUser(`/pedidos/${orderNumber}`);
   const order = await prisma.order.findFirst({
     where: { number: orderNumber, userId: user.id, destination: "SHELTER", status: "DELIVERED" },
     select: { id: true },
   });
   if (!order) return { message: "Comprovante disponível só para doações já entregues." };
+  const limit = await hit(`receipt:user:${user.id}`, LIMITS.receiptByUser);
+  if (!limit.allowed) return { message: tooManyMessage(limit.retryAfterSeconds) };
   await sendOrderEmail(order.id, "paid");
   return { success: true, message: `Comprovante enviado para ${user.email}.` };
 }
