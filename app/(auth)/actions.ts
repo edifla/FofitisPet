@@ -7,6 +7,7 @@ import { LoginRateLimited, signIn, signOut } from "@/auth";
 import { attachCartToUser, clearCartCookie } from "@/lib/cart";
 import { safeCallbackUrl } from "@/lib/dal";
 import { appUrl, sendEmail } from "@/lib/email";
+import { LEGAL } from "@/lib/legal";
 import { prisma } from "@/lib/prisma";
 import { clientIp, hit, LIMITS, tooManyMessage } from "@/lib/rate-limit";
 import { hashPassword } from "@/lib/password";
@@ -29,6 +30,7 @@ export async function signup(_state: FormState, formData: FormData): Promise<For
     ...values,
     password: formData.get("password"),
     passwordConfirmation: formData.get("passwordConfirmation"),
+    acceptTerms: formData.get("acceptTerms") ?? undefined,
   });
   if (!parsed.success) {
     return { errors: fieldErrors(parsed.error), values };
@@ -39,7 +41,13 @@ export async function signup(_state: FormState, formData: FormData): Promise<For
   const { name, email, password } = parsed.data;
   try {
     await prisma.user.create({
-      data: { name, email, passwordHash: await hashPassword(password) },
+      data: {
+        name,
+        email,
+        passwordHash: await hashPassword(password),
+        termsAcceptedAt: new Date(),
+        termsVersion: LEGAL.version,
+      },
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {

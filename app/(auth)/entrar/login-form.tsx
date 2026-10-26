@@ -16,6 +16,12 @@ export function LoginForm() {
       {searchParams.get("senha") === "redefinida" && (
         <FormMessage tone="success" message="Senha redefinida. Entre com a nova senha." />
       )}
+      {searchParams.get("conta") === "excluida" && (
+        <FormMessage
+          tone="success"
+          message="Sua conta foi excluída. Enviamos a confirmação por e-mail."
+        />
+      )}
       <Field
         label="E-mail"
         name="email"

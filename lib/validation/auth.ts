@@ -25,6 +25,10 @@ export const signupSchema = z
     email: emailSchema,
     password: passwordSchema,
     passwordConfirmation: z.string(),
+    // Aceite dos termos e da política de privacidade (KAN-124).
+    acceptTerms: z.literal("on", {
+      error: "Para criar a conta, aceite os termos de uso e a política de privacidade.",
+    }),
   })
   .refine((data) => data.password === data.passwordConfirmation, {
     error: "As senhas não conferem.",

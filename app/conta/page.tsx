@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { logout } from "@/app/(auth)/actions";
 import { requireUser } from "@/lib/dal";
+import { DeleteAccountForm } from "./delete-account-form";
 
 export const metadata: Metadata = {
   title: "Minha conta",
@@ -40,6 +41,39 @@ async function AccountDetails() {
           Sair
         </button>
       </form>
+
+      {/* Direitos do titular (KAN-126). */}
+      <section className="mt-6 flex flex-col gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+        <h2 className="text-lg font-semibold">Seus dados</h2>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Veja na{" "}
+          <Link href="/privacidade" className="underline">
+            política de privacidade
+          </Link>{" "}
+          o que guardamos e por quê.
+        </p>
+        {/* Rota que gera o arquivo: link comum, sem prefetch. */}
+        <a href="/conta/meus-dados" className="self-start underline" download>
+          Baixar meus dados (JSON)
+        </a>
+        {user.role === "ADMIN" ? (
+          <p className="text-sm text-zinc-500">
+            Contas de administrador não podem ser excluídas por aqui.
+          </p>
+        ) : (
+          <details className="flex flex-col gap-3">
+            <summary className="cursor-pointer text-sm text-red-700 dark:text-red-400">
+              Excluir minha conta
+            </summary>
+            <p className="my-3 text-sm text-zinc-600 dark:text-zinc-400">
+              Apagamos seus endereços, carrinho e dados de acesso e encerramos solicitações de
+              adoção em aberto. Pedidos e doações ficam guardados pelo prazo da legislação fiscal,
+              sem o seu nome e endereço. Pedidos aguardando pagamento são cancelados.
+            </p>
+            <DeleteAccountForm />
+          </details>
+        )}
+      </section>
     </div>
   );
 }
