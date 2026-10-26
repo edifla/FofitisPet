@@ -23,6 +23,9 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      - name: Validar schema do Prisma
+        run: npx prisma validate
+
       - name: Lint
         run: npm run lint
 
