@@ -2,6 +2,7 @@ import type {
   AnimalSex,
   AnimalSize,
   AnimalStatus,
+  HousingType,
   OrderStatus,
   Species,
   StockLocation,
@@ -88,5 +89,13 @@ export const animalSpeciesLabels: Record<Species, string> = {
   BIRD: "Pássaro",
   FISH: "Peixe",
   SMALL_PET: "Pequeno pet",
+  OTHER: "Outro",
+};
+
+// Formulário de interesse em adoção (KAN-39).
+export const housingTypeLabels: Record<HousingType, string> = {
+  HOUSE: "Casa",
+  APARTMENT: "Apartamento",
+  FARM: "Chácara ou sítio",
   OTHER: "Outro",
 };
