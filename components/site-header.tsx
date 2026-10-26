@@ -16,6 +16,9 @@ export function SiteHeader() {
           <Link href="/produtos" className="text-sm">
             Produtos
           </Link>
+          <Link href="/adocao" className="text-sm">
+            Adoção
+          </Link>
           <Link href="/abrigo" className="text-sm">
             Abrigo
           </Link>
