@@ -40,6 +40,7 @@ model User {
   orders              Order[]
   adoptionRequests    AdoptionRequest[]
   shelterConsumptions ShelterConsumption[]
+  adoptionEvents      AdoptionRequestEvent[]
   passwordResetTokens PasswordResetToken[]
   cart                Cart?
 }
@@ -518,11 +519,31 @@ model AdoptionRequest {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  animal Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
-  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  animal Animal                 @relation(fields: [animalId], references: [id], onDelete: Restrict)
+  user   User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  events AdoptionRequestEvent[]
 
   @@index([animalId, status])
   @@index([userId])
+  @@index([status, createdAt])
+}
+
+// Histórico de mudanças de status de uma solicitação (KAN-116). O primeiro evento é o
+// recebimento do formulário, sem status anterior e sem autor.
+model AdoptionRequestEvent {
+  id          String                 @id @default(cuid())
+  requestId   String
+  fromStatus  AdoptionRequestStatus?
+  toStatus    AdoptionRequestStatus
+  note        String?
+  // Nulo para eventos automáticos (formulário recebido, animal adotado por outra família).
+  createdById String?
+  createdAt   DateTime               @default(now())
+
+  request   AdoptionRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  createdBy User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([requestId, createdAt])
 }
 
 // ---------------------------------------------------------------------------
