@@ -76,3 +76,38 @@ export async function listProductImages(productId: string) {
     select: { id: true, url: true, alt: true },
   });
 }
+
+export async function listProductVariants(productId: string) {
+  await requireAdmin();
+  return prisma.productVariant.findMany({
+    where: { productId },
+    orderBy: [{ active: "desc" }, { priceCents: "asc" }, { createdAt: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      priceCents: true,
+      weightGrams: true,
+      attributes: true,
+      active: true,
+    },
+  });
+}
+
+export async function getProductVariant(variantId: string) {
+  await requireAdmin();
+  return prisma.productVariant.findUnique({
+    where: { id: variantId },
+    select: {
+      id: true,
+      productId: true,
+      name: true,
+      sku: true,
+      priceCents: true,
+      weightGrams: true,
+      attributes: true,
+      active: true,
+      product: { select: { name: true } },
+    },
+  });
+}

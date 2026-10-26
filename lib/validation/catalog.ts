@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { parseBRL, parseKg } from "@/lib/money";
 import { slugify } from "@/lib/slug";
 
 export { fieldErrors, type FormState } from "./form";
@@ -61,3 +62,59 @@ export const productSchema = z
     active: z.boolean(),
   })
   .transform(withSlug);
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, { error: `Use no máximo ${max} caracteres.` })
+    .transform((value) => value || null);
+
+export const variantSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(1, { error: "Informe o nome da variação, ex.: 15 kg." })
+      .max(60, { error: "Use no máximo 60 caracteres." }),
+    sku: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z0-9][A-Z0-9-]{2,39}$/, {
+        error: "Use de 3 a 40 letras, números ou hífens, ex.: RAC-PREM-15KG.",
+      }),
+    // Convertidos campo a campo, para os erros de preço e peso aparecerem junto com os outros.
+    priceCents: z
+      .string()
+      .trim()
+      .transform((value, ctx) => {
+        const cents = parseBRL(value);
+        if (cents === null || cents <= 0 || cents > 100_000_000) {
+          ctx.addIssue({ code: "custom", message: "Informe um preço válido, ex.: 199,90." });
+          return z.NEVER;
+        }
+        return cents;
+      }),
+    weightGrams: z
+      .string()
+      .trim()
+      .transform((value, ctx) => {
+        if (!value) return null;
+        const grams = parseKg(value);
+        if (grams === null) {
+          ctx.addIssue({ code: "custom", message: "Informe o peso em kg, ex.: 15 ou 0,5." });
+          return z.NEVER;
+        }
+        return grams;
+      }),
+    size: optionalText(40),
+    flavor: optionalText(40),
+    active: z.boolean(),
+  })
+  .transform(({ size, flavor, ...data }) => {
+    const attributes: Record<string, string> = {};
+    if (size) attributes.tamanho = size;
+    if (flavor) attributes.sabor = flavor;
+    return { ...data, attributes: Object.keys(attributes).length ? attributes : undefined };
+  });
