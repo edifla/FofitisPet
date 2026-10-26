@@ -2,12 +2,14 @@
 
 import { refresh } from "next/cache";
 import { requireUser } from "@/lib/dal";
+import { sendOrderEmail } from "@/lib/order-emails";
 import {
   PaymentError,
   payWithCard,
   simulatePixApproval,
   startPixPayment,
 } from "@/lib/payments/service";
+import { prisma } from "@/lib/prisma";
 import { cardBrand, cardSchema, fieldErrors } from "@/lib/validation/card";
 import type { FormState } from "@/lib/validation/form";
 
@@ -71,4 +73,16 @@ export async function payWithCardAction(
   refresh();
   if (!result.approved) return { message: result.message, values };
   return { success: true };
+}
+
+// Reenvia o comprovante de uma doação já entregue ao abrigo (KAN-35). Só para o próprio doador.
+export async function resendDonationReceipt(orderNumber: number): Promise<FormState> {
+  const user = await requireUser(`/pedidos/${orderNumber}`);
+  const order = await prisma.order.findFirst({
+    where: { number: orderNumber, userId: user.id, destination: "SHELTER", status: "DELIVERED" },
+    select: { id: true },
+  });
+  if (!order) return { message: "Comprovante disponível só para doações já entregues." };
+  await sendOrderEmail(order.id, "paid");
+  return { success: true, message: `Comprovante enviado para ${user.email}.` };
 }
