@@ -1,14 +1,48 @@
 @import "tailwindcss";
 
+/* Identidade visual provisória (KAN-15). Tudo o que é marca passa por estes tokens: para trocar a
+   identidade, mude só os valores aqui (e o desenho em components/brand/logo.tsx e app/icon.svg).
+   Contrastes conferidos para WCAG AA (texto normal ≥ 4,5:1). */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Laranja "patinha": cor da marca. */
+  --brand-50: #fff7ed;
+  --brand-100: #ffedd5;
+  --brand-300: #fdba74;
+  --brand-400: #fb923c;
+  --brand-500: #f97316;
+  --brand-600: #ea580c;
+  --brand-700: #c2410c;
+  --brand-800: #9a3412;
+
+  /* Papéis de cor usados pelos componentes. */
+  --primary: var(--brand-700); /* botões principais: branco sobre ele = 5,2:1 */
+  --primary-hover: var(--brand-800);
+  --on-primary: #ffffff;
+  --brand-text: var(--brand-700); /* texto e logo da marca sobre o fundo: 5,2:1 */
+  --focus-ring: var(--brand-600);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-brand-text: var(--brand-text);
+  /* Fontes: Geist (next/font) para tudo; troque aqui e em app/layout.tsx. */
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -16,6 +50,12 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    /* No escuro, o laranja fica mais claro e o texto do botão escuro: 7,7:1. */
+    --primary: var(--brand-400);
+    --primary-hover: var(--brand-300);
+    --on-primary: #1c1917;
+    --brand-text: var(--brand-400); /* 8,8:1 */
+    --focus-ring: var(--brand-400);
     /* Contraste mínimo de 4,5:1 (WCAG AA) no fundo escuro (KAN-50): o zinc-500 dos textos
        secundários ficava em 4,1:1 e o vermelho dos erros em 4,2:1. */
     --color-zinc-500: #8a8a94;
@@ -26,13 +66,19 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Foco visível para quem navega pelo teclado (KAN-50). Sem especificidade, para não brigar com
-   os estilos de foco dos campos de formulário. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+/* Foco visível para quem navega pelo teclado (KAN-50), na cor da marca. Sem especificidade, para
+   não brigar com os estilos de foco dos campos de formulário. */
 :where(a, button, summary, [tabindex], input[type="checkbox"], input[type="radio"]):focus-visible {
-  outline: 2px solid currentColor;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 

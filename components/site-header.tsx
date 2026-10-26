@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Logo } from "@/components/brand/logo";
 import { CartLink } from "@/components/cart-link";
 import { getCurrentUser } from "@/lib/dal";
 
@@ -11,19 +12,19 @@ export function SiteHeader() {
       {/* Em telas estreitas, os links quebram em mais de uma linha em vez de vazar da tela. */}
       <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <Link href="/" className="text-lg font-semibold">
-            FofitisPet
+          <Link href="/" aria-label="FofitisPet, página inicial">
+            <Logo />
           </Link>
-          <Link href="/produtos" className="text-sm">
+          <Link href="/produtos" className="text-sm hover:text-brand-text">
             Produtos
           </Link>
-          <Link href="/adocao" className="text-sm">
+          <Link href="/adocao" className="text-sm hover:text-brand-text">
             Adoção
           </Link>
-          <Link href="/abrigo" className="text-sm">
+          <Link href="/abrigo" className="text-sm hover:text-brand-text">
             Abrigo
           </Link>
-          <Link href="/doar" className="text-sm">
+          <Link href="/doar" className="text-sm hover:text-brand-text">
             Doar
           </Link>
         </div>
