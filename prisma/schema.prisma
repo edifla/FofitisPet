@@ -292,12 +292,14 @@ model Order {
   shippingMethod        String?
   trackingCode          String?
 
-  paidAt      DateTime?
-  shippedAt   DateTime?
-  deliveredAt DateTime?
-  canceledAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  paidAt       DateTime?
+  shippedAt    DateTime?
+  deliveredAt  DateTime?
+  canceledAt   DateTime?
+  // Motivo mostrado ao cliente, ex.: "Prazo de pagamento expirado".
+  cancelReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
   items          OrderItem[]

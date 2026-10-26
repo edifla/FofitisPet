@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import type { OrderStatus } from "@/app/generated/prisma/client";
 import { requireUser } from "@/lib/dal";
 import { orderStatusLabels } from "@/lib/labels";
+import { expireOrderIfStale, paymentDeadline } from "@/lib/orders";
 import { formatBRL } from "@/lib/money";
 import { simulatedPaymentsAllowed, usingSimulatedGateway } from "@/lib/payments";
 import { SIMULATED_PROVIDER, TEST_CARD_LIST, TEST_HOLDER_NAMES } from "@/lib/payments/simulated";
@@ -40,14 +41,20 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
   const user = await requireUser(`/pedidos/${numero}`);
   if (!Number.isInteger(number) || number < 1) notFound();
 
+  const scope = { number, ...(user.role === "ADMIN" ? {} : { userId: user.id }) };
+  // Pedido não pago fora do prazo é cancelado aqui mesmo, sem esperar a rotina periódica.
+  await expireOrderIfStale(scope);
+
   const order = await prisma.order.findFirst({
-    where: { number, ...(user.role === "ADMIN" ? {} : { userId: user.id }) },
+    where: scope,
     select: {
       number: true,
       userId: true,
       status: true,
       createdAt: true,
       paidAt: true,
+      canceledAt: true,
+      cancelReason: true,
       payments: {
         // Pix ainda válido e o pagamento aprovado, se houver.
         where: {
@@ -111,6 +118,9 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
         orderNumber={order.number}
         status={order.status}
         paidAt={order.paidAt}
+        createdAt={order.createdAt}
+        canceledAt={order.canceledAt}
+        cancelReason={order.cancelReason}
         totalCents={order.totalCents}
         isOwner={order.userId === user.id}
         payments={order.payments}
@@ -201,6 +211,9 @@ function PaymentSection({
   orderNumber,
   status,
   paidAt,
+  createdAt,
+  canceledAt,
+  cancelReason,
   totalCents,
   isOwner,
   payments,
@@ -208,6 +221,9 @@ function PaymentSection({
   orderNumber: number;
   status: OrderStatus;
   paidAt: Date | null;
+  createdAt: Date;
+  canceledAt: Date | null;
+  cancelReason: string | null;
   totalCents: number;
   isOwner: boolean;
   payments: PaymentRow[];
@@ -227,6 +243,17 @@ function PaymentSection({
       <p className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
         Pagamento aprovado{how}
         {paidAt && ` em ${dateTime.format(paidAt)}`}. Já estamos separando seu pedido.
+      </p>
+    );
+  }
+  if (status === "CANCELED") {
+    return (
+      <p className="rounded-md bg-red-50 p-4 text-sm text-red-900 dark:bg-red-950 dark:text-red-200">
+        Pedido cancelado{canceledAt && ` em ${dateTime.format(canceledAt)}`}
+        {cancelReason && `: ${cancelReason.toLowerCase()}`}. Os itens voltaram para o estoque.
+        {payments.some((payment) => payment.status === "APPROVED")
+          ? " Recebemos um pagamento depois do cancelamento: ele será estornado."
+          : " Nenhum valor foi cobrado."}
       </p>
     );
   }
@@ -265,7 +292,10 @@ function PaymentSection({
           </>
         ) : (
           <>
-            <p>Os itens estão reservados para você. Pague com Pix ou cartão para confirmar.</p>
+            <p>
+              Os itens estão reservados para você até as {time.format(paymentDeadline(createdAt))}.
+              Pague com Pix ou cartão para confirmar.
+            </p>
             <StartPixForm orderNumber={orderNumber} />
           </>
         )}

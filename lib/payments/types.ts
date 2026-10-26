@@ -24,7 +24,7 @@ export type CardCharge = {
   statusDetail: string;
 };
 
-export interface PaymentGateway {
+export interface PaymentGateway extends WebhookReader {
   // Nome gravado em Payment.provider e usado para casar os webhooks.
   readonly name: string;
   createPix(input: {
@@ -42,6 +42,15 @@ export interface PaymentGateway {
     card: CardData;
   }): Promise<CardCharge>;
 }
+
+// Leitura de um aviso (webhook) do gateway: confere a assinatura e traduz o corpo. Cada gateway
+// assina de um jeito; a rota /api/pagamentos/webhook só repassa a requisição.
+export interface WebhookReader {
+  readWebhook(input: { headers: Headers; body: string; secret: string }): GatewayUpdate;
+}
+
+// Assinatura ausente ou inválida, ou corpo que não é um aviso do gateway.
+export class WebhookError extends Error {}
 
 // Erro de dados que o cliente pode corrigir (ex.: cartão que o gateway não aceita).
 export class GatewayInputError extends Error {}
