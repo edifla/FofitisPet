@@ -111,3 +111,57 @@ export async function getProductVariant(variantId: string) {
     },
   });
 }
+
+// Saldos de todas as variações, para a tela de estoque.
+export async function listStock(onlyLow: boolean) {
+  await requireAdmin();
+  const variants = await prisma.productVariant.findMany({
+    orderBy: [{ product: { name: "asc" } }, { priceCents: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      active: true,
+      product: { select: { id: true, name: true, active: true } },
+      stockLevels: { select: { location: true, quantity: true } },
+    },
+  });
+  const rows = variants.map((variant) => {
+    const level = (location: "STORE" | "SHELTER") =>
+      variant.stockLevels.find((l) => l.location === location)?.quantity ?? 0;
+    return { ...variant, store: level("STORE"), shelter: level("SHELTER") };
+  });
+  return onlyLow ? rows.filter((row) => row.store <= LOW_STOCK) : rows;
+}
+
+// Abaixo ou igual a este saldo na loja, a variação aparece como "estoque baixo".
+export const LOW_STOCK = 3;
+
+export async function getVariantStock(variantId: string) {
+  await requireAdmin();
+  return prisma.productVariant.findUnique({
+    where: { id: variantId },
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      product: { select: { id: true, name: true } },
+      stockLevels: { select: { location: true, quantity: true } },
+      stockMovements: {
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        select: {
+          id: true,
+          type: true,
+          fromLocation: true,
+          toLocation: true,
+          quantity: true,
+          note: true,
+          createdAt: true,
+          createdBy: { select: { name: true } },
+          order: { select: { number: true } },
+        },
+      },
+    },
+  });
+}
