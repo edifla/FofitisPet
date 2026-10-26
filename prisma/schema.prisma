@@ -33,7 +33,8 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  addresses Address[]
+  addresses      Address[]
+  stockMovements StockMovement[]
 }
 
 model Address {
@@ -56,4 +57,157 @@ model Address {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Produtos, categorias e estoque Loja/Abrigo (KAN-86)
+// ---------------------------------------------------------------------------
+
+// Espécies atendidas por um produto. Também usada no cadastro de animais.
+enum Species {
+  DOG
+  CAT
+  BIRD
+  FISH
+  SMALL_PET
+  OTHER
+}
+
+// Onde o estoque está: na loja (à venda) ou no abrigo (doado).
+enum StockLocation {
+  STORE
+  SHELTER
+}
+
+enum StockMovementType {
+  // Entrada de mercadoria na loja.
+  RESTOCK
+  // Correção manual de saldo (inventário, avaria).
+  ADJUSTMENT
+  // Venda para um cliente (sai da loja).
+  SALE
+  // Compra para o abrigo: sai da loja e entra no abrigo.
+  DONATION_TRANSFER
+  // Item dado aos animais (sai do abrigo).
+  SHELTER_CONSUMPTION
+  // Devolução de uma venda cancelada.
+  RETURN
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  // Categoria pai, para subcategorias (ex.: Alimentação > Ração seca).
+  parentId    String?
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@index([parentId])
+}
+
+model Brand {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id               String    @id @default(cuid())
+  name             String
+  slug             String    @unique
+  description      String
+  categoryId       String
+  brandId          String?
+  species          Species[]
+  // Pode ser comprado para o abrigo (KAN-29).
+  donationEligible Boolean   @default(false)
+  active           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  category Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  brand    Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  images   ProductImage[]
+  variants ProductVariant[]
+
+  @@index([categoryId])
+  @@index([brandId])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  url       String
+  alt       String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+// Variação vendável de um produto (tamanho, sabor, peso). Todo produto tem ao menos uma.
+model ProductVariant {
+  id          String   @id @default(cuid())
+  productId   String
+  sku         String   @unique
+  // Nome exibido, ex.: "15 kg", "Frango".
+  name        String
+  priceCents  Int
+  // Peso de uma unidade, usado no frete e nas metas de campanha em kg (KAN-42).
+  weightGrams Int?
+  // Atributos livres da variação, ex.: { "sabor": "frango", "tamanho": "15 kg" }.
+  attributes  Json?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stockLevels    StockLevel[]
+  stockMovements StockMovement[]
+
+  @@index([productId])
+}
+
+// Saldo atual de uma variação em cada local. Mantido junto com StockMovement na mesma transação.
+model StockLevel {
+  variantId String
+  location  StockLocation
+  quantity  Int           @default(0)
+  updatedAt DateTime      @updatedAt
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, location])
+}
+
+// Histórico de toda entrada e saída de estoque. O saldo em StockLevel é a soma destes registros.
+model StockMovement {
+  id           String            @id @default(cuid())
+  variantId    String
+  type         StockMovementType
+  // Nulo quando a unidade entra de fora (RESTOCK) ou sai do sistema (SALE, SHELTER_CONSUMPTION).
+  fromLocation StockLocation?
+  toLocation   StockLocation?
+  quantity     Int
+  note         String?
+  createdById  String?
+  createdAt    DateTime          @default(now())
+
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  createdBy User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([variantId, createdAt])
 }
