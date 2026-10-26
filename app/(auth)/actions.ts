@@ -1,12 +1,22 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { Prisma } from "@/app/generated/prisma/client";
 import { signIn, signOut } from "@/auth";
 import { safeCallbackUrl } from "@/lib/dal";
+import { appUrl, sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
-import { fieldErrors, loginSchema, signupSchema, type FormState } from "@/lib/validation/auth";
+import { createPasswordResetToken, resetPasswordWithToken } from "@/lib/password-reset";
+import {
+  fieldErrors,
+  forgotPasswordSchema,
+  loginSchema,
+  resetPasswordSchema,
+  signupSchema,
+  type FormState,
+} from "@/lib/validation/auth";
 
 export async function signup(_state: FormState, formData: FormData): Promise<FormState> {
   const values = {
@@ -61,4 +71,58 @@ export async function login(_state: FormState, formData: FormData): Promise<Form
 
 export async function logout() {
   await signOut({ redirectTo: "/" });
+}
+
+export async function requestPasswordReset(
+  _state: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const values = { email: String(formData.get("email") ?? "") };
+  const parsed = forgotPasswordSchema.safeParse(values);
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error), values };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: parsed.data.email },
+    select: { id: true, name: true, email: true },
+  });
+  if (user) {
+    const token = await createPasswordResetToken(user.id);
+    await sendEmail({
+      to: user.email,
+      subject: "Redefinição de senha - FofitisPet",
+      text: [
+        `Olá, ${user.name}!`,
+        "",
+        "Recebemos um pedido para redefinir a sua senha. Use o link abaixo em até 1 hora:",
+        appUrl(`/redefinir-senha/${token}`),
+        "",
+        "Se não foi você, ignore este e-mail. Sua senha continua a mesma.",
+      ].join("\n"),
+    });
+  }
+
+  // Mesma resposta exista ou não a conta, para não revelar quais e-mails estão cadastrados.
+  return {
+    success: true,
+    message: "Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha.",
+  };
+}
+
+export async function resetPassword(_state: FormState, formData: FormData): Promise<FormState> {
+  const parsed = resetPasswordSchema.safeParse({
+    token: formData.get("token"),
+    password: formData.get("password"),
+    passwordConfirmation: formData.get("passwordConfirmation"),
+  });
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error) };
+  }
+
+  const ok = await resetPasswordWithToken(parsed.data.token, parsed.data.password);
+  if (!ok) {
+    return { message: "Este link é inválido ou já expirou. Peça um novo." };
+  }
+  redirect("/entrar?senha=redefinida");
 }

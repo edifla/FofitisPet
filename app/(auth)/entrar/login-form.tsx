@@ -33,6 +33,9 @@ export function LoginForm() {
         required
         errors={state?.errors?.password}
       />
+      <Link href="/esqueci-senha" className="-mt-2 self-end text-sm underline">
+        Esqueci minha senha
+      </Link>
       <FormMessage message={state?.message} />
       <SubmitButton pending={pending}>Entrar</SubmitButton>
       <p className="text-center text-sm">
