@@ -590,11 +590,14 @@ model CartItem {
   cartId    String
   variantId String
   quantity  Int
+  // Comprado para o abrigo (KAN-30): vai num pedido de doação, sem frete nem endereço.
+  donation  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
   variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
-  @@unique([cartId, variantId])
+  // O mesmo produto pode estar duas vezes: uma para o cliente e outra para o abrigo.
+  @@unique([cartId, variantId, donation])
 }

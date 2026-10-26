@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getCart, MAX_QUANTITY_PER_ITEM } from "@/lib/cart";
+import { type CartLine, getCart, MAX_QUANTITY_PER_ITEM } from "@/lib/cart";
 import { formatBRL } from "@/lib/money";
 import { quoteShipping, type ShippingQuote } from "@/lib/shipping";
-import { removeFromCart } from "./actions";
+import { moveCartItem, removeFromCart } from "./actions";
 import { QuantityForm } from "./quantity-form";
 
 export const metadata: Metadata = {
@@ -27,16 +27,21 @@ export default function CartPage({ searchParams }: Props) {
 }
 
 async function CartContents({ searchParams }: Pick<Props, "searchParams">) {
-  const [{ items, subtotalCents }, params] = await Promise.all([getCart(), searchParams]);
+  const [cart, params] = await Promise.all([getCart(), searchParams]);
+  const { items, subtotalCents, donationSubtotalCents, purchaseCount, donationCount } = cart;
   const cep = typeof params.cep === "string" ? params.cep.slice(0, 9) : "";
-  const sellable = items.filter((item) => item.available);
-  const quote = cep
-    ? quoteShipping({
-        zipCode: cep,
-        items: sellable.map((item) => ({ weightGrams: item.weightGrams, quantity: item.quantity })),
-        subtotalCents,
-      })
-    : null;
+  const purchase = items.filter((item) => !item.donation);
+  const donation = items.filter((item) => item.donation);
+  const quote =
+    cep && purchaseCount > 0
+      ? quoteShipping({
+          zipCode: cep,
+          items: purchase
+            .filter((item) => item.available)
+            .map((item) => ({ weightGrams: item.weightGrams, quantity: item.quantity })),
+          subtotalCents,
+        })
+      : null;
 
   if (items.length === 0) {
     return (
@@ -50,70 +55,127 @@ async function CartContents({ searchParams }: Pick<Props, "searchParams">) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
-        {items.map((item) => (
-          <li key={item.id} className="flex gap-4 py-4">
-            <div className="relative size-20 shrink-0 overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-900">
-              {item.image && (
-                <Image
-                  src={item.image.url}
-                  alt={item.image.alt ?? item.productName}
-                  fill
-                  sizes="5rem"
-                  className="object-cover"
-                />
-              )}
-            </div>
-            <div className="flex flex-1 flex-col gap-1">
-              <Link href={`/produtos/${item.productSlug}`} className="font-medium hover:underline">
-                {item.productName}
+    <div className="flex flex-col gap-10">
+      {purchase.length > 0 && (
+        <section className="flex flex-col gap-4" aria-labelledby="compra">
+          {donation.length > 0 && (
+            <h2 id="compra" className="text-lg font-semibold">
+              Para você
+            </h2>
+          )}
+          <CartItems items={purchase} />
+          <div className="flex flex-col items-end gap-1 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+            <p className="text-sm text-zinc-500">Subtotal</p>
+            <p className="text-2xl font-semibold">{formatBRL(subtotalCents)}</p>
+            <ShippingEstimate cep={cep} quote={quote} />
+            {purchaseCount > 0 && (
+              <Link
+                href="/checkout"
+                className="mt-2 rounded-md bg-zinc-900 px-6 py-2 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+              >
+                Continuar para o checkout
               </Link>
-              <p className="text-sm text-zinc-500">
-                {item.variantName} · {formatBRL(item.unitPriceCents)} cada
+            )}
+          </div>
+        </section>
+      )}
+
+      {donation.length > 0 && (
+        <section
+          className="flex flex-col gap-4 rounded-lg border border-emerald-300 p-4 dark:border-emerald-800"
+          aria-labelledby="doacao"
+        >
+          <div>
+            <h2 id="doacao" className="text-lg font-semibold">
+              Para o abrigo
+            </h2>
+            <p className="text-sm text-zinc-500">
+              Estes itens vão direto para o abrigo da FofitisPet, sem frete e sem endereço.
+            </p>
+          </div>
+          <CartItems items={donation} />
+          <div className="flex flex-col items-end gap-1 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+            <p className="text-sm text-zinc-500">Total da doação</p>
+            <p className="text-2xl font-semibold">{formatBRL(donationSubtotalCents)}</p>
+            {donationCount > 0 && (
+              <Link
+                href="/checkout/doacao"
+                className="mt-2 rounded-md bg-emerald-700 px-6 py-2 font-medium text-white"
+              >
+                Finalizar doação
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function CartItems({ items }: { items: CartLine[] }) {
+  return (
+    <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+      {items.map((item) => (
+        <li key={item.id} className="flex gap-4 py-4">
+          <div className="relative size-20 shrink-0 overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-900">
+            {item.image && (
+              <Image
+                src={item.image.url}
+                alt={item.image.alt ?? item.productName}
+                fill
+                sizes="5rem"
+                className="object-cover"
+              />
+            )}
+          </div>
+          <div className="flex flex-1 flex-col gap-1">
+            <Link href={`/produtos/${item.productSlug}`} className="font-medium hover:underline">
+              {item.productName}
+            </Link>
+            <p className="text-sm text-zinc-500">
+              {item.variantName} · {formatBRL(item.unitPriceCents)} cada
+            </p>
+            {!item.available && (
+              <p className="text-sm text-red-600">Indisponível no momento. Não entra no total.</p>
+            )}
+            {item.overStock && (
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                Só há {item.stock} unidade(s) disponível(is).
               </p>
-              {!item.available && (
-                <p className="text-sm text-red-600">Indisponível no momento. Não entra no total.</p>
-              )}
-              {item.overStock && (
-                <p className="text-sm text-amber-700 dark:text-amber-400">
-                  Só há {item.stock} unidade(s) disponível(is).
-                </p>
-              )}
-            </div>
-            <div className="flex flex-col items-end gap-1 text-right">
-              {item.available ? (
-                <QuantityForm
-                  itemId={item.id}
-                  quantity={item.quantity}
-                  max={Math.min(item.stock, MAX_QUANTITY_PER_ITEM)}
-                  productName={item.productName}
-                />
-              ) : (
-                <p className="text-sm text-zinc-500">Qtd. {item.quantity}</p>
-              )}
-              <p className="font-semibold">{formatBRL(item.totalCents)}</p>
-              <form action={removeFromCart.bind(null, item.id)}>
-                <button type="submit" className="text-sm text-red-700 underline dark:text-red-400">
-                  Remover<span className="sr-only"> {item.productName}</span>
+            )}
+            {(item.donation || item.donationEligible) && (
+              <form action={moveCartItem.bind(null, item.id, !item.donation)}>
+                <button
+                  type="submit"
+                  className="text-sm text-emerald-800 underline dark:text-emerald-300"
+                >
+                  {item.donation ? "Receber em casa em vez de doar" : "Doar para o abrigo"}
+                  <span className="sr-only"> {item.productName}</span>
                 </button>
               </form>
-            </div>
-          </li>
-        ))}
-      </ul>
-      <div className="flex flex-col items-end gap-1 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-        <p className="text-sm text-zinc-500">Subtotal</p>
-        <p className="text-2xl font-semibold">{formatBRL(subtotalCents)}</p>
-        <ShippingEstimate cep={cep} quote={quote} />
-        <Link
-          href="/checkout"
-          className="mt-2 rounded-md bg-zinc-900 px-6 py-2 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-        >
-          Continuar para o checkout
-        </Link>
-      </div>
-    </div>
+            )}
+          </div>
+          <div className="flex flex-col items-end gap-1 text-right">
+            {item.available ? (
+              <QuantityForm
+                itemId={item.id}
+                quantity={item.quantity}
+                max={Math.min(item.stock, MAX_QUANTITY_PER_ITEM)}
+                productName={item.productName}
+              />
+            ) : (
+              <p className="text-sm text-zinc-500">Qtd. {item.quantity}</p>
+            )}
+            <p className="font-semibold">{formatBRL(item.totalCents)}</p>
+            <form action={removeFromCart.bind(null, item.id)}>
+              <button type="submit" className="text-sm text-red-700 underline dark:text-red-400">
+                Remover<span className="sr-only"> {item.productName}</span>
+              </button>
+            </form>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 

@@ -53,13 +53,13 @@ export async function attachCartToUser(userId: string) {
           select: {
             id: true,
             userId: true,
-            items: { select: { variantId: true, quantity: true } },
+            items: { select: { variantId: true, quantity: true, donation: true } },
           },
         })
       : null,
     prisma.cart.findUnique({
       where: { userId },
-      select: { id: true, items: { select: { variantId: true, quantity: true } } },
+      select: { id: true, items: { select: { variantId: true, quantity: true, donation: true } } },
     }),
   ]);
 
@@ -81,17 +81,19 @@ export async function attachCartToUser(userId: string) {
       select: { variantId: true, quantity: true },
     });
     const stockOf = new Map(stocks.map((s) => [s.variantId, s.quantity]));
-    const savedQty = new Map(saved.items.map((i) => [i.variantId, i.quantity]));
+    const key = (i: { variantId: string; donation: boolean }) => `${i.variantId}:${i.donation}`;
+    const savedQty = new Map(saved.items.map((i) => [key(i), i.quantity]));
     await prisma.$transaction([
       ...guestCart.items.map((item) => {
         const limit = Math.min(stockOf.get(item.variantId) ?? 0, MAX_QUANTITY_PER_ITEM);
         const quantity = Math.max(
           1,
-          Math.min((savedQty.get(item.variantId) ?? 0) + item.quantity, limit),
+          Math.min((savedQty.get(key(item)) ?? 0) + item.quantity, limit),
         );
+        const { variantId, donation } = item;
         return prisma.cartItem.upsert({
-          where: { cartId_variantId: { cartId: saved.id, variantId: item.variantId } },
-          create: { cartId: saved.id, variantId: item.variantId, quantity },
+          where: { cartId_variantId_donation: { cartId: saved.id, variantId, donation } },
+          create: { cartId: saved.id, variantId, donation, quantity },
           update: { quantity },
         });
       }),
@@ -107,22 +109,30 @@ async function sellableVariant(variantId: string) {
     where: { id: variantId, active: true, product: { active: true } },
     select: {
       id: true,
+      product: { select: { donationEligible: true } },
       stockLevels: { where: { location: "STORE" }, select: { quantity: true } },
     },
   });
   if (!variant) throw new CartError("Este produto não está mais disponível.");
-  return { stock: variant.stockLevels[0]?.quantity ?? 0 };
+  return {
+    stock: variant.stockLevels[0]?.quantity ?? 0,
+    donationEligible: variant.product.donationEligible,
+  };
 }
 
-// Soma a quantidade ao que já está no carrinho, sem passar do estoque da loja.
-export async function addItem(variantId: string, quantity: number) {
+// Soma a quantidade ao que já está no carrinho, sem passar do estoque da loja. Com donation, o
+// item vai para o abrigo (KAN-30) e fica numa linha separada do mesmo produto para o cliente.
+export async function addItem(variantId: string, quantity: number, donation = false) {
   if (!Number.isInteger(quantity) || quantity < 1) throw new CartError("Quantidade inválida.");
-  const { stock } = await sellableVariant(variantId);
+  const { stock, donationEligible } = await sellableVariant(variantId);
+  if (donation && !donationEligible) {
+    throw new CartError("Este produto não pode ser doado ao abrigo.");
+  }
   if (stock <= 0) throw new CartError("Este produto está esgotado.");
 
   const cartId = await ensureCartId();
   const existing = await prisma.cartItem.findUnique({
-    where: { cartId_variantId: { cartId, variantId } },
+    where: { cartId_variantId_donation: { cartId, variantId, donation } },
     select: { quantity: true },
   });
   const limit = Math.min(stock, MAX_QUANTITY_PER_ITEM);
@@ -133,8 +143,8 @@ export async function addItem(variantId: string, quantity: number) {
   }
 
   await prisma.cartItem.upsert({
-    where: { cartId_variantId: { cartId, variantId } },
-    create: { cartId, variantId, quantity: final },
+    where: { cartId_variantId_donation: { cartId, variantId, donation } },
+    create: { cartId, variantId, donation, quantity: final },
     update: { quantity: final },
   });
   await prisma.cart.update({ where: { id: cartId }, data: { updatedAt: new Date() } });
@@ -144,7 +154,7 @@ export async function addItem(variantId: string, quantity: number) {
 // Leitura do carrinho para as páginas. Lê cookies: precisa estar dentro de um <Suspense>.
 export const getCart = cache(async () => {
   const cartId = await readCartId();
-  if (!cartId) return { items: [], count: 0, subtotalCents: 0 };
+  if (!cartId) return summarize([]);
 
   const items = await prisma.cartItem.findMany({
     where: { cartId },
@@ -152,6 +162,7 @@ export const getCart = cache(async () => {
     select: {
       id: true,
       quantity: true,
+      donation: true,
       variant: {
         select: {
           id: true,
@@ -165,6 +176,7 @@ export const getCart = cache(async () => {
               name: true,
               slug: true,
               active: true,
+              donationEligible: true,
               images: {
                 orderBy: [{ position: "asc" }, { createdAt: "asc" }],
                 take: 1,
@@ -177,12 +189,19 @@ export const getCart = cache(async () => {
     },
   });
 
-  const lines = items.map(({ id, quantity, variant }) => {
+  const lines: CartLine[] = items.map(({ id, quantity, donation, variant }) => {
     const stock = variant.stockLevels[0]?.quantity ?? 0;
-    const available = variant.active && variant.product.active && stock > 0;
+    // Item de doação de um produto que deixou de ser doável também fica indisponível.
+    const available =
+      variant.active &&
+      variant.product.active &&
+      stock > 0 &&
+      (!donation || variant.product.donationEligible);
     return {
       id,
       quantity,
+      donation,
+      donationEligible: variant.product.donationEligible,
       variantId: variant.id,
       variantName: variant.name,
       productName: variant.product.name,
@@ -193,19 +212,47 @@ export const getCart = cache(async () => {
       totalCents: variant.priceCents * quantity,
       stock,
       available,
-      // Mais unidades no carrinho do que há na loja (o estoque caiu depois de adicionar).
       overStock: available && quantity > stock,
     };
   });
-  const sellable = lines.filter((line) => line.available);
-  return {
-    items: lines,
-    count: sellable.reduce((sum, line) => sum + line.quantity, 0),
-    subtotalCents: sellable.reduce((sum, line) => sum + line.totalCents, 0),
-  };
+  return summarize(lines);
 });
 
-export type CartLine = Awaited<ReturnType<typeof getCart>>["items"][number];
+export type CartLine = {
+  id: string;
+  quantity: number;
+  donation: boolean;
+  donationEligible: boolean;
+  variantId: string;
+  variantName: string;
+  productName: string;
+  productSlug: string;
+  image: { url: string; alt: string | null } | null;
+  unitPriceCents: number;
+  weightGrams: number | null;
+  totalCents: number;
+  stock: number;
+  available: boolean;
+  // Mais unidades no carrinho do que há na loja (o estoque caiu depois de adicionar).
+  overStock: boolean;
+};
+
+// Totais separados: a compra (que paga frete) e a doação ao abrigo (KAN-30).
+function summarize(items: CartLine[]) {
+  const sum = (lines: CartLine[], pick: (line: CartLine) => number) =>
+    lines.reduce((total, line) => total + pick(line), 0);
+  const sellable = items.filter((line) => line.available);
+  const purchase = sellable.filter((line) => !line.donation);
+  const donation = sellable.filter((line) => line.donation);
+  return {
+    items,
+    count: sum(sellable, (line) => line.quantity),
+    purchaseCount: sum(purchase, (line) => line.quantity),
+    donationCount: sum(donation, (line) => line.quantity),
+    subtotalCents: sum(purchase, (line) => line.totalCents),
+    donationSubtotalCents: sum(donation, (line) => line.totalCents),
+  };
+}
 
 // Remove um item do carrinho atual. Itens de outro carrinho são ignorados.
 export async function removeItem(itemId: string) {
@@ -236,4 +283,41 @@ export async function setItemQuantity(itemId: string, quantity: number) {
   const final = Math.min(quantity, stock, MAX_QUANTITY_PER_ITEM);
   await prisma.cartItem.update({ where: { id: item.id }, data: { quantity: final } });
   return { quantity: final, limited: final < quantity };
+}
+
+// Troca o destino de um item: para o abrigo ou para o cliente (KAN-30). Se o mesmo produto já
+// estiver no outro destino, as quantidades se juntam.
+export async function setItemDonation(itemId: string, donation: boolean) {
+  const cartId = await readCartId();
+  const item = cartId
+    ? await prisma.cartItem.findFirst({
+        where: { id: itemId, cartId },
+        select: { id: true, cartId: true, variantId: true, quantity: true, donation: true },
+      })
+    : null;
+  if (!item) throw new CartError("Este item não está mais no seu carrinho.");
+  if (item.donation === donation) return;
+
+  const { stock, donationEligible } = await sellableVariant(item.variantId);
+  if (donation && !donationEligible) {
+    throw new CartError("Este produto não pode ser doado ao abrigo.");
+  }
+  const other = await prisma.cartItem.findUnique({
+    where: {
+      cartId_variantId_donation: { cartId: item.cartId, variantId: item.variantId, donation },
+    },
+    select: { id: true, quantity: true },
+  });
+  if (!other) {
+    await prisma.cartItem.update({ where: { id: item.id }, data: { donation } });
+    return;
+  }
+  const quantity = Math.max(
+    1,
+    Math.min(other.quantity + item.quantity, stock, MAX_QUANTITY_PER_ITEM),
+  );
+  await prisma.$transaction([
+    prisma.cartItem.update({ where: { id: other.id }, data: { quantity } }),
+    prisma.cartItem.delete({ where: { id: item.id } }),
+  ]);
 }

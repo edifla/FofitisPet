@@ -29,7 +29,7 @@ async function AddressStep() {
   const user = await requireUser("/checkout");
   const [addresses, cart] = await Promise.all([listAddresses(user.id), getCart()]);
 
-  if (cart.count === 0) {
+  if (cart.purchaseCount === 0) {
     return (
       <div className="flex flex-col items-start gap-3">
         <p>Seu carrinho está vazio ou sem itens disponíveis.</p>

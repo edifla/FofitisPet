@@ -81,13 +81,8 @@ async function ProductDetails({ params }: Pick<Props, "params">) {
               stock,
             }))}
             fewLeft={FEW_LEFT}
+            donationEligible={product.donationEligible}
           />
-
-          {product.donationEligible && (
-            <p className="rounded-md bg-zinc-100 p-3 text-sm dark:bg-zinc-900">
-              Este item pode ser comprado para o abrigo da FofitisPet.
-            </p>
-          )}
         </div>
       </div>
 
