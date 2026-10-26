@@ -35,6 +35,7 @@ model User {
 
   addresses      Address[]
   stockMovements StockMovement[]
+  orders         Order[]
 }
 
 model Address {
@@ -177,6 +178,7 @@ model ProductVariant {
   product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
   stockLevels    StockLevel[]
   stockMovements StockMovement[]
+  orderItems     OrderItem[]
 
   @@index([productId])
 }
@@ -203,11 +205,150 @@ model StockMovement {
   toLocation   StockLocation?
   quantity     Int
   note         String?
+  // Pedido que gerou o movimento (SALE, DONATION_TRANSFER, RETURN).
+  orderId      String?
   createdById  String?
   createdAt    DateTime          @default(now())
 
   variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
   createdBy User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  order     Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([variantId, createdAt])
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------------------
+// Pedidos, itens e pagamentos (KAN-87)
+// ---------------------------------------------------------------------------
+
+// Para quem vai o pedido. Itens marcados como "Doar este item" geram um pedido SHELTER separado,
+// sem frete e sem endereço (KAN-30, KAN-31).
+enum OrderDestination {
+  CUSTOMER
+  SHELTER
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PREPARING
+  SHIPPED
+  // Pedidos SHELTER vão direto de PAID para DELIVERED com a transferência de estoque (KAN-32).
+  DELIVERED
+  CANCELED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELED
+  REFUNDED
+}
+
+model Order {
+  id            String           @id @default(cuid())
+  // Número sequencial mostrado ao cliente e nos e-mails.
+  number        Int              @unique @default(autoincrement())
+  userId        String
+  destination   OrderDestination @default(CUSTOMER)
+  status        OrderStatus      @default(PENDING_PAYMENT)
+  // Doação sem o nome do cliente na página de transparência (KAN-31).
+  anonymous     Boolean          @default(false)
+  subtotalCents Int
+  shippingCents Int              @default(0)
+  discountCents Int              @default(0)
+  totalCents    Int
+
+  // Cópia do endereço no momento da compra. Nula em pedidos SHELTER.
+  shippingRecipientName String?
+  shippingZipCode       String? @db.VarChar(8)
+  shippingStreet        String?
+  shippingNumber        String?
+  shippingComplement    String?
+  shippingNeighborhood  String?
+  shippingCity          String?
+  shippingState         String? @db.Char(2)
+  shippingMethod        String?
+  trackingCode          String?
+
+  paidAt      DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+  canceledAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items          OrderItem[]
+  payments       Payment[]
+  stockMovements StockMovement[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model OrderItem {
+  id             String @id @default(cuid())
+  orderId        String
+  variantId      String
+  // Cópia do nome e do preço no momento da compra, para o histórico não mudar se o produto mudar.
+  productName    String
+  variantName    String
+  unitPriceCents Int
+  quantity       Int
+  totalCents     Int
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String
+  // Gateway usado, ex.: "mercadopago". Em desenvolvimento roda em sandbox (KAN-26).
+  provider          String
+  // Id do pagamento no gateway, usado para casar os webhooks.
+  providerPaymentId String?
+  method            PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  amountCents       Int
+  pixQrCode         String?
+  pixExpiresAt      DateTime?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  order  Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  events PaymentEvent[]
+
+  @@unique([provider, providerPaymentId])
+  @@index([orderId])
+}
+
+// Webhook recebido do gateway. O @@unique evita processar o mesmo evento duas vezes.
+model PaymentEvent {
+  id          String    @id @default(cuid())
+  provider    String
+  eventId     String
+  paymentId   String?
+  type        String
+  payload     Json
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, eventId])
+  @@index([paymentId])
 }
