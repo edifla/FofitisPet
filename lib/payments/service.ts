@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { Prisma } from "@/app/generated/prisma/client";
 import { sendOrderEmail } from "@/lib/order-emails";
-import { expireOrderIfStale } from "@/lib/orders";
+import { deliverDonation, expireOrderIfStale } from "@/lib/orders";
 import { prisma } from "@/lib/prisma";
 import {
   GatewayInputError,
@@ -163,7 +163,7 @@ export async function applyGatewayUpdate(update: GatewayUpdate): Promise<UpdateR
         select: {
           id: true,
           status: true,
-          order: { select: { id: true, status: true, number: true } },
+          order: { select: { id: true, status: true, number: true, destination: true } },
         },
       });
       const event = await tx.paymentEvent.create({
@@ -204,7 +204,13 @@ export async function applyGatewayUpdate(update: GatewayUpdate): Promise<UpdateR
           where: { id: payment.order.id, status: "PENDING_PAYMENT" },
           data: { status: "PAID", paidAt: now },
         });
-        if (paid.count === 1) paidOrderId = payment.order.id;
+        if (paid.count === 1) {
+          paidOrderId = payment.order.id;
+          // Doação ao abrigo: entrega na hora, com a transferência de estoque (KAN-32).
+          if (payment.order.destination === "SHELTER") {
+            await deliverDonation(tx, payment.order.id);
+          }
+        }
         if (paid.count === 0) {
           // Pago depois de cancelado (ex.: Pix pago após o prazo): precisa de reembolso manual.
           await tx.payment.update({
