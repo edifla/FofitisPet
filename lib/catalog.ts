@@ -17,6 +17,8 @@ export type CatalogQuery = {
   brands?: string[];
   minPriceCents?: number;
   maxPriceCents?: number;
+  // Só produtos doáveis ao abrigo (KAN-29).
+  donation?: boolean;
   sort?: CatalogSort;
   page?: number;
 };
@@ -30,6 +32,7 @@ export type CatalogItem = {
   coverAlt: string | null;
   minPriceCents: number;
   inStock: boolean;
+  donationEligible: boolean;
 };
 
 // "%" e "_" digitados pelo cliente são texto, não curingas do LIKE.
@@ -52,6 +55,7 @@ export async function searchCatalog({
   brands = [],
   minPriceCents,
   maxPriceCents,
+  donation = false,
   sort = "relevancia",
   page = 1,
 }: CatalogQuery) {
@@ -68,6 +72,7 @@ export async function searchCatalog({
         : Prisma.empty
     })`,
   ];
+  if (donation) conditions.push(Prisma.sql`p."donationEligible"`);
   if (species) {
     conditions.push(Prisma.sql`${species}::"Species" = ANY(p.species)`);
   }
@@ -130,6 +135,7 @@ export async function searchCatalog({
       id: true,
       name: true,
       slug: true,
+      donationEligible: true,
       brand: { select: { name: true } },
       images: {
         orderBy: [{ position: "asc" }, { createdAt: "asc" }],
@@ -160,6 +166,7 @@ export async function searchCatalog({
         coverAlt: product.images[0]?.alt ?? null,
         minPriceCents: Math.min(...product.variants.map((v) => v.priceCents)),
         inStock: product.variants.some((v) => (v.stockLevels[0]?.quantity ?? 0) > 0),
+        donationEligible: product.donationEligible,
       },
     ];
   });

@@ -45,7 +45,8 @@ async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
     filters.category ||
     filters.brands.length ||
     filters.minPrice ||
-    filters.maxPrice,
+    filters.maxPrice ||
+    filters.donation,
   );
 
   return (
@@ -142,6 +143,7 @@ function HiddenFilters({
           ))}
           {filters.minPrice && <input type="hidden" name="preco_min" value={filters.minPrice} />}
           {filters.maxPrice && <input type="hidden" name="preco_max" value={filters.maxPrice} />}
+          {filters.donation && <input type="hidden" name="doacao" value="sim" />}
         </>
       )}
       {omit !== "sort" && filters.sort !== "relevancia" && (
@@ -250,6 +252,17 @@ function FilterPanel({
           </div>
         </fieldset>
 
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="doacao"
+            value="sim"
+            defaultChecked={filters.donation}
+            className="size-4"
+          />
+          Pode ser doado ao abrigo
+        </label>
+
         <div className="flex items-center gap-4">
           <button
             type="submit"
@@ -265,6 +278,7 @@ function FilterPanel({
                 brands: [],
                 minPrice: "",
                 maxPrice: "",
+                donation: false,
               })}
               className="text-sm underline"
             >
