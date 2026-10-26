@@ -722,3 +722,41 @@ model RateLimit {
 
   @@index([resetAt])
 }
+
+// ---------------------------------------------------------------------------
+// Monitoramento (KAN-51), sem serviço externo
+// ---------------------------------------------------------------------------
+
+// Erros agrupados pela "impressão digital" (origem + mensagem + rota): cada ocorrência repetida
+// só aumenta o contador. Sem cabeçalhos, cookies nem IP; caminhos com ids longos são mascarados.
+model ErrorLog {
+  id          String    @id @default(cuid())
+  fingerprint String    @unique
+  // "server" (onRequestError) ou "client" (telas de erro do navegador).
+  source      String
+  message     String
+  stack       String?
+  // Rota do código, ex.: /produtos/[slug]; e o último caminho visto, ex.: /produtos/racao.
+  routePath   String?
+  path        String?
+  method      String?
+  routeType   String?
+  digest      String?
+  count       Int       @default(1)
+  firstSeenAt DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  // Marcado no admin; volta a nulo se o erro acontecer de novo.
+  resolvedAt  DateTime?
+
+  @@index([resolvedAt, lastSeenAt])
+}
+
+// Visualizações de página por dia e caminho. Contagem anônima: nenhum dado do visitante.
+model PageViewDaily {
+  day   DateTime @db.Date
+  path  String
+  views Int      @default(0)
+
+  @@id([day, path])
+  @@index([day])
+}
