@@ -1,5 +1,6 @@
-// Schema do FofitisPet. Os modelos entram na KAN-19 (modelagem do banco).
+// Schema do FofitisPet.
 // Docs: https://pris.ly/d/prisma-schema
+// Valores em dinheiro são guardados em centavos (Int) para evitar erro de arredondamento.
 
 generator client {
   provider = "prisma-client"
@@ -8,4 +9,51 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Usuários e endereços (KAN-85)
+// ---------------------------------------------------------------------------
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  // Sempre gravado em minúsculas pela aplicação, para o @unique valer sem diferenciar caixa.
+  email         String    @unique
+  // Nulo enquanto a conta não tiver senha (ex.: login social na KAN-20).
+  passwordHash  String?
+  emailVerified DateTime?
+  phone         String?
+  role          Role      @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  addresses Address[]
+}
+
+model Address {
+  id            String   @id @default(cuid())
+  userId        String
+  // Apelido escolhido pelo cliente, ex.: "Casa", "Trabalho".
+  label         String?
+  recipientName String
+  zipCode       String   @db.VarChar(8)
+  street        String
+  number        String
+  complement    String?
+  neighborhood  String
+  city          String
+  state         String   @db.Char(2)
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

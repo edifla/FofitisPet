@@ -12,6 +12,22 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: fofitis
+          POSTGRES_PASSWORD: fofitis
+          POSTGRES_DB: fofitispet
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fofitis -d fofitispet"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://fofitis:fofitis@localhost:5432/fofitispet?schema=public
     steps:
       - uses: actions/checkout@v4
 
@@ -25,6 +41,12 @@ jobs:
 
       - name: Validar schema do Prisma
         run: npx prisma validate
+
+      - name: Aplicar migrations
+        run: npx prisma migrate deploy
+
+      - name: Conferir se o schema bate com as migrations
+        run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
 
       - name: Lint
         run: npm run lint
