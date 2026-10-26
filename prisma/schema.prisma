@@ -21,19 +21,26 @@ enum Role {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  name           String
+  id              String    @id @default(cuid())
+  name            String
   // Sempre gravado em minúsculas pela aplicação, para o @unique valer sem diferenciar caixa.
-  email          String    @unique
+  email           String    @unique
   // Nulo enquanto a conta não tiver senha (ex.: login social na KAN-20).
-  passwordHash   String?
-  emailVerified  DateTime?
-  phone          String?
-  role           Role      @default(CUSTOMER)
+  passwordHash    String?
+  emailVerified   DateTime?
+  phone           String?
+  role            Role      @default(CUSTOMER)
   // Incrementado ao trocar a senha: sessões emitidas com a versão antiga deixam de valer.
-  sessionVersion Int       @default(0)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  sessionVersion  Int       @default(0)
+  // Aceite dos termos de uso e da política de privacidade no cadastro (KAN-124): quando e qual
+  // versão (LEGAL.version). Nulo em contas criadas antes do aceite existir.
+  termsAcceptedAt DateTime?
+  termsVersion    String?
+  // Conta excluída a pedido do usuário (KAN-126): os dados pessoais são apagados ou anonimizados e
+  // a linha fica só para manter pedidos e registros fiscais.
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   addresses           Address[]
   stockMovements      StockMovement[]
