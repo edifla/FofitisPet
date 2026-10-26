@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useActionState, useState } from "react";
+import { FormMessage } from "@/components/form/field";
 import { formatBRL } from "@/lib/money";
+import { addToCart } from "../../carrinho/actions";
 
 export type PurchaseVariant = {
   id: string;
@@ -33,9 +36,10 @@ export function PurchasePanel({
   const selected = variants.find((v) => v.id === selectedId) ?? variants[0];
   const status = availability(selected.stock, fewLeft);
   const soldOut = selected.stock <= 0;
+  const [state, action, pending] = useActionState(addToCart, undefined);
 
   return (
-    <form className="flex flex-col gap-5">
+    <form action={action} className="flex flex-col gap-5">
       <input type="hidden" name="variantId" value={selected.id} />
 
       {variants.length > 1 && (
@@ -89,12 +93,22 @@ export function PurchasePanel({
         </div>
         <button
           type="submit"
-          disabled
+          disabled={soldOut || pending}
           className="flex-1 rounded-md bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
         >
-          {soldOut ? "Esgotado" : "Adicionar ao carrinho"}
+          {soldOut ? "Esgotado" : pending ? "Adicionando..." : "Adicionar ao carrinho"}
         </button>
       </div>
+      {state?.message && (
+        <div className="flex items-center gap-3">
+          <FormMessage message={state.message} tone={state.success ? "success" : "error"} />
+          {state.success && (
+            <Link href="/carrinho" className="text-sm font-medium underline">
+              Ver carrinho
+            </Link>
+          )}
+        </div>
+      )}
     </form>
   );
 }
