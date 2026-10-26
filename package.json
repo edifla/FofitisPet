@@ -16,7 +16,8 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "user:promote": "node scripts/promote-admin.mjs"
+    "user:promote": "node scripts/promote-admin.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.1",
@@ -43,7 +44,8 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "prisma": "^7.10.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=22"

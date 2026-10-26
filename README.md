@@ -45,6 +45,7 @@ Abra [http://localhost:3000](http://localhost:3000) no navegador.
 | `npm run start`        | Sobe o build de produção            |
 | `npm run lint`         | ESLint                              |
 | `npm run typecheck`    | Checagem de tipos com `tsc`         |
+| `npm test`             | Testes dos fluxos críticos (Vitest) |
 | `npm run format`       | Formata o código com Prettier       |
 | `npm run format:check` | Verifica se o código está formatado |
 | `npm run db:up`        | Sobe o Postgres do `compose.yaml`   |
@@ -73,13 +74,17 @@ import { prisma } from "@/lib/prisma";
 
 ## Integração contínua
 
-O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em cada pull request e em push no `master`: instala as dependências, roda lint, checagem de formatação, build, checagem de tipos e testes (quando houver).
+O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em cada pull request e em push no `master`: instala as dependências, roda lint, checagem de formatação, build, checagem de tipos e testes.
+
+## Testes
+
+Os testes em [`tests/`](tests) cobrem os fluxos críticos (KAN-47): checkout, compra para o abrigo, adoção e webhooks de pagamento. Eles chamam a camada de serviço e as rotas de API contra um Postgres de verdade, num banco separado criado na hora (`<banco>_test`, ao lado do `DATABASE_URL`), então não mexem nos dados de desenvolvimento. Com o banco no ar (`npm run db:up`), rode `npm test`.
 
 ## Como contribuir
 
 1. Crie uma branch a partir do `master` com a chave do card do Jira, por exemplo `feat/KAN-22-catalogo`.
 2. Use mensagens de commit em português com a chave do card, por exemplo `feat: catálogo com busca (KAN-22)`.
-3. Antes de abrir o PR, rode `npm run lint`, `npm run format:check` e `npm run typecheck`.
+3. Antes de abrir o PR, rode `npm run lint`, `npm run format:check`, `npm run typecheck` e `npm test`.
 4. Abra o pull request para o `master` e registre o link do PR no card do Jira.
 
 ## Roadmap
