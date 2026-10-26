@@ -23,14 +23,82 @@ async function ensureCartId(): Promise<string> {
     return current;
   }
   const cart = await prisma.cart.create({ data: {}, select: { id: true } });
-  (await cookies()).set(CART_COOKIE, cart.id, {
+  await setCartCookie(cart.id);
+  return cart.id;
+}
+
+async function setCartCookie(cartId: string) {
+  (await cookies()).set(CART_COOKIE, cartId, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: CART_MAX_AGE,
   });
-  return cart.id;
+}
+
+// No logout: o carrinho continua salvo na conta, mas este navegador deixa de vê-lo.
+export async function clearCartCookie() {
+  (await cookies()).delete(CART_COOKIE);
+}
+
+// No login (KAN-104): o carrinho do visitante passa a ser da conta. Se a conta já tinha um
+// carrinho, os itens se juntam (somando quantidades sem passar do estoque) e fica o da conta.
+export async function attachCartToUser(userId: string) {
+  const guestId = await readCartId();
+  const [guest, saved] = await Promise.all([
+    guestId
+      ? prisma.cart.findUnique({
+          where: { id: guestId },
+          select: {
+            id: true,
+            userId: true,
+            items: { select: { variantId: true, quantity: true } },
+          },
+        })
+      : null,
+    prisma.cart.findUnique({
+      where: { userId },
+      select: { id: true, items: { select: { variantId: true, quantity: true } } },
+    }),
+  ]);
+
+  // Um carrinho de outra conta neste navegador não é herdado.
+  const guestCart = guest && (guest.userId === null || guest.userId === userId) ? guest : null;
+
+  if (!saved) {
+    if (guestCart) {
+      await prisma.cart.update({ where: { id: guestCart.id }, data: { userId } });
+      await setCartCookie(guestCart.id);
+    } else if (guest) {
+      await clearCartCookie();
+    }
+    return;
+  }
+  if (guestCart && guestCart.id !== saved.id) {
+    const stocks = await prisma.stockLevel.findMany({
+      where: { location: "STORE", variantId: { in: guestCart.items.map((i) => i.variantId) } },
+      select: { variantId: true, quantity: true },
+    });
+    const stockOf = new Map(stocks.map((s) => [s.variantId, s.quantity]));
+    const savedQty = new Map(saved.items.map((i) => [i.variantId, i.quantity]));
+    await prisma.$transaction([
+      ...guestCart.items.map((item) => {
+        const limit = Math.min(stockOf.get(item.variantId) ?? 0, MAX_QUANTITY_PER_ITEM);
+        const quantity = Math.max(
+          1,
+          Math.min((savedQty.get(item.variantId) ?? 0) + item.quantity, limit),
+        );
+        return prisma.cartItem.upsert({
+          where: { cartId_variantId: { cartId: saved.id, variantId: item.variantId } },
+          create: { cartId: saved.id, variantId: item.variantId, quantity },
+          update: { quantity },
+        });
+      }),
+      prisma.cart.delete({ where: { id: guestCart.id } }),
+    ]);
+  }
+  await setCartCookie(saved.id);
 }
 
 // Variação à venda e quanto há na loja. Lança CartError se não puder ser comprada.

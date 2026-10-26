@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { Prisma } from "@/app/generated/prisma/client";
 import { signIn, signOut } from "@/auth";
+import { attachCartToUser, clearCartCookie } from "@/lib/cart";
 import { safeCallbackUrl } from "@/lib/dal";
 import { appUrl, sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
@@ -44,8 +45,15 @@ export async function signup(_state: FormState, formData: FormData): Promise<For
     throw error;
   }
 
-  // Já entra na conta recém-criada. Em caso de sucesso o signIn redireciona (lança NEXT_REDIRECT).
-  await signIn("credentials", { email, password, redirectTo: "/conta" });
+  // Já entra na conta recém-criada e leva o carrinho de visitante junto.
+  await signIn("credentials", { email, password, redirect: false });
+  await attachCartToUserByEmail(email);
+  redirect("/conta");
+}
+
+async function attachCartToUserByEmail(email: string) {
+  const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+  if (user) await attachCartToUser(user.id);
 }
 
 export async function login(_state: FormState, formData: FormData): Promise<FormState> {
@@ -56,10 +64,7 @@ export async function login(_state: FormState, formData: FormData): Promise<Form
   }
 
   try {
-    await signIn("credentials", {
-      ...parsed.data,
-      redirectTo: safeCallbackUrl(formData.get("callbackUrl")),
-    });
+    await signIn("credentials", { ...parsed.data, redirect: false });
   } catch (error) {
     // Mesma mensagem para e-mail inexistente e senha errada, para não revelar quem tem conta.
     if (error instanceof AuthError) {
@@ -67,9 +72,12 @@ export async function login(_state: FormState, formData: FormData): Promise<Form
     }
     throw error;
   }
+  await attachCartToUserByEmail(parsed.data.email);
+  redirect(safeCallbackUrl(formData.get("callbackUrl")));
 }
 
 export async function logout() {
+  await clearCartCookie();
   await signOut({ redirectTo: "/" });
 }
 
