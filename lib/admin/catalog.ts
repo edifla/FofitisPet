@@ -123,13 +123,15 @@ export async function listStock(onlyLow: boolean) {
       sku: true,
       active: true,
       product: { select: { id: true, name: true, active: true } },
-      stockLevels: { select: { location: true, quantity: true } },
+      stockLevels: { select: { location: true, quantity: true, targetQuantity: true } },
     },
   });
   const rows = variants.map((variant) => {
     const level = (location: "STORE" | "SHELTER") =>
       variant.stockLevels.find((l) => l.location === location)?.quantity ?? 0;
-    return { ...variant, store: level("STORE"), shelter: level("SHELTER") };
+    const shelterTarget =
+      variant.stockLevels.find((l) => l.location === "SHELTER")?.targetQuantity ?? null;
+    return { ...variant, store: level("STORE"), shelter: level("SHELTER"), shelterTarget };
   });
   return onlyLow ? rows.filter((row) => row.store <= LOW_STOCK) : rows;
 }
@@ -145,8 +147,8 @@ export async function getVariantStock(variantId: string) {
       id: true,
       name: true,
       sku: true,
-      product: { select: { id: true, name: true } },
-      stockLevels: { select: { location: true, quantity: true } },
+      product: { select: { id: true, name: true, donationEligible: true } },
+      stockLevels: { select: { location: true, quantity: true, targetQuantity: true } },
       stockMovements: {
         orderBy: { createdAt: "desc" },
         take: 50,

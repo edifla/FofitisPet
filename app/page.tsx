@@ -15,6 +15,9 @@ export default function Home() {
         >
           Ver produtos
         </Link>
+        <Link href="/abrigo" className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">
+          Ajudar o abrigo
+        </Link>
         <Link
           href="/cadastro"
           className="rounded-md border border-zinc-300 px-4 py-2 font-medium dark:border-zinc-700"

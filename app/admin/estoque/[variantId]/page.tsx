@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getVariantStock } from "@/lib/admin/catalog";
 import { stockLocationLabels, stockMovementLabels } from "@/lib/labels";
-import { AdjustmentForm, RestockForm } from "./stock-forms";
+import { AdjustmentForm, RestockForm, ShelterTargetForm } from "./stock-forms";
 
 export const metadata: Metadata = { title: "Movimentar estoque" };
 
@@ -53,6 +53,13 @@ async function VariantStock({ params }: Pick<Props, "params">) {
       <div className="grid gap-8 md:grid-cols-2">
         <RestockForm variantId={variant.id} />
         <AdjustmentForm variantId={variant.id} current={level("STORE")} />
+        <ShelterTargetForm
+          variantId={variant.id}
+          current={
+            variant.stockLevels.find((l) => l.location === "SHELTER")?.targetQuantity ?? null
+          }
+          donationEligible={variant.product.donationEligible}
+        />
       </div>
 
       <section className="flex flex-col gap-3">

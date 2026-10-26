@@ -195,5 +195,16 @@ async function seedCatalog(client) {
       }
     }
   }
+  // Metas do abrigo (KAN-33): o que aparece em "Itens mais necessários". Só preenche se ainda
+  // não houver meta, para não sobrescrever o que o admin definiu.
+  const shelterTargets = { "SEED-PREM-1KG": 20, "SEED-GOLD-1KG": 15, "SEED-SACHE-85G": 120 };
+  for (const [sku, target] of Object.entries(shelterTargets)) {
+    await client.query(
+      `UPDATE "StockLevel" SET "targetQuantity" = $2
+       WHERE location = 'SHELTER' AND "targetQuantity" IS NULL
+         AND "variantId" = (SELECT id FROM "ProductVariant" WHERE sku = $1)`,
+      [sku, target],
+    );
+  }
   console.log(`Catálogo de exemplo pronto (${products.length} produtos).`);
 }

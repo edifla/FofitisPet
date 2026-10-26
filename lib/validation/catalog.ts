@@ -145,3 +145,8 @@ export const adjustmentSchema = z.object({
     .min(3, { error: "Explique o motivo do ajuste, ex.: inventário, avaria." })
     .max(200),
 });
+
+// Meta de saldo no abrigo (KAN-33). Vazio remove a meta.
+export const shelterTargetSchema = z.object({
+  target: z.union([z.literal("").transform(() => null), quantitySchema(10_000)]),
+});
