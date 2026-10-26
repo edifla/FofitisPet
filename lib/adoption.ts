@@ -96,3 +96,35 @@ export function formatAge(birthDate: Date | null, now = new Date()) {
   const years = Math.floor(months / 12);
   return years === 1 ? "1 ano" : `${years} anos`;
 }
+
+// Perfil público do animal (KAN-38). Animais fora da listagem não têm perfil.
+export async function getAnimalBySlug(slug: string) {
+  return prisma.animal.findFirst({
+    where: { slug, status: { in: ["AVAILABLE", "RESERVED", "ADOPTED"] } },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      species: true,
+      size: true,
+      sex: true,
+      birthDate: true,
+      temperament: true,
+      story: true,
+      healthNotes: true,
+      specialNeeds: true,
+      neutered: true,
+      dewormed: true,
+      status: true,
+      arrivedAt: true,
+      images: {
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+        select: { id: true, url: true, alt: true },
+      },
+      vaccinations: {
+        orderBy: { appliedAt: "desc" },
+        select: { id: true, name: true, appliedAt: true, nextDoseAt: true },
+      },
+    },
+  });
+}

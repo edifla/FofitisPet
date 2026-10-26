@@ -74,7 +74,7 @@ async function AnimalList({ searchParams }: Pick<Props, "searchParams">) {
         ) : (
           <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {animals.map((animal) => (
-              <li key={animal.id} className="flex flex-col gap-2">
+              <li key={animal.id} className="relative flex flex-col gap-2">
                 <div className="relative aspect-square overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-900">
                   {animal.images[0] ? (
                     <Image
@@ -96,7 +96,14 @@ async function AnimalList({ searchParams }: Pick<Props, "searchParams">) {
                   )}
                 </div>
                 <div>
-                  <h2 className="text-lg font-medium">{animal.name}</h2>
+                  <h2 className="text-lg font-medium">
+                    <Link
+                      href={`/adocao/${animal.slug}`}
+                      className="after:absolute after:inset-0 hover:underline"
+                    >
+                      {animal.name}
+                    </Link>
+                  </h2>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     {animalSpeciesLabels[animal.species]} · {animalSexLabels[animal.sex]} ·{" "}
                     {animalSizeLabels[animal.size]} · {formatAge(animal.birthDate)}
