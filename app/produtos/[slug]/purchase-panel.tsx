@@ -21,13 +21,16 @@ function availability(stock: number, fewLeft: number) {
   return { text: "Em estoque", className: "text-green-700 dark:text-green-400" };
 }
 
-// Escolha da variação, preço, disponibilidade e quantidade.
+// Escolha da variação, preço, disponibilidade e quantidade. Produtos doáveis ganham o botão
+// "Doar este item", que põe o item na doação ao abrigo (KAN-30).
 export function PurchasePanel({
   variants,
   fewLeft,
+  donationEligible = false,
 }: {
   variants: PurchaseVariant[];
   fewLeft: number;
+  donationEligible?: boolean;
 }) {
   // Começa pela primeira variação com estoque, se houver.
   const [selectedId, setSelectedId] = useState(
@@ -99,6 +102,23 @@ export function PurchasePanel({
           {soldOut ? "Esgotado" : pending ? "Adicionando..." : "Adicionar ao carrinho"}
         </button>
       </div>
+      {donationEligible && !soldOut && (
+        <div className="flex flex-col gap-2 rounded-md border border-emerald-300 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950">
+          <p className="text-sm text-emerald-900 dark:text-emerald-200">
+            Prefere ajudar? Compre este item para o abrigo da FofitisPet: sem frete, entregue direto
+            aos nossos animais.
+          </p>
+          <button
+            type="submit"
+            name="destino"
+            value="abrigo"
+            disabled={pending}
+            className="self-start rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          >
+            Doar este item
+          </button>
+        </div>
+      )}
       {state?.message && (
         <div className="flex items-center gap-3">
           <FormMessage message={state.message} tone={state.success ? "success" : "error"} />

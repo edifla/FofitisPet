@@ -28,7 +28,8 @@ export async function buildCheckoutSummary(
   shippingId: string | undefined,
 ): Promise<CheckoutSummary> {
   const [cart, address] = await Promise.all([getCart(), getUserAddress(userId, addressId)]);
-  const lines = cart.items.filter((line) => line.available);
+  // Itens para o abrigo vão no checkout da doação (KAN-31), sem frete.
+  const lines = cart.items.filter((line) => line.available && !line.donation);
   if (lines.length === 0) return { ok: false, reason: "empty-cart" };
   if (!address) return { ok: false, reason: "invalid-address" };
   // Mais unidades no carrinho do que há na loja: o cliente precisa ajustar antes.
@@ -127,7 +128,11 @@ export async function placeOrder(
       }
       if (cartId) {
         await tx.cartItem.deleteMany({
-          where: { cartId, variantId: { in: lines.map((line) => line.variantId) } },
+          where: {
+            cartId,
+            donation: false,
+            variantId: { in: lines.map((line) => line.variantId) },
+          },
         });
       }
       return order;
