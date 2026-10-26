@@ -85,7 +85,7 @@ async function AnimalList({ searchParams }: Pick<Props, "searchParams">) {
                       className="object-cover"
                     />
                   ) : (
-                    <span className="flex h-full items-center justify-center text-sm text-zinc-400">
+                    <span className="flex h-full items-center justify-center text-sm text-zinc-600 dark:text-zinc-400">
                       Foto em breve
                     </span>
                   )}

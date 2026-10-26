@@ -17,7 +17,7 @@ export function ProductCard({ product }: { product: CatalogItem }) {
             className="object-cover transition-transform group-hover:scale-105"
           />
         ) : (
-          <span className="flex h-full items-center justify-center text-sm text-zinc-400">
+          <span className="flex h-full items-center justify-center text-sm text-zinc-600 dark:text-zinc-400">
             Sem foto
           </span>
         )}

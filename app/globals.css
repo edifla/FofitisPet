@@ -16,6 +16,10 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    /* Contraste mínimo de 4,5:1 (WCAG AA) no fundo escuro (KAN-50): o zinc-500 dos textos
+       secundários ficava em 4,1:1 e o vermelho dos erros em 4,2:1. */
+    --color-zinc-500: #8a8a94;
+    --color-red-600: #ff6467;
   }
 }
 
@@ -23,4 +27,21 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Foco visível para quem navega pelo teclado (KAN-50). Sem especificidade, para não brigar com
+   os estilos de foco dos campos de formulário. */
+:where(a, button, summary, [tabindex], input[type="checkbox"], input[type="radio"]):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
