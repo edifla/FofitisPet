@@ -45,6 +45,7 @@ await withClient(async (client) => {
 
   await seedCatalog(client);
   await seedAnimals(client);
+  await seedDonationKits(client);
 });
 
 // Catálogo de exemplo para navegar pela loja. Só cria o que ainda não existe (por slug e SKU),
@@ -279,4 +280,45 @@ async function seedAnimals(client) {
     );
   }
   console.log(`Animais de exemplo prontos (${animals.length}).`);
+}
+
+// Kits de doação de exemplo (KAN-43). Os itens só entram se o kit for novo.
+async function seedDonationKits(client) {
+  const kits = [
+    // slug, nome, descrição, ordem, [sku, quantidade]
+    [
+      "1-kg-de-racao-para-caes",
+      "1 kg de ração para cães",
+      "Um pacote de ração premium para os cães adultos do abrigo.",
+      0,
+      [["SEED-PREM-1KG", 1]],
+    ],
+    [
+      "kit-gatinho",
+      "Kit gatinho",
+      "1 kg de ração e 6 sachês para os gatos do abrigo.",
+      1,
+      [
+        ["SEED-GOLD-1KG", 1],
+        ["SEED-SACHE-85G", 6],
+      ],
+    ],
+  ];
+  for (const [slug, name, description, position, items] of kits) {
+    const { rowCount } = await client.query(
+      `INSERT INTO "DonationKit" (id, name, slug, description, position, "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, now())
+       ON CONFLICT (slug) DO NOTHING`,
+      [`seed_kit_${slug}`, name, slug, description, position],
+    );
+    if (rowCount === 0) continue;
+    for (const [sku, quantity] of items) {
+      await client.query(
+        `INSERT INTO "DonationKitItem" (id, "kitId", "variantId", quantity)
+         SELECT $1, $2, v.id, $3 FROM "ProductVariant" v WHERE v.sku = $4`,
+        [`seed_kititem_${slug}_${sku}`, `seed_kit_${slug}`, quantity, sku],
+      );
+    }
+  }
+  console.log(`Kits de doação de exemplo prontos (${kits.length}).`);
 }
