@@ -12,6 +12,17 @@ export const speciesSlugs: Record<string, Species> = {
   outros: "OTHER",
 };
 
+// Ordenação (KAN-100). Em todas, os produtos esgotados vão para o fim.
+export const catalogSorts = {
+  relevancia: "Relevância",
+  "menor-preco": "Menor preço",
+  "maior-preco": "Maior preço",
+  nome: "Nome (A–Z)",
+  novidades: "Novidades",
+} as const;
+
+export type CatalogSort = keyof typeof catalogSorts;
+
 export type CatalogFilters = {
   q: string;
   species: string | null;
@@ -19,6 +30,7 @@ export type CatalogFilters = {
   brands: string[];
   minPrice: string;
   maxPrice: string;
+  sort: CatalogSort;
   page: number;
 };
 
@@ -35,6 +47,7 @@ export function parseCatalogParams(params: Params): CatalogFilters {
     .map(slug)
     .filter((b): b is string => b !== null);
   const species = first(params.especie);
+  const sort = first(params.ordem);
   return {
     q: first(params.q).trim().slice(0, 100),
     species: Object.hasOwn(speciesSlugs, species) ? species : null,
@@ -42,6 +55,7 @@ export function parseCatalogParams(params: Params): CatalogFilters {
     brands: [...new Set(brands)].slice(0, 20),
     minPrice: first(params.preco_min).trim().slice(0, 12),
     maxPrice: first(params.preco_max).trim().slice(0, 12),
+    sort: Object.hasOwn(catalogSorts, sort) ? (sort as CatalogSort) : "relevancia",
     page: Math.max(1, Math.min(1000, Number(first(params.pagina)) || 1)),
   };
 }
@@ -55,6 +69,7 @@ export function toCatalogQuery(filters: CatalogFilters) {
     brands: filters.brands,
     minPriceCents: filters.minPrice ? (parseBRL(filters.minPrice) ?? undefined) : undefined,
     maxPriceCents: filters.maxPrice ? (parseBRL(filters.maxPrice) ?? undefined) : undefined,
+    sort: filters.sort,
     page: filters.page,
   };
 }
@@ -69,6 +84,7 @@ export function catalogHref(filters: CatalogFilters, changes: Partial<CatalogFil
   for (const brand of next.brands) params.append("marca", brand);
   if (next.minPrice) params.set("preco_min", next.minPrice);
   if (next.maxPrice) params.set("preco_max", next.maxPrice);
+  if (next.sort !== "relevancia") params.set("ordem", next.sort);
   if (next.page > 1) params.set("pagina", String(next.page));
   const query = params.toString();
   return query ? `/produtos?${query}` : "/produtos";
