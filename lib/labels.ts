@@ -1,4 +1,9 @@
-import type { Species, StockLocation, StockMovementType } from "@/app/generated/prisma/client";
+import type {
+  OrderStatus,
+  Species,
+  StockLocation,
+  StockMovementType,
+} from "@/app/generated/prisma/client";
 
 export const speciesLabels: Record<Species, string> = {
   DOG: "Cães",
@@ -26,4 +31,14 @@ export const stockMovementLabels: Record<StockMovementType, string> = {
   DONATION_TRANSFER: "Compra para o abrigo",
   SHELTER_CONSUMPTION: "Consumo do abrigo",
   RETURN: "Devolução",
+};
+
+export const orderStatusLabels: Record<OrderStatus, string> = {
+  PENDING_PAYMENT: "Aguardando pagamento",
+  PAID: "Pagamento aprovado",
+  PREPARING: "Em separação",
+  SHIPPED: "Enviado",
+  DELIVERED: "Entregue",
+  CANCELED: "Cancelado",
+  REFUNDED: "Reembolsado",
 };

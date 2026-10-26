@@ -11,7 +11,7 @@ export const MAX_QUANTITY_PER_ITEM = 99;
 
 export class CartError extends Error {}
 
-async function readCartId(): Promise<string | null> {
+export async function readCartId(): Promise<string | null> {
   const value = (await cookies()).get(CART_COOKIE)?.value;
   return value && /^[0-9a-f-]{36}$/.test(value) ? value : null;
 }
