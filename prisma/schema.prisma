@@ -33,10 +33,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  addresses        Address[]
-  stockMovements   StockMovement[]
-  orders           Order[]
-  adoptionRequests AdoptionRequest[]
+  addresses           Address[]
+  stockMovements      StockMovement[]
+  orders              Order[]
+  adoptionRequests    AdoptionRequest[]
+  shelterConsumptions ShelterConsumption[]
 }
 
 model Address {
@@ -176,20 +177,23 @@ model ProductVariant {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  stockLevels    StockLevel[]
-  stockMovements StockMovement[]
-  orderItems     OrderItem[]
+  product             Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stockLevels         StockLevel[]
+  stockMovements      StockMovement[]
+  orderItems          OrderItem[]
+  shelterConsumptions ShelterConsumption[]
 
   @@index([productId])
 }
 
 // Saldo atual de uma variação em cada local. Mantido junto com StockMovement na mesma transação.
 model StockLevel {
-  variantId String
-  location  StockLocation
-  quantity  Int           @default(0)
-  updatedAt DateTime      @updatedAt
+  variantId      String
+  location       StockLocation
+  quantity       Int           @default(0)
+  // Saldo desejado no abrigo. Itens abaixo da meta aparecem em "Itens mais necessários" (KAN-33).
+  targetQuantity Int?
+  updatedAt      DateTime      @updatedAt
 
   variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
@@ -211,9 +215,10 @@ model StockMovement {
   createdById  String?
   createdAt    DateTime          @default(now())
 
-  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
-  createdBy User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  order     Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  variant            ProductVariant      @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  createdBy          User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  order              Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  shelterConsumption ShelterConsumption?
 
   @@index([variantId, createdAt])
   @@index([orderId])
@@ -429,9 +434,10 @@ model Animal {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  images           AnimalImage[]
-  vaccinations     Vaccination[]
-  adoptionRequests AdoptionRequest[]
+  images              AnimalImage[]
+  vaccinations        Vaccination[]
+  adoptionRequests    AdoptionRequest[]
+  shelterConsumptions ShelterConsumption[]
 
   @@index([status, species])
 }
@@ -500,4 +506,31 @@ model AdoptionRequest {
 
   @@index([animalId, status])
   @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Consumo do abrigo (KAN-89)
+// ---------------------------------------------------------------------------
+
+// O que foi dado aos animais (KAN-34). Cada registro gera um StockMovement SHELTER_CONSUMPTION,
+// que baixa o saldo do abrigo. animalId alimenta o selo de ração recebida (KAN-45).
+model ShelterConsumption {
+  id              String   @id @default(cuid())
+  variantId       String
+  quantity        Int
+  // Nulo quando o item foi usado para vários animais ou para o abrigo em geral.
+  animalId        String?
+  consumedAt      DateTime @default(now())
+  note            String?
+  recordedById    String
+  stockMovementId String   @unique
+  createdAt       DateTime @default(now())
+
+  variant       ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  animal        Animal?        @relation(fields: [animalId], references: [id], onDelete: SetNull)
+  recordedBy    User           @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+  stockMovement StockMovement  @relation(fields: [stockMovementId], references: [id], onDelete: Restrict)
+
+  @@index([variantId, consumedAt])
+  @@index([animalId])
 }
