@@ -1,5 +1,6 @@
 import "server-only";
 import { Prisma, type Species } from "@/app/generated/prisma/client";
+import type { CatalogSort } from "@/lib/catalog-params";
 import { prisma } from "@/lib/prisma";
 
 // Catálogo público (KAN-22). Só entram produtos ativos com pelo menos uma variação ativa.
@@ -16,6 +17,7 @@ export type CatalogQuery = {
   brands?: string[];
   minPriceCents?: number;
   maxPriceCents?: number;
+  sort?: CatalogSort;
   page?: number;
 };
 
@@ -50,6 +52,7 @@ export async function searchCatalog({
   brands = [],
   minPriceCents,
   maxPriceCents,
+  sort = "relevancia",
   page = 1,
 }: CatalogQuery) {
   const terms = searchTerms(q);
@@ -86,10 +89,21 @@ export async function searchCatalog({
     );
   }
   const where = Prisma.join(conditions, " AND ");
-  // Com busca, produtos com o termo no nome vêm primeiro.
-  const nameMatch = terms.length
-    ? Prisma.sql`unaccent(p.name) ILIKE unaccent(${likePattern(terms.join(" "))}) DESC,`
-    : Prisma.empty;
+  // Menor preço entre as variações ativas, e se alguma delas tem estoque na loja.
+  const minPrice = Prisma.sql`(SELECT min(v."priceCents") FROM "ProductVariant" v WHERE v."productId" = p.id AND v.active)`;
+  const inStock = Prisma.sql`EXISTS (
+    SELECT 1 FROM "ProductVariant" v JOIN "StockLevel" sl ON sl."variantId" = v.id
+    WHERE v."productId" = p.id AND v.active AND sl.location = 'STORE' AND sl.quantity > 0)`;
+  const orderBy = {
+    // Com busca, produtos com o termo no nome vêm primeiro.
+    relevancia: terms.length
+      ? Prisma.sql`unaccent(p.name) ILIKE unaccent(${likePattern(terms.join(" "))}) DESC, p.name ASC`
+      : Prisma.sql`p.name ASC`,
+    "menor-preco": Prisma.sql`${minPrice} ASC, p.name ASC`,
+    "maior-preco": Prisma.sql`${minPrice} DESC, p.name ASC`,
+    nome: Prisma.sql`p.name ASC`,
+    novidades: Prisma.sql`p."createdAt" DESC, p.name ASC`,
+  }[sort];
   const offset = (Math.max(1, page) - 1) * PAGE_SIZE;
 
   const [rows, [{ total }]] = await Promise.all([
@@ -99,7 +113,7 @@ export async function searchCatalog({
       JOIN "Category" c ON c.id = p."categoryId"
       LEFT JOIN "Brand" b ON b.id = p."brandId"
       WHERE ${where}
-      ORDER BY ${nameMatch} p.name ASC
+      ORDER BY ${inStock} DESC, ${orderBy}
       LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
     prisma.$queryRaw<{ total: bigint }[]>`
       SELECT count(*) AS total

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ProductCard } from "@/components/catalog/product-card";
+import { SortSelect } from "@/components/catalog/sort-select";
 import { getCatalogFilterOptions, searchCatalog } from "@/lib/catalog";
 import {
   type CatalogFilters,
@@ -73,9 +74,15 @@ async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
           </button>
         </form>
 
-        <p className="text-sm text-zinc-500" aria-live="polite">
-          {filters.q ? `${total} resultado(s) para "${filters.q}"` : `${total} produto(s)`}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-zinc-500" aria-live="polite">
+            {filters.q ? `${total} resultado(s) para "${filters.q}"` : `${total} produto(s)`}
+          </p>
+          <form action="/produtos" className="flex items-center gap-2">
+            <HiddenFilters filters={filters} omit="sort" />
+            <SortSelect value={filters.sort} />
+          </form>
+        </div>
 
         {items.length === 0 ? (
           <div className="flex flex-col gap-2 py-8 text-center">
@@ -114,20 +121,32 @@ async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
   );
 }
 
-// Mantém os filtros atuais ao enviar um dos formulários (busca ou filtros).
-function HiddenFilters({ filters, omit }: { filters: CatalogFilters; omit: "q" | "filters" }) {
-  if (omit === "filters") {
-    return filters.q ? <input type="hidden" name="q" value={filters.q} /> : null;
-  }
+// Mantém o estado atual ao enviar um dos formulários (busca, filtros ou ordem), menos a parte
+// que o próprio formulário edita.
+function HiddenFilters({
+  filters,
+  omit,
+}: {
+  filters: CatalogFilters;
+  omit: "q" | "filters" | "sort";
+}) {
   return (
     <>
-      {filters.species && <input type="hidden" name="especie" value={filters.species} />}
-      {filters.category && <input type="hidden" name="categoria" value={filters.category} />}
-      {filters.brands.map((brand) => (
-        <input key={brand} type="hidden" name="marca" value={brand} />
-      ))}
-      {filters.minPrice && <input type="hidden" name="preco_min" value={filters.minPrice} />}
-      {filters.maxPrice && <input type="hidden" name="preco_max" value={filters.maxPrice} />}
+      {omit !== "q" && filters.q && <input type="hidden" name="q" value={filters.q} />}
+      {omit !== "filters" && (
+        <>
+          {filters.species && <input type="hidden" name="especie" value={filters.species} />}
+          {filters.category && <input type="hidden" name="categoria" value={filters.category} />}
+          {filters.brands.map((brand) => (
+            <input key={brand} type="hidden" name="marca" value={brand} />
+          ))}
+          {filters.minPrice && <input type="hidden" name="preco_min" value={filters.minPrice} />}
+          {filters.maxPrice && <input type="hidden" name="preco_max" value={filters.maxPrice} />}
+        </>
+      )}
+      {omit !== "sort" && filters.sort !== "relevancia" && (
+        <input type="hidden" name="ordem" value={filters.sort} />
+      )}
     </>
   );
 }
