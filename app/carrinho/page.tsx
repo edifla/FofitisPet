@@ -94,6 +94,12 @@ async function CartContents() {
         <p className="text-sm text-zinc-500">Subtotal</p>
         <p className="text-2xl font-semibold">{formatBRL(subtotalCents)}</p>
         <p className="text-sm text-zinc-500">O frete é calculado no checkout.</p>
+        <Link
+          href="/checkout"
+          className="mt-2 rounded-md bg-zinc-900 px-6 py-2 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+        >
+          Continuar para o checkout
+        </Link>
       </div>
     </div>
   );
