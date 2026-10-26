@@ -28,6 +28,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://fofitis:fofitis@localhost:5432/fofitispet?schema=public
+      AUTH_SECRET: segredo-so-para-o-ci
     steps:
       - uses: actions/checkout@v4
 

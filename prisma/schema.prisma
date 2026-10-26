@@ -21,17 +21,19 @@ enum Role {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
+  id             String    @id @default(cuid())
+  name           String
   // Sempre gravado em minúsculas pela aplicação, para o @unique valer sem diferenciar caixa.
-  email         String    @unique
+  email          String    @unique
   // Nulo enquanto a conta não tiver senha (ex.: login social na KAN-20).
-  passwordHash  String?
-  emailVerified DateTime?
-  phone         String?
-  role          Role      @default(CUSTOMER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  passwordHash   String?
+  emailVerified  DateTime?
+  phone          String?
+  role           Role      @default(CUSTOMER)
+  // Incrementado ao trocar a senha: sessões emitidas com a versão antiga deixam de valer.
+  sessionVersion Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   addresses           Address[]
   stockMovements      StockMovement[]
