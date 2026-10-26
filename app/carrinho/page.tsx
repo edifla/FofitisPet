@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getCart, MAX_QUANTITY_PER_ITEM } from "@/lib/cart";
 import { formatBRL } from "@/lib/money";
+import { quoteShipping, type ShippingQuote } from "@/lib/shipping";
 import { removeFromCart } from "./actions";
 import { QuantityForm } from "./quantity-form";
 
@@ -12,19 +13,30 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default function CartPage() {
+type Props = PageProps<"/carrinho">;
+
+export default function CartPage({ searchParams }: Props) {
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
       <h1 className="mb-6 text-2xl font-semibold">Carrinho</h1>
       <Suspense fallback={<p className="text-zinc-500">Carregando carrinho...</p>}>
-        <CartContents />
+        <CartContents searchParams={searchParams} />
       </Suspense>
     </main>
   );
 }
 
-async function CartContents() {
-  const { items, subtotalCents } = await getCart();
+async function CartContents({ searchParams }: Pick<Props, "searchParams">) {
+  const [{ items, subtotalCents }, params] = await Promise.all([getCart(), searchParams]);
+  const cep = typeof params.cep === "string" ? params.cep.slice(0, 9) : "";
+  const sellable = items.filter((item) => item.available);
+  const quote = cep
+    ? quoteShipping({
+        zipCode: cep,
+        items: sellable.map((item) => ({ weightGrams: item.weightGrams, quantity: item.quantity })),
+        subtotalCents,
+      })
+    : null;
 
   if (items.length === 0) {
     return (
@@ -93,7 +105,7 @@ async function CartContents() {
       <div className="flex flex-col items-end gap-1 border-t border-zinc-200 pt-4 dark:border-zinc-800">
         <p className="text-sm text-zinc-500">Subtotal</p>
         <p className="text-2xl font-semibold">{formatBRL(subtotalCents)}</p>
-        <p className="text-sm text-zinc-500">O frete é calculado no checkout.</p>
+        <ShippingEstimate cep={cep} quote={quote} />
         <Link
           href="/checkout"
           className="mt-2 rounded-md bg-zinc-900 px-6 py-2 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
@@ -101,6 +113,56 @@ async function CartContents() {
           Continuar para o checkout
         </Link>
       </div>
+    </div>
+  );
+}
+
+// Simulação de frete pelo CEP (KAN-27). O valor final é escolhido no checkout.
+function ShippingEstimate({ cep, quote }: { cep: string; quote: ShippingQuote | null }) {
+  return (
+    <div className="flex w-full max-w-sm flex-col items-end gap-2 pt-2">
+      <form action="/carrinho" className="flex items-end gap-2">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="cep" className="text-sm text-zinc-500">
+            Calcular frete
+          </label>
+          <input
+            id="cep"
+            name="cep"
+            inputMode="numeric"
+            autoComplete="postal-code"
+            placeholder="CEP"
+            defaultValue={cep}
+            className="w-32 rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          />
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700"
+        >
+          Calcular
+        </button>
+      </form>
+      {cep && !quote && <p className="text-sm text-red-600">CEP inválido.</p>}
+      {quote && (
+        <ul className="w-full text-sm">
+          {quote.options.map((option) => (
+            <li key={option.id} className="flex justify-between gap-4">
+              <span>
+                {option.name} · até {option.days} dia(s) útil(eis)
+              </span>
+              <span className="font-medium">
+                {option.priceCents === 0 ? "Grátis" : formatBRL(option.priceCents)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {quote && quote.missingForFreeCents > 0 && (
+        <p className="text-sm text-zinc-500">
+          Faltam {formatBRL(quote.missingForFreeCents)} para o frete Econômica grátis.
+        </p>
+      )}
     </div>
   );
 }
