@@ -12,10 +12,13 @@ import {
   brandSchema,
   categorySchema,
   fieldErrors,
+  adjustmentSchema,
   productSchema,
+  restockSchema,
   variantSchema,
   type FormState,
 } from "@/lib/validation/catalog";
+import { InsufficientStockError, moveStock } from "@/lib/stock";
 
 // Toda ação confere o papel de admin por conta própria: Server Actions são endpoints públicos.
 
@@ -380,4 +383,79 @@ export async function deleteVariant(variantId: string): Promise<FormState> {
   }
   refresh();
   return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// Estoque da loja (KAN-97)
+// ---------------------------------------------------------------------------
+
+export async function restockVariant(
+  variantId: string,
+  _state: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const admin = await requireAdmin();
+  const values = { quantity: text(formData, "quantity"), note: text(formData, "note") };
+  const parsed = restockSchema.safeParse(values);
+  if (!parsed.success) return { errors: fieldErrors(parsed.error), values };
+
+  await prisma.$transaction((tx) =>
+    moveStock(tx, {
+      variantId,
+      type: "RESTOCK",
+      from: null,
+      to: "STORE",
+      quantity: parsed.data.quantity,
+      note: parsed.data.note,
+      createdById: admin.id,
+    }),
+  );
+  refresh();
+  return { success: true, message: `Entrada de ${parsed.data.quantity} unidade(s) registrada.` };
+}
+
+// Ajuste de inventário: o admin informa quanto contou na loja e o sistema registra a diferença.
+export async function adjustStoreStock(
+  variantId: string,
+  _state: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const admin = await requireAdmin();
+  const values = { counted: text(formData, "counted"), note: text(formData, "note") };
+  const parsed = adjustmentSchema.safeParse(values);
+  if (!parsed.success) return { errors: fieldErrors(parsed.error), values };
+
+  try {
+    const delta = await prisma.$transaction(async (tx) => {
+      const level = await tx.stockLevel.findUnique({
+        where: { variantId_location: { variantId, location: "STORE" } },
+        select: { quantity: true },
+      });
+      const delta = parsed.data.counted - (level?.quantity ?? 0);
+      if (delta !== 0) {
+        await moveStock(tx, {
+          variantId,
+          type: "ADJUSTMENT",
+          from: delta < 0 ? "STORE" : null,
+          to: delta > 0 ? "STORE" : null,
+          quantity: Math.abs(delta),
+          note: parsed.data.note,
+          createdById: admin.id,
+        });
+      }
+      return delta;
+    });
+    refresh();
+    if (delta === 0) return { success: true, message: "O saldo já era esse; nada mudou." };
+    return {
+      success: true,
+      message: `Saldo ajustado para ${parsed.data.counted} (${delta > 0 ? "+" : ""}${delta}).`,
+    };
+  } catch (error) {
+    // Uma venda pode ter baixado o saldo entre a leitura e o ajuste.
+    if (error instanceof InsufficientStockError) {
+      return { message: "O saldo mudou enquanto você ajustava. Confira e tente de novo.", values };
+    }
+    throw error;
+  }
 }

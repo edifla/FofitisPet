@@ -12,6 +12,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         <Link href="/admin/produtos">Produtos</Link>
         <Link href="/admin/categorias">Categorias</Link>
         <Link href="/admin/marcas">Marcas</Link>
+        <Link href="/admin/estoque">Estoque</Link>
       </nav>
       <main className="flex-1">{children}</main>
     </div>

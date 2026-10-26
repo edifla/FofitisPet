@@ -118,3 +118,30 @@ export const variantSchema = z
     if (flavor) attributes.sabor = flavor;
     return { ...data, attributes: Object.keys(attributes).length ? attributes : undefined };
   });
+
+const quantitySchema = (max: number) =>
+  z.coerce
+    .number({ error: "Informe um número inteiro." })
+    .int({ error: "Informe um número inteiro." })
+    .min(0, { error: "A quantidade não pode ser negativa." })
+    .max(max, { error: `Use no máximo ${max}.` });
+
+export const restockSchema = z.object({
+  quantity: quantitySchema(100_000).refine((value) => value > 0, {
+    error: "Informe quantas unidades chegaram.",
+  }),
+  note: z
+    .string()
+    .trim()
+    .max(200)
+    .transform((value) => value || null),
+});
+
+export const adjustmentSchema = z.object({
+  counted: quantitySchema(100_000),
+  note: z
+    .string()
+    .trim()
+    .min(3, { error: "Explique o motivo do ajuste, ex.: inventário, avaria." })
+    .max(200),
+});
