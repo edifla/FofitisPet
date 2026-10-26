@@ -176,9 +176,14 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
         </p>
       </section>
 
-      <Link href="/produtos" className="text-sm underline">
-        Continuar comprando
-      </Link>
+      <div className="flex gap-6 text-sm">
+        <Link href="/conta/pedidos" className="underline">
+          Meus pedidos
+        </Link>
+        <Link href="/produtos" className="underline">
+          Continuar comprando
+        </Link>
+      </div>
     </article>
   );
 }

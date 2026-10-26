@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { logout } from "@/app/(auth)/actions";
 import { requireUser } from "@/lib/dal";
@@ -28,6 +29,9 @@ async function AccountDetails() {
         <dt className="text-zinc-500">E-mail</dt>
         <dd>{user.email}</dd>
       </dl>
+      <Link href="/conta/pedidos" className="self-start underline">
+        Meus pedidos
+      </Link>
       <form action={logout}>
         <button
           type="submit"

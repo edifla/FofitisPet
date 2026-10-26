@@ -1,5 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/app/generated/prisma/client";
+import { sendOrderEmail } from "@/lib/order-emails";
 import { prisma } from "@/lib/prisma";
 import { moveStock } from "@/lib/stock";
 
@@ -71,7 +72,11 @@ export async function expireOrderIfStale(order: { id: string } | { number: numbe
     select: { id: true },
   });
   if (!stale) return false;
-  return prisma.$transaction((tx) => cancelUnpaidOrder(tx, stale.id, EXPIRED_REASON));
+  const canceled = await prisma.$transaction((tx) =>
+    cancelUnpaidOrder(tx, stale.id, EXPIRED_REASON),
+  );
+  if (canceled) await sendOrderEmail(stale.id, "canceled");
+  return canceled;
 }
 
 // Rotina periódica: expira todos os pedidos vencidos. Devolve quantos foram cancelados.
@@ -85,7 +90,10 @@ export async function expireStaleOrders(limit = 100) {
   let canceled = 0;
   for (const order of stale) {
     const done = await prisma.$transaction((tx) => cancelUnpaidOrder(tx, order.id, EXPIRED_REASON));
-    if (done) canceled++;
+    if (done) {
+      canceled++;
+      await sendOrderEmail(order.id, "canceled");
+    }
   }
   return canceled;
 }
