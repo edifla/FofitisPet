@@ -12,7 +12,7 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
 
   if (!current) {
     return (
-      <div className="flex aspect-square items-center justify-center rounded-lg bg-zinc-100 text-zinc-400 dark:bg-zinc-900">
+      <div className="flex aspect-square items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
         Sem foto
       </div>
     );

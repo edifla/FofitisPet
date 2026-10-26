@@ -46,7 +46,7 @@ async function AnimalTable() {
                 className="object-cover"
               />
             ) : (
-              <span className="flex h-full items-center justify-center text-xs text-zinc-400">
+              <span className="flex h-full items-center justify-center text-xs text-zinc-600 dark:text-zinc-400">
                 Sem foto
               </span>
             )}

@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ProductGallery } from "@/components/catalog/product-gallery";
 import { FEW_LEFT, getProductBySlug } from "@/lib/catalog";
 import { speciesLabels } from "@/lib/labels";
+import { siteUrl } from "@/lib/site";
 import { PurchasePanel } from "./purchase-panel";
 
 type Props = PageProps<"/produtos/[slug]">;
@@ -33,9 +34,30 @@ async function ProductDetails({ params }: Pick<Props, "params">) {
   const product = await getProductBySlug((await params).slug);
   if (!product) notFound();
   const { category } = product;
+  const prices = product.variants.map((v) => v.priceCents / 100);
+  // Dados estruturados para os buscadores (KAN-50). "<" escapado para não fechar o <script>.
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images.map((image) => new URL(image.url, siteUrl()).toString()),
+    ...(product.brand && { brand: { "@type": "Brand", name: product.brand.name } }),
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "BRL",
+      lowPrice: Math.min(...prices).toFixed(2),
+      highPrice: Math.max(...prices).toFixed(2),
+      offerCount: product.variants.length,
+      availability: product.variants.some((v) => v.stock > 0)
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  }).replace(/</g, "\\u003c");
 
   return (
     <article className="flex flex-col gap-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
       <nav aria-label="Você está em" className="text-sm text-zinc-500">
         <Link href="/produtos" className="underline">
           Produtos
