@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getCart } from "@/lib/cart";
 import { formatBRL } from "@/lib/money";
+import { removeFromCart } from "./actions";
 
 export const metadata: Metadata = {
   title: "Carrinho",
@@ -67,9 +68,14 @@ async function CartContents() {
                 </p>
               )}
             </div>
-            <div className="text-right">
+            <div className="flex flex-col items-end gap-1 text-right">
               <p className="text-sm text-zinc-500">Qtd. {item.quantity}</p>
               <p className="font-semibold">{formatBRL(item.totalCents)}</p>
+              <form action={removeFromCart.bind(null, item.id)}>
+                <button type="submit" className="text-sm text-red-700 underline dark:text-red-400">
+                  Remover<span className="sr-only"> {item.productName}</span>
+                </button>
+              </form>
             </div>
           </li>
         ))}
