@@ -2,6 +2,7 @@ import "server-only";
 import { appUrl, sendEmail } from "@/lib/email";
 import { formatBRL } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { DONATION_NOTICE } from "@/lib/legal";
 
 // E-mails transacionais dos pedidos (KAN-28). Saem depois que a mudança foi gravada, e uma falha
 // no envio nunca desfaz o pedido nem o pagamento: só fica no log.
@@ -53,7 +54,7 @@ function donationReceipt(
     ...items,
     `Total doado: ${formatBRL(order.totalCents)}`,
     "",
-    "Este comprovante é só um agradecimento e não tem valor fiscal.",
+    DONATION_NOTICE,
     "",
     `Veja a doação: ${link}`,
   ];

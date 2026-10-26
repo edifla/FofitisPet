@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CampaignList } from "@/components/campaigns/campaign-list";
 import { getActiveKits } from "@/lib/kits";
+import { DONATION_NOTICE } from "@/lib/legal";
 import { formatBRL } from "@/lib/money";
 import { DonateKitButton } from "./donate-kit-button";
 
@@ -22,6 +23,7 @@ export default function DonatePage() {
           Escolha um kit pronto: os itens saem do estoque da loja direto para o abrigo, sem frete.
           Você paga como numa compra comum e recebe o comprovante da doação por e-mail.
         </p>
+        <p className="max-w-2xl text-sm text-zinc-500">{DONATION_NOTICE}</p>
       </header>
 
       <Suspense>
