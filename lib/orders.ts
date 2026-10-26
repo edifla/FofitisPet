@@ -33,7 +33,8 @@ export async function cancelUnpaidOrder(
 
   const reserved = await tx.stockMovement.groupBy({
     by: ["variantId", "fromLocation"],
-    where: { orderId, type: "SALE" },
+    // Reservas feitas ao criar o pedido: venda ou doação ao abrigo ainda não paga.
+    where: { orderId, type: { in: ["SALE", "DONATION_TRANSFER"] }, fromLocation: { not: null } },
     _sum: { quantity: true },
   });
   for (const line of reserved) {
