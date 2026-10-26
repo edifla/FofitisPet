@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ProductGallery } from "@/components/catalog/product-gallery";
-import { formatAge, formatWeight, getAnimalBySlug, getFoodReceivedGrams } from "@/lib/adoption";
+import { formatAge, getAnimalBySlug, getFoodReceivedGrams } from "@/lib/adoption";
+import { formatFoodTotal } from "@/lib/food";
 import {
   animalSexLabels,
   animalSizeLabels,
@@ -86,8 +87,8 @@ async function AnimalProfile({ params }: Pick<Props, "params">) {
             <div className="flex flex-col gap-1 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
               {foodGrams > 0 ? (
                 <p>
-                  <strong>{formatWeight(foodGrams)} de ração</strong> já alimentaram {animal.name}{" "}
-                  no abrigo, graças às doações.
+                  <strong>{formatFoodTotal(foodGrams)} de ração</strong> já alimentaram{" "}
+                  {animal.name} no abrigo, graças às doações.
                 </p>
               ) : (
                 <p>Toda a ração do abrigo vem de doações feitas na loja.</p>

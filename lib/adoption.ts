@@ -1,5 +1,6 @@
 import "server-only";
 import type { AnimalSize, Prisma, Species, Temperament } from "@/app/generated/prisma/client";
+import { foodVariantWhere } from "@/lib/food";
 import { prisma } from "@/lib/prisma";
 
 // Animais para adoção (KAN-37). Só aparecem os disponíveis e os reservados.
@@ -129,32 +130,12 @@ export async function getAnimalBySlug(slug: string) {
   });
 }
 
-// Categoria raiz dos alimentos; as subcategorias (ração seca, úmida...) também contam.
-const FOOD_CATEGORY_SLUG = "alimentacao";
-
 // Ração recebida pelo animal (KAN-45): soma, em gramas, do que foi registrado no consumo do
-// abrigo para ele (KAN-34) em itens de alimentação com peso cadastrado.
+// abrigo para ele (KAN-34) em itens de alimentação.
 export async function getFoodReceivedGrams(animalId: string) {
   const consumptions = await prisma.shelterConsumption.findMany({
-    where: {
-      animalId,
-      variant: {
-        weightGrams: { not: null },
-        product: {
-          category: {
-            OR: [{ slug: FOOD_CATEGORY_SLUG }, { parent: { slug: FOOD_CATEGORY_SLUG } }],
-          },
-        },
-      },
-    },
+    where: { animalId, variant: foodVariantWhere() },
     select: { quantity: true, variant: { select: { weightGrams: true } } },
   });
   return consumptions.reduce((sum, c) => sum + c.quantity * (c.variant.weightGrams ?? 0), 0);
-}
-
-// "850 g", "3,5 kg", "12 kg".
-export function formatWeight(grams: number) {
-  if (grams < 1000) return `${grams} g`;
-  const kg = grams / 1000;
-  return `${kg.toLocaleString("pt-BR", { maximumFractionDigits: kg < 10 ? 1 : 0 })} kg`;
 }
