@@ -123,6 +123,21 @@ async function RequestDetails({ params }: Pick<Props, "params">) {
         </div>
 
         <aside className="flex flex-col gap-8">
+          {request.status === "APPROVED" && (
+            <section className="flex flex-col gap-2">
+              <h2 className="font-medium">Termo de adoção</h2>
+              {/* Rota que gera o PDF: link comum, sem prefetch. */}
+              <a
+                href={`/admin/adocoes/${request.id}/termo`}
+                className="rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+              >
+                Baixar termo (PDF)
+              </a>
+              <p className="text-sm text-zinc-500">
+                Imprima e leve na entrega. CPF, RG, endereço e assinaturas são preenchidos à mão.
+              </p>
+            </section>
+          )}
           <section>
             <h2 className="mb-2 font-medium">Mudar status</h2>
             {next.length > 0 ? (
