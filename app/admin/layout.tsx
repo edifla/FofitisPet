@@ -9,6 +9,9 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         <Link href="/admin" className="font-semibold">
           Painel
         </Link>
+        <Link href="/admin/produtos">Produtos</Link>
+        <Link href="/admin/categorias">Categorias</Link>
+        <Link href="/admin/marcas">Marcas</Link>
       </nav>
       <main className="flex-1">{children}</main>
     </div>

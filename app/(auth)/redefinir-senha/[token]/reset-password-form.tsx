@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Field, FormMessage, SubmitButton } from "@/components/auth/field";
+import { Field, FormMessage, SubmitButton } from "@/components/form/field";
 import { resetPassword } from "../../actions";
 
 export function ResetPasswordForm({ token }: { token: string }) {

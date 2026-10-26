@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { Field, FormMessage, SubmitButton } from "@/components/auth/field";
+import { Field, FormMessage, SubmitButton } from "@/components/form/field";
 import { signup } from "../actions";
 
 export function SignupForm() {

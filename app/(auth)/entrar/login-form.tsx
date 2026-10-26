@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
-import { Field, FormMessage, SubmitButton } from "@/components/auth/field";
+import { Field, FormMessage, SubmitButton } from "@/components/form/field";
 import { login } from "../actions";
 
 export function LoginForm() {

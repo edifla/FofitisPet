@@ -1,5 +1,7 @@
 import * as z from "zod";
 
+export { fieldErrors, type FormState } from "./form";
+
 export const emailSchema = z
   .string()
   .trim()
@@ -28,27 +30,6 @@ export const signupSchema = z
     error: "As senhas não conferem.",
     path: ["passwordConfirmation"],
   });
-
-// Estado devolvido pelas Server Actions dos formulários de autenticação.
-export type FormState =
-  | {
-      errors?: Record<string, string[] | undefined>;
-      message?: string;
-      success?: boolean;
-      // Valores digitados, para o formulário não perder o que o usuário escreveu.
-      values?: Record<string, string>;
-    }
-  | undefined;
-
-// Agrupa os erros do Zod por campo, no formato usado pelos formulários.
-export function fieldErrors(error: z.ZodError): Record<string, string[]> {
-  const errors: Record<string, string[]> = {};
-  for (const issue of error.issues) {
-    const key = String(issue.path[0] ?? "form");
-    (errors[key] ??= []).push(issue.message);
-  }
-  return errors;
-}
 
 export const loginSchema = z.object({
   email: emailSchema,
