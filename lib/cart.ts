@@ -157,6 +157,7 @@ export const getCart = cache(async () => {
           id: true,
           name: true,
           priceCents: true,
+          weightGrams: true,
           active: true,
           stockLevels: { where: { location: "STORE" }, select: { quantity: true } },
           product: {
@@ -188,6 +189,7 @@ export const getCart = cache(async () => {
       productSlug: variant.product.slug,
       image: variant.product.images[0] ?? null,
       unitPriceCents: variant.priceCents,
+      weightGrams: variant.weightGrams,
       totalCents: variant.priceCents * quantity,
       stock,
       available,
