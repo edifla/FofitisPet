@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { Prisma } from "@/app/generated/prisma/client";
+import { sendOrderEmail } from "@/lib/order-emails";
 import { expireOrderIfStale } from "@/lib/orders";
 import { prisma } from "@/lib/prisma";
 import {
@@ -146,8 +147,12 @@ export type UpdateResult = "applied" | "duplicate" | "unknown-payment" | "ignore
 // Aplica uma atualização do gateway (vinda do webhook). O mesmo aviso (provider + eventId) só é
 // processado uma vez, e um pagamento já finalizado não volta a pendente.
 export async function applyGatewayUpdate(update: GatewayUpdate): Promise<UpdateResult> {
+  // Pedido que passou a pago nesta atualização, para o e-mail sair depois do commit.
+  let paidOrderId: string | null = null;
+  let result: UpdateResult;
   try {
-    return await prisma.$transaction(async (tx) => {
+    result = await prisma.$transaction(async (tx) => {
+      paidOrderId = null;
       const payment = await tx.payment.findUnique({
         where: {
           provider_providerPaymentId: {
@@ -199,6 +204,7 @@ export async function applyGatewayUpdate(update: GatewayUpdate): Promise<UpdateR
           where: { id: payment.order.id, status: "PENDING_PAYMENT" },
           data: { status: "PAID", paidAt: now },
         });
+        if (paid.count === 1) paidOrderId = payment.order.id;
         if (paid.count === 0) {
           // Pago depois de cancelado (ex.: Pix pago após o prazo): precisa de reembolso manual.
           await tx.payment.update({
@@ -218,6 +224,8 @@ export async function applyGatewayUpdate(update: GatewayUpdate): Promise<UpdateR
     }
     throw error;
   }
+  if (paidOrderId) await sendOrderEmail(paidOrderId, "paid");
+  return result;
 }
 
 // Só no gateway simulado: faz o papel do banco confirmando o Pix.

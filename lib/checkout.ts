@@ -1,6 +1,7 @@
 import "server-only";
 import { getUserAddress, type SavedAddress } from "@/lib/addresses";
 import { getCart, readCartId, type CartLine } from "@/lib/cart";
+import { sendOrderEmail } from "@/lib/order-emails";
 import { prisma } from "@/lib/prisma";
 import { quoteShipping, type ShippingOption, type ShippingQuote } from "@/lib/shipping";
 import { InsufficientStockError, moveStock } from "@/lib/stock";
@@ -78,8 +79,9 @@ export async function placeOrder(
   const cartId = await readCartId();
   const { address, lines, shipping } = summary;
 
+  let order;
   try {
-    return await prisma.$transaction(async (tx) => {
+    order = await prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
           userId,
@@ -138,4 +140,6 @@ export async function placeOrder(
     }
     throw error;
   }
+  await sendOrderEmail(order.id, "created");
+  return order;
 }
