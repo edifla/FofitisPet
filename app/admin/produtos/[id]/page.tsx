@@ -5,6 +5,7 @@ import { DeleteButton } from "@/components/admin/delete-button";
 import { getCatalogOptions, getProduct } from "@/lib/admin/catalog";
 import { deleteProduct } from "../../actions";
 import { ProductForm } from "../product-form";
+import { ProductImages } from "./product-images";
 
 export const metadata: Metadata = { title: "Editar produto" };
 
@@ -29,6 +30,7 @@ async function EditProductForm({ params }: Pick<PageProps<"/admin/produtos/[id]"
   return (
     <div className="flex flex-col gap-8">
       <ProductForm product={product} categories={categories} brands={brands} />
+      <ProductImages productId={product.id} />
       <section className="border-t border-zinc-200 pt-6 dark:border-zinc-800">
         <h2 className="mb-2 font-medium">Excluir produto</h2>
         <p className="mb-3 text-sm text-zinc-500">
