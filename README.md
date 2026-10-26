@@ -12,19 +12,25 @@ Loja virtual de itens para pets com dois diferenciais:
 - [Next.js 16](https://nextjs.org) (App Router) com React 19 e TypeScript
 - [Tailwind CSS 4](https://tailwindcss.com)
 - ESLint e Prettier
-- Planejado: PostgreSQL com Prisma (KAN-84)
+- PostgreSQL 17 com [Prisma 7](https://www.prisma.io) (driver adapter `@prisma/adapter-pg`)
 
 ## Requisitos
 
 - Node.js 22 ou superior
 - npm
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) para o banco local
 
 ## Como rodar
 
 ```bash
+cp .env.example .env
 npm install
+npm run db:up
+npm run db:migrate
 npm run dev
 ```
+
+O `npm install` já gera o Prisma Client (script `postinstall`).
 
 Abra [http://localhost:3000](http://localhost:3000) no navegador.
 
@@ -39,6 +45,20 @@ Abra [http://localhost:3000](http://localhost:3000) no navegador.
 | `npm run typecheck`    | Checagem de tipos com `tsc`         |
 | `npm run format`       | Formata o código com Prettier       |
 | `npm run format:check` | Verifica se o código está formatado |
+| `npm run db:up`        | Sobe o Postgres do `compose.yaml`   |
+| `npm run db:down`      | Para o Postgres                     |
+| `npm run db:migrate`   | Cria e aplica migrations do Prisma  |
+| `npm run db:studio`    | Abre o Prisma Studio                |
+
+## Banco de dados
+
+- O Postgres local roda pelo [`compose.yaml`](compose.yaml), com usuário, senha e banco definidos lá. A `DATABASE_URL` do [`.env.example`](.env.example) já aponta para ele.
+- O schema fica em [`prisma/schema.prisma`](prisma/schema.prisma) e a configuração do CLI em [`prisma.config.ts`](prisma.config.ts).
+- O Prisma Client é gerado em `app/generated/prisma` (fora do Git). No código, importe a instância de [`lib/prisma.ts`](lib/prisma.ts):
+
+```ts
+import { prisma } from "@/lib/prisma";
+```
 
 ## Integração contínua
 

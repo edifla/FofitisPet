@@ -1,0 +1,11 @@
+// Schema do FofitisPet. Os modelos entram na KAN-19 (modelagem do banco).
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
