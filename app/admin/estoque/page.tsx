@@ -65,7 +65,21 @@ async function StockTable({ searchParams }: Pick<Props, "searchParams">) {
                   >
                     {row.store}
                   </td>
-                  <td className="py-2 pr-4 text-right tabular-nums">{row.shelter}</td>
+                  <td className="py-2 pr-4 text-right tabular-nums">
+                    {row.shelter}
+                    {row.shelterTarget !== null && (
+                      <span
+                        className={
+                          row.shelter < row.shelterTarget
+                            ? "text-amber-700 dark:text-amber-400"
+                            : "text-zinc-500"
+                        }
+                      >
+                        {" "}
+                        / meta {row.shelterTarget}
+                      </span>
+                    )}
+                  </td>
                   <td className="py-2">
                     <Link href={`/admin/estoque/${row.id}`} className="underline">
                       Movimentar

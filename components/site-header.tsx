@@ -16,6 +16,9 @@ export function SiteHeader() {
           <Link href="/produtos" className="text-sm">
             Produtos
           </Link>
+          <Link href="/abrigo" className="text-sm">
+            Abrigo
+          </Link>
         </div>
         <div className="flex items-center gap-4">
           <Suspense fallback={<span className="text-sm">Carrinho</span>}>

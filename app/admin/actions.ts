@@ -15,6 +15,7 @@ import {
   adjustmentSchema,
   productSchema,
   restockSchema,
+  shelterTargetSchema,
   variantSchema,
   type FormState,
 } from "@/lib/validation/catalog";
@@ -458,4 +459,29 @@ export async function adjustStoreStock(
     }
     throw error;
   }
+}
+
+// Meta de saldo de uma variação no abrigo (KAN-33). Abaixo dela, o item aparece em
+// "Itens mais necessários" para quem quer doar.
+export async function setShelterTarget(
+  variantId: string,
+  _state: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireAdmin();
+  const values = { target: text(formData, "target") };
+  const parsed = shelterTargetSchema.safeParse(values);
+  if (!parsed.success) return { errors: fieldErrors(parsed.error), values };
+
+  const target = parsed.data.target;
+  await prisma.stockLevel.upsert({
+    where: { variantId_location: { variantId, location: "SHELTER" } },
+    create: { variantId, location: "SHELTER", quantity: 0, targetQuantity: target },
+    update: { targetQuantity: target },
+  });
+  refresh();
+  return {
+    success: true,
+    message: target === null ? "Meta removida." : `Meta do abrigo: ${target} unidade(s).`,
+  };
 }
