@@ -329,12 +329,14 @@ model OrderItem {
 model Payment {
   id                String        @id @default(cuid())
   orderId           String
-  // Gateway usado, ex.: "mercadopago". Em desenvolvimento roda em sandbox (KAN-26).
+  // Gateway usado: "simulado" por enquanto; "mercadopago" a partir da KAN-55.
   provider          String
   // Id do pagamento no gateway, usado para casar os webhooks.
   providerPaymentId String?
   method            PaymentMethod
   status            PaymentStatus @default(PENDING)
+  // Motivo informado pelo gateway, ex.: "saldo insuficiente" numa recusa.
+  statusDetail      String?
   amountCents       Int
   pixQrCode         String?
   pixExpiresAt      DateTime?
