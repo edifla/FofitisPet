@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import { PageViews } from "@/components/monitoring/page-views";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -43,7 +44,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </div>
         <SiteFooter />
-        <PageViews />
+        {/* usePathname só existe no momento do pedido: fica fora da pré-renderização. */}
+        <Suspense fallback={null}>
+          <PageViews />
+        </Suspense>
       </body>
     </html>
   );
