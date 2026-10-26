@@ -34,7 +34,6 @@ export type FormState =
   | {
       errors?: Record<string, string[] | undefined>;
       message?: string;
-      success?: boolean;
       // Valores digitados, para o formulário não perder o que o usuário escreveu.
       values?: Record<string, string>;
     }
@@ -49,3 +48,8 @@ export function fieldErrors(error: z.ZodError): Record<string, string[]> {
   }
   return errors;
 }
+
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, { error: "Informe sua senha." }).max(128),
+});

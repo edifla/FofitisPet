@@ -46,7 +46,7 @@ export function SignupForm() {
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         A senha precisa ter pelo menos 8 caracteres, com letras e números.
       </p>
-      <FormMessage message={state?.message} tone={state?.success ? "success" : "error"} />
+      <FormMessage message={state?.message} />
       <SubmitButton pending={pending}>Criar conta</SubmitButton>
       <p className="text-center text-sm">
         Já tem conta?{" "}
