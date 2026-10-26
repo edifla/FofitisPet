@@ -8,8 +8,9 @@ import { getCurrentUser } from "@/lib/dal";
 export function SiteHeader() {
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-6">
+      {/* Em telas estreitas, os links quebram em mais de uma linha em vez de vazar da tela. */}
+      <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <Link href="/" className="text-lg font-semibold">
             FofitisPet
           </Link>
@@ -26,7 +27,7 @@ export function SiteHeader() {
             Doar
           </Link>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Suspense fallback={<span className="text-sm">Carrinho</span>}>
             <CartLink />
           </Suspense>

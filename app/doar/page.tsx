@@ -44,6 +44,9 @@ export default function DonatePage() {
         <Link href="/produtos?doacao=sim" className="underline">
           Escolher produtos avulsos para doar
         </Link>
+        <Link href="/transparencia" className="underline">
+          Ver como as doações são usadas
+        </Link>
       </p>
     </main>
   );
