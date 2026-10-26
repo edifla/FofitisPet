@@ -143,3 +143,27 @@ export async function removeItem(itemId: string) {
   if (!cartId) return;
   await prisma.cartItem.deleteMany({ where: { id: itemId, cartId } });
 }
+
+// Define a quantidade de um item do carrinho atual (0 remove), sem passar do estoque da loja.
+export async function setItemQuantity(itemId: string, quantity: number) {
+  if (!Number.isInteger(quantity) || quantity < 0) throw new CartError("Quantidade inválida.");
+  const cartId = await readCartId();
+  const item = cartId
+    ? await prisma.cartItem.findFirst({
+        where: { id: itemId, cartId },
+        select: { id: true, variantId: true },
+      })
+    : null;
+  if (!item) throw new CartError("Este item não está mais no seu carrinho.");
+
+  if (quantity === 0) {
+    await prisma.cartItem.delete({ where: { id: item.id } });
+    return { quantity: 0, limited: false };
+  }
+
+  const { stock } = await sellableVariant(item.variantId);
+  if (stock <= 0) throw new CartError("Este produto está esgotado. Remova-o do carrinho.");
+  const final = Math.min(quantity, stock, MAX_QUANTITY_PER_ITEM);
+  await prisma.cartItem.update({ where: { id: item.id }, data: { quantity: final } });
+  return { quantity: final, limited: final < quantity };
+}
