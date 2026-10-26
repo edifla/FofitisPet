@@ -1,13 +1,12 @@
 import "server-only";
+import type { AdoptionRequestStatus } from "@/app/generated/prisma/client";
+import { CLOSED_REQUEST_STATUSES, canTransition, OPEN_REQUEST_STATUSES } from "@/lib/adoption-flow";
 import { appUrl, sendEmail } from "@/lib/email";
 import { housingTypeLabels } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
 import { type AdoptionInterest, formatPhone } from "@/lib/validation/adoption";
 
-// Solicitações de adoção (KAN-39).
-
-// Solicitações que ainda não tiveram decisão.
-export const OPEN_REQUEST_STATUSES = ["RECEIVED", "IN_REVIEW", "INTERVIEW"] as const;
+// Solicitações de adoção: recebimento (KAN-39) e mudanças de status (KAN-40).
 
 // Limite de solicitações por e-mail em 24 horas, contra envios em massa.
 const DAILY_LIMIT = 5;
@@ -60,6 +59,7 @@ export async function createAdoptionRequest(
       otherPetsDescription: data.hasOtherPets ? data.otherPetsDescription : null,
       experience: data.experience,
       reason: data.reason,
+      events: { create: { toStatus: "RECEIVED" } },
     },
     select: { id: true },
   });
@@ -112,4 +112,155 @@ async function sendRequestEmails(requestId: string, animalName: string, data: Ad
       }),
     ),
   );
+}
+
+export class AdoptionFlowError extends Error {}
+
+type StatusChange = {
+  to: AdoptionRequestStatus;
+  note: string | null;
+  interviewAt: Date | null;
+  adminId: string;
+};
+
+// Muda o status de uma solicitação e registra no histórico (KAN-116). Ao aprovar, o animal
+// passa a adotado e as outras solicitações abertas para ele são recusadas automaticamente.
+export async function changeRequestStatus(requestId: string, change: StatusChange) {
+  const { to, note, interviewAt, adminId } = change;
+  const result = await prisma.$transaction(async (tx) => {
+    const request = await tx.adoptionRequest.findUnique({
+      where: { id: requestId },
+      select: { status: true, animalId: true, animal: { select: { status: true } } },
+    });
+    if (!request) throw new AdoptionFlowError("Solicitação não encontrada.");
+    const from = request.status;
+    if (!canTransition(from, to)) {
+      throw new AdoptionFlowError("Essa mudança de status não é permitida.");
+    }
+    if ((to === "APPROVED" || from === "REJECTED") && request.animal.status === "ADOPTED") {
+      throw new AdoptionFlowError("Este animal já foi adotado.");
+    }
+    if (to === "INTERVIEW" && !interviewAt) {
+      throw new AdoptionFlowError("Informe a data e a hora da entrevista.");
+    }
+
+    // Só muda se ninguém mudou antes (dois admins ao mesmo tempo).
+    const updated = await tx.adoptionRequest.updateMany({
+      where: { id: requestId, status: from },
+      data: {
+        status: to,
+        decidedAt: CLOSED_REQUEST_STATUSES.includes(to) ? new Date() : null,
+        ...(to === "INTERVIEW" && { interviewAt }),
+      },
+    });
+    if (updated.count === 0) {
+      throw new AdoptionFlowError(
+        "A solicitação mudou enquanto você editava. Recarregue a página.",
+      );
+    }
+    await tx.adoptionRequestEvent.create({
+      data: { requestId, fromStatus: from, toStatus: to, note, createdById: adminId },
+    });
+
+    let closedOthers: string[] = [];
+    if (to === "APPROVED") {
+      await tx.animal.update({
+        where: { id: request.animalId },
+        data: { status: "ADOPTED", adoptedAt: new Date() },
+      });
+      const others = await tx.adoptionRequest.findMany({
+        where: {
+          animalId: request.animalId,
+          id: { not: requestId },
+          status: { in: [...OPEN_REQUEST_STATUSES] },
+        },
+        select: { id: true, status: true },
+      });
+      closedOthers = others.map((other) => other.id);
+      await tx.adoptionRequest.updateMany({
+        where: { id: { in: closedOthers } },
+        data: { status: "REJECTED", decidedAt: new Date() },
+      });
+      await tx.adoptionRequestEvent.createMany({
+        data: others.map((other) => ({
+          requestId: other.id,
+          fromStatus: other.status,
+          toStatus: "REJECTED" as const,
+          note: "Animal adotado por outra família.",
+        })),
+      });
+    }
+    return { closedOthers };
+  });
+
+  await sendStatusEmail(requestId, to);
+  for (const id of result.closedOthers) await sendStatusEmail(id, "REJECTED", true);
+}
+
+const dateTime = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "long",
+  timeStyle: "short",
+  timeZone: "America/Sao_Paulo",
+});
+
+// Avisa o interessado nas mudanças que dependem dele. "Em análise" não gera e-mail.
+async function sendStatusEmail(
+  requestId: string,
+  status: AdoptionRequestStatus,
+  adoptedByOther = false,
+) {
+  const request = await prisma.adoptionRequest.findUnique({
+    where: { id: requestId },
+    select: {
+      applicantName: true,
+      applicantEmail: true,
+      interviewAt: true,
+      animal: { select: { name: true } },
+    },
+  });
+  if (!request) return;
+  const name = request.animal.name;
+  const messages: Partial<Record<AdoptionRequestStatus, { subject: string; body: string[] }>> = {
+    INTERVIEW: {
+      subject: `Vamos conversar sobre a adoção de ${name}`,
+      body: [
+        `Gostamos do seu formulário e queremos marcar uma conversa sobre a adoção de ${name}.`,
+        request.interviewAt
+          ? `Data sugerida: ${dateTime.format(request.interviewAt)}. Se não puder, responda este e-mail.`
+          : "",
+      ],
+    },
+    APPROVED: {
+      subject: `Sua adoção de ${name} foi aprovada!`,
+      body: [
+        `Que alegria: a adoção de ${name} foi aprovada! A equipe do abrigo vai combinar com você`,
+        "a data para buscar o animal e assinar o termo de adoção.",
+      ],
+    },
+    REJECTED: {
+      subject: `Sobre o seu interesse em adotar ${name}`,
+      body: adoptedByOther
+        ? [
+            `${name} já encontrou uma família. Obrigado pelo carinho!`,
+            `Há outros animais esperando por um lar: ${appUrl("/adocao")}`,
+          ]
+        : [
+            `Depois de avaliar com cuidado, não vamos seguir com a adoção de ${name} neste momento.`,
+            `Obrigado pelo interesse. Há outros animais esperando por um lar: ${appUrl("/adocao")}`,
+          ],
+    },
+  };
+  const message = messages[status];
+  if (!message) return;
+  await sendEmail({
+    to: request.applicantEmail,
+    subject: message.subject,
+    text: [
+      `Olá, ${request.applicantName}!`,
+      "",
+      ...message.body.filter(Boolean),
+      "",
+      "FofitisPet",
+    ].join("\n"),
+  });
 }
