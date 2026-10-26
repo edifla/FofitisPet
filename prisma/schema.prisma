@@ -33,9 +33,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  addresses      Address[]
-  stockMovements StockMovement[]
-  orders         Order[]
+  addresses        Address[]
+  stockMovements   StockMovement[]
+  orders           Order[]
+  adoptionRequests AdoptionRequest[]
 }
 
 model Address {
@@ -351,4 +352,152 @@ model PaymentEvent {
 
   @@unique([provider, eventId])
   @@index([paymentId])
+}
+
+// ---------------------------------------------------------------------------
+// Animais e solicitações de adoção (KAN-88)
+// ---------------------------------------------------------------------------
+
+enum AnimalSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum AnimalSex {
+  MALE
+  FEMALE
+}
+
+enum AnimalStatus {
+  AVAILABLE
+  // Com uma solicitação aprovada, aguardando a entrega ao adotante.
+  RESERVED
+  ADOPTED
+  // Em tratamento ou fora da listagem por outro motivo.
+  UNAVAILABLE
+}
+
+enum Temperament {
+  CALM
+  PLAYFUL
+  ENERGETIC
+  SHY
+  AFFECTIONATE
+  INDEPENDENT
+  GOOD_WITH_KIDS
+  GOOD_WITH_DOGS
+  GOOD_WITH_CATS
+}
+
+enum HousingType {
+  HOUSE
+  APARTMENT
+  FARM
+  OTHER
+}
+
+// Fluxo de status da KAN-40.
+enum AdoptionRequestStatus {
+  RECEIVED
+  IN_REVIEW
+  INTERVIEW
+  APPROVED
+  REJECTED
+  // Cancelada pelo próprio interessado.
+  WITHDRAWN
+}
+
+model Animal {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  species      Species
+  size         AnimalSize
+  sex          AnimalSex
+  // Data de nascimento, muitas vezes estimada no resgate. A idade exibida é calculada a partir dela.
+  birthDate    DateTime?     @db.Date
+  temperament  Temperament[]
+  story        String
+  healthNotes  String?
+  neutered     Boolean       @default(false)
+  dewormed     Boolean       @default(false)
+  specialNeeds String?
+  status       AnimalStatus  @default(AVAILABLE)
+  arrivedAt    DateTime?     @db.Date
+  adoptedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  images           AnimalImage[]
+  vaccinations     Vaccination[]
+  adoptionRequests AdoptionRequest[]
+
+  @@index([status, species])
+}
+
+model AnimalImage {
+  id        String   @id @default(cuid())
+  animalId  String
+  url       String
+  alt       String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@index([animalId])
+}
+
+model Vaccination {
+  id         String    @id @default(cuid())
+  animalId   String
+  // Nome da vacina, ex.: "V10", "Antirrábica".
+  name       String
+  appliedAt  DateTime  @db.Date
+  nextDoseAt DateTime? @db.Date
+  createdAt  DateTime  @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@index([animalId])
+}
+
+// Formulário de interesse (KAN-39). Os dados do interessado ficam copiados aqui porque
+// o termo de adoção (KAN-41) precisa deles mesmo que o cadastro do usuário mude.
+model AdoptionRequest {
+  id       String                @id @default(cuid())
+  animalId String
+  // Nulo se o formulário for enviado sem login.
+  userId   String?
+  status   AdoptionRequestStatus @default(RECEIVED)
+
+  applicantName  String
+  applicantEmail String
+  applicantPhone String
+  applicantCity  String
+  applicantState String @db.Char(2)
+
+  housingType          HousingType
+  ownsHome             Boolean
+  hasYard              Boolean
+  // Todos na casa concordam com a adoção.
+  householdAgrees      Boolean
+  hasOtherPets         Boolean
+  otherPetsDescription String?
+  experience           String
+  reason               String
+
+  // Anotações internas do abrigo, nunca mostradas ao interessado.
+  adminNotes  String?
+  interviewAt DateTime?
+  decidedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([animalId, status])
+  @@index([userId])
 }
