@@ -33,6 +33,7 @@ async function UserMenu() {
   }
   return (
     <nav className="flex gap-4 text-sm">
+      {user.role === "ADMIN" && <Link href="/admin">Administração</Link>}
       <Link href="/conta">Olá, {user.name.split(" ")[0]}</Link>
     </nav>
   );
