@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { CartLink } from "@/components/cart-link";
 import { getCurrentUser } from "@/lib/dal";
 
 // Cabeçalho provisório até o design system (KAN-17). O menu do usuário lê a sessão,
@@ -16,9 +17,14 @@ export function SiteHeader() {
             Produtos
           </Link>
         </div>
-        <Suspense fallback={<span className="h-5 w-24" />}>
-          <UserMenu />
-        </Suspense>
+        <div className="flex items-center gap-4">
+          <Suspense fallback={<span className="text-sm">Carrinho</span>}>
+            <CartLink />
+          </Suspense>
+          <Suspense fallback={<span className="h-5 w-24" />}>
+            <UserMenu />
+          </Suspense>
+        </div>
       </div>
     </header>
   );
