@@ -340,6 +340,10 @@ model Payment {
   amountCents       Int
   pixQrCode         String?
   pixExpiresAt      DateTime?
+  // Cartão: só bandeira, 4 últimos dígitos e parcelas. O número do cartão nunca é guardado.
+  cardBrand         String?
+  cardLastFour      String?
+  installments      Int?
   paidAt            DateTime?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt

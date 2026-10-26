@@ -2,8 +2,14 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getGateway, simulatedPaymentsAllowed, type GatewayUpdate } from "./index";
+import {
+  GatewayInputError,
+  getGateway,
+  simulatedPaymentsAllowed,
+  type GatewayUpdate,
+} from "./index";
 import { SIMULATED_PROVIDER } from "./simulated";
+import type { CardData } from "./types";
 
 // Regras de pagamento dos pedidos (KAN-26), independentes do gateway usado.
 
@@ -65,6 +71,70 @@ export async function startPixPayment(userId: string, orderNumber: number) {
     },
     select: { id: true },
   });
+}
+
+const cardMessages: Record<string, string> = {
+  cc_rejected_insufficient_amount: "Pagamento recusado: saldo ou limite insuficiente.",
+  cc_rejected_bad_filled_security_code: "Pagamento recusado: confira o código de segurança.",
+};
+
+// Paga o pedido no cartão (KAN-109). O gateway responde na hora; a resposta passa pelo mesmo
+// caminho dos webhooks, então um aviso posterior do mesmo pagamento é tratado igual.
+export async function payWithCard(
+  userId: string,
+  orderNumber: number,
+  input: { card: CardData; installments: number; brand: string },
+): Promise<{ approved: true } | { approved: false; message: string }> {
+  const order = await payableOrder(userId, orderNumber);
+  const gateway = getGateway();
+
+  let charge;
+  try {
+    charge = await gateway.createCardPayment({
+      reference: `PEDIDO${order.number}`,
+      amountCents: order.totalCents,
+      payerEmail: order.user.email,
+      installments: input.installments,
+      card: input.card,
+    });
+  } catch (error) {
+    if (error instanceof GatewayInputError) throw new PaymentError(error.message);
+    throw error;
+  }
+
+  await prisma.payment.create({
+    data: {
+      orderId: order.id,
+      provider: gateway.name,
+      providerPaymentId: charge.providerPaymentId,
+      method: "CREDIT_CARD",
+      amountCents: order.totalCents,
+      cardBrand: input.brand,
+      cardLastFour: input.card.number.slice(-4),
+      installments: input.installments,
+    },
+  });
+  await applyGatewayUpdate({
+    provider: gateway.name,
+    eventId: `sync:${charge.providerPaymentId}`,
+    type: "payment.created",
+    providerPaymentId: charge.providerPaymentId,
+    status: charge.status,
+    statusDetail: charge.statusDetail,
+    // Sem dados do cartão no registro do evento.
+    payload: { status: charge.status, statusDetail: charge.statusDetail },
+  });
+
+  if (charge.status === "APPROVED") return { approved: true };
+  if (charge.status === "PENDING") {
+    return { approved: false, message: "Pagamento em análise. Avisaremos quando for aprovado." };
+  }
+  return {
+    approved: false,
+    message:
+      cardMessages[charge.statusDetail] ??
+      "Pagamento recusado pelo emissor do cartão. Tente outro cartão ou pague com Pix.",
+  };
 }
 
 export type UpdateResult = "applied" | "duplicate" | "unknown-payment" | "ignored";
