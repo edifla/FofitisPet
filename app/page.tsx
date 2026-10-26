@@ -10,8 +10,14 @@ export default function Home() {
       </p>
       <div className="flex gap-3">
         <Link
-          href="/cadastro"
+          href="/produtos"
           className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+        >
+          Ver produtos
+        </Link>
+        <Link
+          href="/cadastro"
+          className="rounded-md border border-zinc-300 px-4 py-2 font-medium dark:border-zinc-700"
         >
           Criar conta
         </Link>

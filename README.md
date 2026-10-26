@@ -32,7 +32,7 @@ npm run dev
 
 O `npm install` já gera o Prisma Client (script `postinstall`).
 
-Para ter contas de teste no banco local, rode `npm run db:seed`. As contas e senhas estão no topo de [`prisma/seed.mjs`](prisma/seed.mjs).
+Para ter contas de teste e um catálogo de exemplo no banco local, rode `npm run db:seed`. As contas e senhas estão no topo de [`prisma/seed.mjs`](prisma/seed.mjs).
 
 Abra [http://localhost:3000](http://localhost:3000) no navegador.
 
@@ -51,7 +51,7 @@ Abra [http://localhost:3000](http://localhost:3000) no navegador.
 | `npm run db:down`      | Para o Postgres                     |
 | `npm run db:migrate`   | Cria e aplica migrations do Prisma  |
 | `npm run db:studio`    | Abre o Prisma Studio                |
-| `npm run db:seed`      | Cria as contas de teste locais      |
+| `npm run db:seed`      | Cria contas e catálogo de teste     |
 | `npm run user:promote` | Torna uma conta admin (`-- email`)  |
 
 ## Banco de dados
