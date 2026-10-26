@@ -67,3 +67,12 @@ export async function getCatalogOptions() {
   ]);
   return { categories, brands };
 }
+
+export async function listProductImages(productId: string) {
+  await requireAdmin();
+  return prisma.productImage.findMany({
+    where: { productId },
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+    select: { id: true, url: true, alt: true },
+  });
+}

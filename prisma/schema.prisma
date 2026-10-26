@@ -152,12 +152,14 @@ model Product {
 }
 
 model ProductImage {
-  id        String   @id @default(cuid())
-  productId String
-  url       String
-  alt       String?
-  position  Int      @default(0)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  productId  String
+  // Chave no armazenamento (lib/storage); a url é o endereço público dela.
+  storageKey String   @unique
+  url        String
+  alt        String?
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
