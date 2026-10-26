@@ -13,6 +13,7 @@ import {
   categorySchema,
   fieldErrors,
   productSchema,
+  variantSchema,
   type FormState,
 } from "@/lib/validation/catalog";
 
@@ -297,6 +298,86 @@ export async function moveProductImage(imageId: string, direction: -1 | 1): Prom
       prisma.productImage.update({ where: { id: i.id }, data: { position } }),
     ),
   );
+  refresh();
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// Variações dos produtos (KAN-96)
+// ---------------------------------------------------------------------------
+
+function variantValues(formData: FormData) {
+  return {
+    name: text(formData, "name"),
+    sku: text(formData, "sku"),
+    price: text(formData, "price"),
+    weight: text(formData, "weight"),
+    size: text(formData, "size"),
+    flavor: text(formData, "flavor"),
+  };
+}
+
+export async function saveVariant(
+  productId: string,
+  variantId: string | null,
+  _state: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireAdmin();
+  const values = variantValues(formData);
+  const parsed = variantSchema.safeParse({
+    ...values,
+    priceCents: values.price,
+    weightGrams: values.weight,
+    active: formData.get("active") === "on",
+  });
+  if (!parsed.success) {
+    // Os erros vêm com o nome do campo do banco; o formulário usa price e weight.
+    const { priceCents, weightGrams, ...errors } = fieldErrors(parsed.error);
+    return { errors: { ...errors, price: priceCents, weight: weightGrams }, values };
+  }
+
+  try {
+    if (variantId) {
+      await prisma.productVariant.update({
+        where: { id: variantId, productId },
+        data: { ...parsed.data, attributes: parsed.data.attributes ?? Prisma.DbNull },
+      });
+    } else {
+      // Toda variação nasce com saldo zero na loja e no abrigo (o controle vem na KAN-97).
+      await prisma.productVariant.create({
+        data: {
+          ...parsed.data,
+          productId,
+          stockLevels: { create: [{ location: "STORE" }, { location: "SHELTER" }] },
+        },
+      });
+    }
+  } catch (error) {
+    if (isPrismaError(error, "P2002")) {
+      return { errors: { sku: ["Já existe uma variação com este SKU."] }, values };
+    }
+    throw error;
+  }
+
+  revalidatePath(`/admin/produtos/${productId}`);
+  if (variantId) redirect(`/admin/produtos/${productId}`);
+  return { success: true, message: `Variação "${parsed.data.name}" criada.` };
+}
+
+export async function deleteVariant(variantId: string): Promise<FormState> {
+  await requireAdmin();
+  try {
+    await prisma.productVariant.delete({ where: { id: variantId } });
+  } catch (error) {
+    if (isPrismaError(error, "P2003")) {
+      return {
+        message:
+          "Esta variação já foi vendida ou teve estoque movimentado. Desative-a em vez de excluir.",
+      };
+    }
+    throw error;
+  }
   refresh();
   return { success: true };
 }
