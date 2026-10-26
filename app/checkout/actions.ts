@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { CheckoutError, placeOrder } from "@/lib/checkout";
+import { CheckoutError, placeDonationOrder, placeOrder } from "@/lib/checkout";
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { addressSchema, fieldErrors, type FormState } from "@/lib/validation/address";
@@ -53,6 +53,23 @@ export async function confirmOrder(_state: FormState, formData: FormData): Promi
       addressId: String(formData.get("addressId") ?? ""),
       shippingId: String(formData.get("shippingId") ?? ""),
       expectedTotalCents: Number(formData.get("expectedTotalCents")),
+    });
+  } catch (error) {
+    if (error instanceof CheckoutError) return { message: error.message };
+    throw error;
+  }
+  refresh();
+  redirect(`/pedidos/${order.number}`);
+}
+
+// Confirma a doação ao abrigo (KAN-31) com o total que o cliente está vendo.
+export async function confirmDonation(_state: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireUser("/checkout/doacao");
+  let order: { number: number };
+  try {
+    order = await placeDonationOrder(user.id, {
+      expectedTotalCents: Number(formData.get("expectedTotalCents")),
+      anonymous: formData.get("anonymous") === "on",
     });
   } catch (error) {
     if (error instanceof CheckoutError) return { message: error.message };

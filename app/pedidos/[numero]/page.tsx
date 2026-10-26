@@ -88,6 +88,8 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
       shippingCity: true,
       shippingState: true,
       shippingMethod: true,
+      destination: true,
+      anonymous: true,
       items: {
         orderBy: { productName: "asc" },
         select: {
@@ -103,12 +105,15 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
   });
   // Pedido de outra pessoa aparece como inexistente.
   if (!order) notFound();
+  const donation = order.destination === "SHELTER";
 
   return (
     <article className="flex flex-col gap-8">
       <header>
         <p className="text-sm text-zinc-500">{dateTime.format(order.createdAt)}</p>
-        <h1 className="text-2xl font-semibold">Pedido #{order.number}</h1>
+        <h1 className="text-2xl font-semibold">
+          {donation ? "Doação" : "Pedido"} #{order.number}
+        </h1>
         <p className="mt-1 inline-block rounded-full bg-amber-100 px-3 py-0.5 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
           {orderStatusLabels[order.status]}
         </p>
@@ -122,6 +127,7 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
         canceledAt={order.canceledAt}
         cancelReason={order.cancelReason}
         totalCents={order.totalCents}
+        donation={donation}
         isOwner={order.userId === user.id}
         payments={order.payments}
       />
@@ -141,19 +147,31 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
         </ul>
       </section>
 
-      <section className="flex flex-col gap-1 text-sm">
-        <h2 className="mb-1 font-medium">Entrega</h2>
-        <p>{order.shippingRecipientName}</p>
-        <p>
-          {order.shippingStreet}, {order.shippingNumber}
-          {order.shippingComplement && ` · ${order.shippingComplement}`}
-        </p>
-        <p className="text-zinc-500">
-          {order.shippingNeighborhood} · {order.shippingCity}/{order.shippingState}
-          {order.shippingZipCode && ` · CEP ${formatZipCode(order.shippingZipCode)}`}
-        </p>
-        {order.shippingMethod && <p className="text-zinc-500">{order.shippingMethod}</p>}
-      </section>
+      {donation ? (
+        <section className="flex flex-col gap-1 text-sm">
+          <h2 className="mb-1 font-medium">Destino</h2>
+          <p>Abrigo da FofitisPet, sem frete.</p>
+          <p className="text-zinc-500">
+            {order.anonymous
+              ? "Doação anônima: seu nome não aparece na transparência."
+              : "Seu nome aparece como doador na página de transparência."}
+          </p>
+        </section>
+      ) : (
+        <section className="flex flex-col gap-1 text-sm">
+          <h2 className="mb-1 font-medium">Entrega</h2>
+          <p>{order.shippingRecipientName}</p>
+          <p>
+            {order.shippingStreet}, {order.shippingNumber}
+            {order.shippingComplement && ` · ${order.shippingComplement}`}
+          </p>
+          <p className="text-zinc-500">
+            {order.shippingNeighborhood} · {order.shippingCity}/{order.shippingState}
+            {order.shippingZipCode && ` · CEP ${formatZipCode(order.shippingZipCode)}`}
+          </p>
+          {order.shippingMethod && <p className="text-zinc-500">{order.shippingMethod}</p>}
+        </section>
+      )}
 
       <section className="flex flex-col gap-1 border-t border-zinc-200 pt-4 text-sm dark:border-zinc-800">
         <p className="flex justify-between">
@@ -162,7 +180,13 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
         </p>
         <p className="flex justify-between">
           <span>Frete</span>
-          <span>{order.shippingCents === 0 ? "Grátis" : formatBRL(order.shippingCents)}</span>
+          <span>
+            {donation
+              ? "Sem frete"
+              : order.shippingCents === 0
+                ? "Grátis"
+                : formatBRL(order.shippingCents)}
+          </span>
         </p>
         {order.discountCents > 0 && (
           <p className="flex justify-between">
@@ -220,6 +244,7 @@ function PaymentSection({
   canceledAt,
   cancelReason,
   totalCents,
+  donation,
   isOwner,
   payments,
 }: {
@@ -230,6 +255,7 @@ function PaymentSection({
   canceledAt: Date | null;
   cancelReason: string | null;
   totalCents: number;
+  donation: boolean;
   isOwner: boolean;
   payments: PaymentRow[];
 }) {
@@ -247,7 +273,10 @@ function PaymentSection({
     return (
       <p className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
         Pagamento aprovado{how}
-        {paidAt && ` em ${dateTime.format(paidAt)}`}. Já estamos separando seu pedido.
+        {paidAt && ` em ${dateTime.format(paidAt)}`}.
+        {donation
+          ? " Obrigado! Os itens foram para o estoque do abrigo."
+          : " Já estamos separando seu pedido."}
       </p>
     );
   }

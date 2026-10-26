@@ -148,3 +148,104 @@ export async function placeOrder(
   await sendOrderEmail(order.id, "created");
   return order;
 }
+
+// Checkout da doação ao abrigo (KAN-31): só os itens marcados para o abrigo, sem endereço e sem
+// frete. O pedido sai com destino SHELTER e, depois de pago, vai para o estoque do abrigo (KAN-32).
+
+export type DonationSummary =
+  | { ok: false; reason: "empty-cart" | "over-stock"; lines?: CartLine[] }
+  | { ok: true; lines: CartLine[]; unavailable: CartLine[]; totalCents: number };
+
+export async function buildDonationSummary(): Promise<DonationSummary> {
+  const cart = await getCart();
+  const lines = cart.items.filter((line) => line.available && line.donation);
+  if (lines.length === 0) return { ok: false, reason: "empty-cart" };
+  if (lines.some((line) => line.overStock)) return { ok: false, reason: "over-stock", lines };
+  return {
+    ok: true,
+    lines,
+    unavailable: cart.items.filter((line) => line.donation && !line.available),
+    totalCents: cart.donationSubtotalCents,
+  };
+}
+
+const donationErrors = {
+  "empty-cart": "Não há itens para doar no carrinho.",
+  "over-stock": "Alguns itens passaram do estoque disponível. Ajuste o carrinho.",
+} as const;
+
+export async function placeDonationOrder(
+  userId: string,
+  input: { expectedTotalCents: number; anonymous: boolean },
+) {
+  const summary = await buildDonationSummary();
+  if (!summary.ok) throw new CheckoutError(donationErrors[summary.reason]);
+  if (summary.totalCents !== input.expectedTotalCents) {
+    throw new CheckoutError(
+      "Os valores mudaram desde o resumo. Confira a doação e confirme de novo.",
+    );
+  }
+  const cartId = await readCartId();
+  const { lines } = summary;
+
+  let order;
+  try {
+    order = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({
+        data: {
+          userId,
+          destination: "SHELTER",
+          status: "PENDING_PAYMENT",
+          anonymous: input.anonymous,
+          subtotalCents: summary.totalCents,
+          shippingCents: 0,
+          totalCents: summary.totalCents,
+          items: {
+            create: lines.map((line) => ({
+              variantId: line.variantId,
+              productName: line.productName,
+              variantName: line.variantName,
+              unitPriceCents: line.unitPriceCents,
+              quantity: line.quantity,
+              totalCents: line.totalCents,
+            })),
+          },
+        },
+        select: { id: true, number: true },
+      });
+      // Reserva as unidades da loja; elas entram no estoque do abrigo quando o pagamento é
+      // aprovado (KAN-32) ou voltam para a loja se o pedido expirar (KAN-110).
+      for (const line of lines) {
+        await moveStock(tx, {
+          variantId: line.variantId,
+          type: "DONATION_TRANSFER",
+          from: "STORE",
+          to: null,
+          quantity: line.quantity,
+          orderId: order.id,
+          createdById: userId,
+          note: "Reservado para o abrigo até o pagamento",
+        });
+      }
+      if (cartId) {
+        await tx.cartItem.deleteMany({
+          where: {
+            cartId,
+            donation: true,
+            variantId: { in: lines.map((line) => line.variantId) },
+          },
+        });
+      }
+      return order;
+    });
+  } catch (error) {
+    if (error instanceof InsufficientStockError) {
+      throw new CheckoutError(
+        "Um dos itens acabou de esgotar. Confira o carrinho e tente de novo.",
+      );
+    }
+    throw error;
+  }
+  await sendOrderEmail(order.id, "created");
+  return order;
+}
