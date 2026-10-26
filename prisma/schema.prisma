@@ -683,3 +683,21 @@ model DonationKitItem {
   @@unique([kitId, variantId])
   @@index([variantId])
 }
+
+// ---------------------------------------------------------------------------
+// Transparência (KAN-44)
+// ---------------------------------------------------------------------------
+
+// Fotos de entregas e do dia a dia do abrigo, mostradas na página de transparência.
+model TransparencyPhoto {
+  id         String   @id @default(cuid())
+  // Chave no armazenamento (lib/storage), como em AnimalImage.
+  storageKey String   @unique
+  url        String
+  caption    String
+  // Dia em que a foto foi tirada; ordena a galeria.
+  takenOn    DateTime @db.Date
+  createdAt  DateTime @default(now())
+
+  @@index([takenOn])
+}

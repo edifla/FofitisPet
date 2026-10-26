@@ -34,9 +34,14 @@ export default function ShelterPage() {
           <NeedsList />
         </Suspense>
       </section>
-      <Link href="/produtos?doacao=sim" className="self-start text-sm underline">
-        Ver todos os produtos que podem ser doados
-      </Link>
+      <p className="flex flex-wrap gap-4 text-sm">
+        <Link href="/produtos?doacao=sim" className="underline">
+          Ver todos os produtos que podem ser doados
+        </Link>
+        <Link href="/transparencia" className="underline">
+          Ver como as doações são usadas
+        </Link>
+      </p>
     </main>
   );
 }
