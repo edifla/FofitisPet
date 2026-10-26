@@ -4,16 +4,16 @@ import { slugify } from "@/lib/slug";
 
 export { fieldErrors, type FormState } from "./form";
 
-const SPECIES = ["DOG", "CAT", "BIRD", "FISH", "SMALL_PET", "OTHER"] as const;
+export const SPECIES = ["DOG", "CAT", "BIRD", "FISH", "SMALL_PET", "OTHER"] as const;
 
-const nameSchema = z
+export const nameSchema = z
   .string()
   .trim()
   .min(2, { error: "Informe um nome com pelo menos 2 caracteres." })
   .max(120, { error: "Use no máximo 120 caracteres." });
 
 // Slug opcional no formulário: se vier vazio, é gerado a partir do nome.
-const slugInput = z
+export const slugInput = z
   .string()
   .trim()
   .max(80, { error: "Use no máximo 80 caracteres." })
@@ -26,7 +26,7 @@ const optionalId = z
   .trim()
   .transform((value) => value || null);
 
-function withSlug<T extends { name: string; slug: string }>(data: T) {
+export function withSlug<T extends { name: string; slug: string }>(data: T) {
   return { ...data, slug: data.slug || slugify(data.name) };
 }
 

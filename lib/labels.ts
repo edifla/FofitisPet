@@ -1,8 +1,12 @@
 import type {
+  AnimalSex,
+  AnimalSize,
+  AnimalStatus,
   OrderStatus,
   Species,
   StockLocation,
   StockMovementType,
+  Temperament,
 } from "@/app/generated/prisma/client";
 
 export const speciesLabels: Record<Species, string> = {
@@ -42,3 +46,37 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
   CANCELED: "Cancelado",
   REFUNDED: "Reembolsado",
 };
+
+// Adoção (KAN-36)
+export const animalSizeLabels: Record<AnimalSize, string> = {
+  SMALL: "Pequeno",
+  MEDIUM: "Médio",
+  LARGE: "Grande",
+};
+
+export const animalSexLabels: Record<AnimalSex, string> = {
+  MALE: "Macho",
+  FEMALE: "Fêmea",
+};
+
+export const animalStatusLabels: Record<AnimalStatus, string> = {
+  AVAILABLE: "Disponível para adoção",
+  RESERVED: "Reservado",
+  ADOPTED: "Adotado",
+  UNAVAILABLE: "Fora da listagem",
+};
+
+export const temperamentLabels: Record<Temperament, string> = {
+  CALM: "Calmo",
+  PLAYFUL: "Brincalhão",
+  ENERGETIC: "Cheio de energia",
+  SHY: "Tímido",
+  AFFECTIONATE: "Carinhoso",
+  INDEPENDENT: "Independente",
+  GOOD_WITH_KIDS: "Se dá bem com crianças",
+  GOOD_WITH_DOGS: "Se dá bem com cães",
+  GOOD_WITH_CATS: "Se dá bem com gatos",
+};
+
+export const toOptions = (labels: Record<string, string>) =>
+  Object.entries(labels).map(([value, label]) => ({ value, label }));
