@@ -1,5 +1,5 @@
 import "server-only";
-import { Prisma } from "@/app/generated/prisma/client";
+import { Prisma, type Species } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 // Catálogo público (KAN-22). Só entram produtos ativos com pelo menos uma variação ativa.
@@ -9,6 +9,13 @@ export const PAGE_SIZE = 24;
 export type CatalogQuery = {
   // Busca por texto (KAN-98): todas as palavras precisam aparecer, sem diferenciar acentos.
   q?: string;
+  // Filtros (KAN-99). A categoria inclui as subcategorias; o preço vale para qualquer
+  // variação ativa do produto.
+  species?: Species;
+  category?: string;
+  brands?: string[];
+  minPriceCents?: number;
+  maxPriceCents?: number;
   page?: number;
 };
 
@@ -36,12 +43,43 @@ function searchTerms(q: string | undefined) {
     .slice(0, 8);
 }
 
-export async function searchCatalog({ q, page = 1 }: CatalogQuery) {
+export async function searchCatalog({
+  q,
+  species,
+  category,
+  brands = [],
+  minPriceCents,
+  maxPriceCents,
+  page = 1,
+}: CatalogQuery) {
   const terms = searchTerms(q);
+  const priceConditions = [
+    minPriceCents !== undefined ? Prisma.sql`v."priceCents" >= ${minPriceCents}` : null,
+    maxPriceCents !== undefined ? Prisma.sql`v."priceCents" <= ${maxPriceCents}` : null,
+  ].filter((condition): condition is Prisma.Sql => condition !== null);
   const conditions: Prisma.Sql[] = [
     Prisma.sql`p.active`,
-    Prisma.sql`EXISTS (SELECT 1 FROM "ProductVariant" v WHERE v."productId" = p.id AND v.active)`,
+    Prisma.sql`EXISTS (SELECT 1 FROM "ProductVariant" v WHERE v."productId" = p.id AND v.active ${
+      priceConditions.length
+        ? Prisma.sql`AND ${Prisma.join(priceConditions, " AND ")}`
+        : Prisma.empty
+    })`,
   ];
+  if (species) {
+    conditions.push(Prisma.sql`${species}::"Species" = ANY(p.species)`);
+  }
+  if (category) {
+    conditions.push(Prisma.sql`p."categoryId" IN (
+      WITH RECURSIVE tree AS (
+        SELECT id FROM "Category" WHERE slug = ${category}
+        UNION ALL
+        SELECT child.id FROM "Category" child JOIN tree ON child."parentId" = tree.id
+      )
+      SELECT id FROM tree)`);
+  }
+  if (brands.length) {
+    conditions.push(Prisma.sql`b.slug IN (${Prisma.join(brands)})`);
+  }
   for (const term of terms) {
     conditions.push(
       Prisma.sql`unaccent(p.name || ' ' || coalesce(b.name, '') || ' ' || c.name || ' ' || p.description) ILIKE unaccent(${likePattern(term)})`,
@@ -118,4 +156,40 @@ export async function searchCatalog({ q, page = 1 }: CatalogQuery) {
     page: Math.max(1, page),
     pageCount: Math.ceil(Number(total) / PAGE_SIZE),
   };
+}
+
+// Opções dos filtros: só categorias e marcas que têm produto à venda.
+export async function getCatalogFilterOptions() {
+  const forSale = {
+    active: true,
+    variants: { some: { active: true } },
+  } satisfies Prisma.ProductWhereInput;
+  const [categories, brands] = await Promise.all([
+    prisma.category.findMany({
+      where: {
+        OR: [
+          { products: { some: forSale } },
+          { children: { some: { products: { some: forSale } } } },
+        ],
+      },
+      orderBy: [{ position: "asc" }, { name: "asc" }],
+      select: { slug: true, name: true, parentId: true, id: true },
+    }),
+    prisma.brand.findMany({
+      where: { products: { some: forSale } },
+      orderBy: { name: "asc" },
+      select: { slug: true, name: true },
+    }),
+  ]);
+  // Subcategorias logo abaixo da categoria pai, para o select.
+  const roots = categories.filter(
+    (c) => !c.parentId || !categories.some((p) => p.id === c.parentId),
+  );
+  const ordered = roots.flatMap((root) => [
+    { slug: root.slug, name: root.name, depth: 0 },
+    ...categories
+      .filter((c) => c.parentId === root.id)
+      .map((child) => ({ slug: child.slug, name: child.name, depth: 1 })),
+  ]);
+  return { categories: ordered, brands };
 }
