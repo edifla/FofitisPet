@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Formatação
+        if: hashFiles('node_modules/prettier/package.json') != ''
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Checagem de tipos (depois do build, que gera next-env.d.ts)
+        run: npm run typecheck
+
+      - name: Testes
+        if: hashFiles('vitest.config.*') != ''
+        run: npm test
