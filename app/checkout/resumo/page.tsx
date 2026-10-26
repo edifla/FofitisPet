@@ -5,6 +5,7 @@ import { buildCheckoutSummary } from "@/lib/checkout";
 import { requireUser } from "@/lib/dal";
 import { formatBRL } from "@/lib/money";
 import { formatZipCode } from "@/lib/validation/address";
+import { ConfirmOrderForm } from "./confirm-form";
 
 export const metadata: Metadata = {
   title: "Resumo do pedido",
@@ -142,9 +143,11 @@ async function Summary({ searchParams }: Pick<Props, "searchParams">) {
         </p>
       </section>
 
-      <p className="text-sm text-zinc-500">
-        A confirmação do pedido e o pagamento entram nas próximas etapas (KAN-107 e KAN-26).
-      </p>
+      <ConfirmOrderForm
+        addressId={address.id}
+        shippingId={shipping.id}
+        totalCents={summary.totalCents}
+      />
     </div>
   );
 }
