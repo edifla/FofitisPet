@@ -41,3 +41,29 @@ const typesByExt: Record<string, ImageType> = {
 export function imageTypeFromKey(key: string): ImageType | null {
   return typesByExt[key.split(".").pop()?.toLowerCase() ?? ""] ?? null;
 }
+
+// Lê e valida as imagens de um campo de upload do formulário. Valida todas antes de devolver,
+// para nada ser gravado se uma delas estiver errada.
+export async function readImageUploads(
+  formData: FormData,
+  field: string,
+): Promise<{ images: { bytes: Uint8Array; ext: string }[] } | { message: string }> {
+  const files = formData
+    .getAll(field)
+    .filter((file): file is File => file instanceof File && file.size > 0);
+  if (files.length === 0) return { message: "Escolha pelo menos uma imagem." };
+  if (files.length > MAX_IMAGES_PER_UPLOAD) {
+    return { message: `Envie no máximo ${MAX_IMAGES_PER_UPLOAD} imagens por vez.` };
+  }
+  const images: { bytes: Uint8Array; ext: string }[] = [];
+  for (const file of files) {
+    if (file.size > MAX_IMAGE_BYTES) {
+      return { message: `"${file.name}" passa de ${MAX_IMAGE_BYTES / 1024 / 1024} MB.` };
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const image = detectImage(bytes);
+    if (!image) return { message: `"${file.name}" não é uma imagem JPG, PNG ou WebP.` };
+    images.push({ bytes, ext: image.ext });
+  }
+  return { images };
+}

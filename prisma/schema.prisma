@@ -458,12 +458,14 @@ model Animal {
 }
 
 model AnimalImage {
-  id        String   @id @default(cuid())
-  animalId  String
-  url       String
-  alt       String?
-  position  Int      @default(0)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  animalId   String
+  // Chave no armazenamento (lib/storage), como em ProductImage (KAN-112).
+  storageKey String   @unique
+  url        String
+  alt        String?
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
 
   animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
 

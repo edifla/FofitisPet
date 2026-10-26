@@ -44,6 +44,7 @@ await withClient(async (client) => {
   }
 
   await seedCatalog(client);
+  await seedAnimals(client);
 });
 
 // Catálogo de exemplo para navegar pela loja. Só cria o que ainda não existe (por slug e SKU),
@@ -207,4 +208,75 @@ async function seedCatalog(client) {
     );
   }
   console.log(`Catálogo de exemplo pronto (${products.length} produtos).`);
+}
+
+// Animais de exemplo para a adoção (KAN-36), sem fotos. Só cria o que não existe (por slug).
+async function seedAnimals(client) {
+  const animals = [
+    // slug, nome, espécie, porte, sexo, nascimento, temperamento, castrado, história
+    [
+      "thor",
+      "Thor",
+      "DOG",
+      "LARGE",
+      "MALE",
+      "2021-03-10",
+      ["CALM", "AFFECTIONATE", "GOOD_WITH_KIDS"],
+      true,
+      "Thor foi resgatado de uma estrada e hoje é o grandalhão mais carinhoso do abrigo. Adora passeios tranquilos.",
+    ],
+    [
+      "mel",
+      "Mel",
+      "DOG",
+      "SMALL",
+      "FEMALE",
+      "2024-01-20",
+      ["PLAYFUL", "ENERGETIC", "GOOD_WITH_DOGS"],
+      true,
+      "Mel chegou filhote e não para quieta: ama bolinhas e correr no pátio com os outros cães.",
+    ],
+    [
+      "luna",
+      "Luna",
+      "CAT",
+      "SMALL",
+      "FEMALE",
+      "2022-07-05",
+      ["SHY", "INDEPENDENT"],
+      true,
+      "Luna é tímida no começo, mas depois que confia vira companhia fiel no sofá. Ideal para casa calma.",
+    ],
+    [
+      "bolinha",
+      "Bolinha",
+      "CAT",
+      "MEDIUM",
+      "MALE",
+      "2023-11-01",
+      ["PLAYFUL", "AFFECTIONATE", "GOOD_WITH_CATS"],
+      false,
+      "Bolinha é curioso e brincalhão, se dá bem com outros gatos e adora caixas de papelão.",
+    ],
+  ];
+  for (const [slug, name, species, size, sex, birthDate, temperament, neutered, story] of animals) {
+    await client.query(
+      `INSERT INTO "Animal" (id, name, slug, species, size, sex, "birthDate", temperament, neutered, dewormed, story, "arrivedAt", "updatedAt")
+       VALUES ($1, $2, $3, $4::"Species", $5::"AnimalSize", $6::"AnimalSex", $7::date, $8::"Temperament"[], $9, true, $10, current_date - 90, now())
+       ON CONFLICT (slug) DO NOTHING`,
+      [
+        `seed_animal_${slug}`,
+        name,
+        slug,
+        species,
+        size,
+        sex,
+        birthDate,
+        temperament,
+        neutered,
+        story,
+      ],
+    );
+  }
+  console.log(`Animais de exemplo prontos (${animals.length}).`);
 }
