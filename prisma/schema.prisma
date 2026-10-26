@@ -40,6 +40,7 @@ model User {
   orders              Order[]
   adoptionRequests    AdoptionRequest[]
   shelterConsumptions ShelterConsumption[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Address {
@@ -535,4 +536,22 @@ model ShelterConsumption {
 
   @@index([variantId, consumedAt])
   @@index([animalId])
+}
+
+// ---------------------------------------------------------------------------
+// Recuperação de senha (KAN-92)
+// ---------------------------------------------------------------------------
+
+// Link de uso único enviado por e-mail. Só o hash SHA-256 do token fica no banco.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
