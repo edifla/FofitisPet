@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import type { OrderStatus } from "@/app/generated/prisma/client";
 import { requireUser } from "@/lib/dal";
 import { orderStatusLabels } from "@/lib/labels";
 import { formatBRL } from "@/lib/money";
+import { simulatedPaymentsAllowed } from "@/lib/payments";
+import { SIMULATED_PROVIDER } from "@/lib/payments/simulated";
 import { prisma } from "@/lib/prisma";
 import { formatZipCode } from "@/lib/validation/address";
+import { PixCode, SimulatePixForm, StartPixForm } from "./pix-payment";
 
 export const metadata: Metadata = {
   title: "Pedido",
@@ -38,8 +42,16 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
     where: { number, ...(user.role === "ADMIN" ? {} : { userId: user.id }) },
     select: {
       number: true,
+      userId: true,
       status: true,
       createdAt: true,
+      paidAt: true,
+      payments: {
+        where: { method: "PIX", status: "PENDING", pixExpiresAt: { gt: new Date() } },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { provider: true, pixQrCode: true, pixExpiresAt: true },
+      },
       subtotalCents: true,
       shippingCents: true,
       discountCents: true,
@@ -79,12 +91,13 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
         </p>
       </header>
 
-      {order.status === "PENDING_PAYMENT" && (
-        <p className="rounded-md bg-zinc-100 p-4 text-sm dark:bg-zinc-900">
-          Recebemos seu pedido e os itens estão reservados. O pagamento por Pix ou cartão entra na
-          próxima etapa do projeto (KAN-26).
-        </p>
-      )}
+      <PaymentSection
+        orderNumber={order.number}
+        status={order.status}
+        paidAt={order.paidAt}
+        isOwner={order.userId === user.id}
+        payments={order.payments}
+      />
 
       <section className="flex flex-col gap-2">
         <h2 className="font-medium">Itens</h2>
@@ -140,5 +153,62 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
         Continuar comprando
       </Link>
     </article>
+  );
+}
+
+const time = new Intl.DateTimeFormat("pt-BR", {
+  timeStyle: "short",
+  timeZone: "America/Sao_Paulo",
+});
+
+// Pagamento do pedido (KAN-26). Só o dono paga; o admin só vê a situação.
+function PaymentSection({
+  orderNumber,
+  status,
+  paidAt,
+  isOwner,
+  payments,
+}: {
+  orderNumber: number;
+  status: OrderStatus;
+  paidAt: Date | null;
+  isOwner: boolean;
+  payments: { provider: string; pixQrCode: string | null; pixExpiresAt: Date | null }[];
+}) {
+  if (status === "PAID") {
+    return (
+      <p className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+        Pagamento aprovado{paidAt && ` em ${dateTime.format(paidAt)}`}. Já estamos separando seu
+        pedido.
+      </p>
+    );
+  }
+  if (status !== "PENDING_PAYMENT") return null;
+
+  const pix = payments[0];
+  return (
+    <section className="flex flex-col gap-4 rounded-md bg-zinc-100 p-4 text-sm dark:bg-zinc-900">
+      <h2 className="font-medium">Pagamento</h2>
+      {!isOwner ? (
+        <p>Aguardando o pagamento do cliente.</p>
+      ) : pix?.pixQrCode ? (
+        <>
+          <p>
+            Copie o código abaixo e pague no app do seu banco
+            {pix.pixExpiresAt && <> até as {time.format(pix.pixExpiresAt)}</>}. A confirmação é
+            automática.
+          </p>
+          <PixCode code={pix.pixQrCode} />
+          {pix.provider === SIMULATED_PROVIDER && simulatedPaymentsAllowed() && (
+            <SimulatePixForm orderNumber={orderNumber} />
+          )}
+        </>
+      ) : (
+        <>
+          <p>Os itens estão reservados para você. Pague com Pix para confirmar o pedido.</p>
+          <StartPixForm orderNumber={orderNumber} />
+        </>
+      )}
+    </section>
   );
 }
