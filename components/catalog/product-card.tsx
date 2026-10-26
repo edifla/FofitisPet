@@ -21,6 +21,11 @@ export function ProductCard({ product }: { product: CatalogItem }) {
             Sem foto
           </span>
         )}
+        {product.donationEligible && (
+          <span className="absolute top-2 right-2 rounded bg-emerald-700/90 px-2 py-0.5 text-xs text-white">
+            Doável ao abrigo
+          </span>
+        )}
         {!product.inStock && (
           <span className="absolute top-2 left-2 rounded bg-zinc-900/80 px-2 py-0.5 text-xs text-white">
             Esgotado

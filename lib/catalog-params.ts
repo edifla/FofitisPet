@@ -30,6 +30,8 @@ export type CatalogFilters = {
   brands: string[];
   minPrice: string;
   maxPrice: string;
+  // Só produtos que podem ser comprados para o abrigo (KAN-29).
+  donation: boolean;
   sort: CatalogSort;
   page: number;
 };
@@ -55,6 +57,7 @@ export function parseCatalogParams(params: Params): CatalogFilters {
     brands: [...new Set(brands)].slice(0, 20),
     minPrice: first(params.preco_min).trim().slice(0, 12),
     maxPrice: first(params.preco_max).trim().slice(0, 12),
+    donation: first(params.doacao) === "sim",
     sort: Object.hasOwn(catalogSorts, sort) ? (sort as CatalogSort) : "relevancia",
     page: Math.max(1, Math.min(1000, Number(first(params.pagina)) || 1)),
   };
@@ -69,6 +72,7 @@ export function toCatalogQuery(filters: CatalogFilters) {
     brands: filters.brands,
     minPriceCents: filters.minPrice ? (parseBRL(filters.minPrice) ?? undefined) : undefined,
     maxPriceCents: filters.maxPrice ? (parseBRL(filters.maxPrice) ?? undefined) : undefined,
+    donation: filters.donation,
     sort: filters.sort,
     page: filters.page,
   };
@@ -84,6 +88,7 @@ export function catalogHref(filters: CatalogFilters, changes: Partial<CatalogFil
   for (const brand of next.brands) params.append("marca", brand);
   if (next.minPrice) params.set("preco_min", next.minPrice);
   if (next.maxPrice) params.set("preco_max", next.maxPrice);
+  if (next.donation) params.set("doacao", "sim");
   if (next.sort !== "relevancia") params.set("ordem", next.sort);
   if (next.page > 1) params.set("pagina", String(next.page));
   const query = params.toString();
