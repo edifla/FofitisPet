@@ -9,6 +9,21 @@ export type PixCharge = {
   qrCode: string;
 };
 
+// Dados do cartão como chegam ao gateway. No simulado vêm do formulário; no Mercado Pago (KAN-55)
+// o navegador troca o cartão por um token e o número nunca passa pelo nosso servidor.
+export type CardData = {
+  number: string;
+  holderName: string;
+  expiry: string;
+  cvv: string;
+};
+
+export type CardCharge = {
+  providerPaymentId: string;
+  status: GatewayStatus;
+  statusDetail: string;
+};
+
 export interface PaymentGateway {
   // Nome gravado em Payment.provider e usado para casar os webhooks.
   readonly name: string;
@@ -18,7 +33,18 @@ export interface PaymentGateway {
     payerEmail: string;
     expiresAt: Date;
   }): Promise<PixCharge>;
+  // Cobrança no cartão: o gateway responde na hora se aprovou ou recusou.
+  createCardPayment(input: {
+    reference: string;
+    amountCents: number;
+    payerEmail: string;
+    installments: number;
+    card: CardData;
+  }): Promise<CardCharge>;
 }
+
+// Erro de dados que o cliente pode corrigir (ex.: cartão que o gateway não aceita).
+export class GatewayInputError extends Error {}
 
 // Atualização de um pagamento vinda do gateway (webhook). eventId identifica o aviso, para o
 // mesmo aviso não ser processado duas vezes.

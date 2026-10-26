@@ -6,10 +6,12 @@ import type { OrderStatus } from "@/app/generated/prisma/client";
 import { requireUser } from "@/lib/dal";
 import { orderStatusLabels } from "@/lib/labels";
 import { formatBRL } from "@/lib/money";
-import { simulatedPaymentsAllowed } from "@/lib/payments";
-import { SIMULATED_PROVIDER } from "@/lib/payments/simulated";
+import { simulatedPaymentsAllowed, usingSimulatedGateway } from "@/lib/payments";
+import { SIMULATED_PROVIDER, TEST_CARD_LIST, TEST_HOLDER_NAMES } from "@/lib/payments/simulated";
 import { prisma } from "@/lib/prisma";
 import { formatZipCode } from "@/lib/validation/address";
+import { MAX_INSTALLMENTS } from "@/lib/validation/card";
+import { CardPaymentForm } from "./card-payment";
 import { PixCode, SimulatePixForm, StartPixForm } from "./pix-payment";
 
 export const metadata: Metadata = {
@@ -47,10 +49,24 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
       createdAt: true,
       paidAt: true,
       payments: {
-        where: { method: "PIX", status: "PENDING", pixExpiresAt: { gt: new Date() } },
+        // Pix ainda válido e o pagamento aprovado, se houver.
+        where: {
+          OR: [
+            { method: "PIX", status: "PENDING", pixExpiresAt: { gt: new Date() } },
+            { status: "APPROVED" },
+          ],
+        },
         orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { provider: true, pixQrCode: true, pixExpiresAt: true },
+        select: {
+          provider: true,
+          method: true,
+          status: true,
+          pixQrCode: true,
+          pixExpiresAt: true,
+          cardBrand: true,
+          cardLastFour: true,
+          installments: true,
+        },
       },
       subtotalCents: true,
       shippingCents: true,
@@ -95,6 +111,7 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
         orderNumber={order.number}
         status={order.status}
         paidAt={order.paidAt}
+        totalCents={order.totalCents}
         isOwner={order.userId === user.id}
         payments={order.payments}
       />
@@ -161,54 +178,108 @@ const time = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
 });
 
+const brandLabels: Record<string, string> = {
+  visa: "Visa",
+  master: "Mastercard",
+  amex: "American Express",
+  elo: "Elo",
+};
+
+type PaymentRow = {
+  provider: string;
+  method: "PIX" | "CREDIT_CARD";
+  status: string;
+  pixQrCode: string | null;
+  pixExpiresAt: Date | null;
+  cardBrand: string | null;
+  cardLastFour: string | null;
+  installments: number | null;
+};
+
 // Pagamento do pedido (KAN-26). Só o dono paga; o admin só vê a situação.
 function PaymentSection({
   orderNumber,
   status,
   paidAt,
+  totalCents,
   isOwner,
   payments,
 }: {
   orderNumber: number;
   status: OrderStatus;
   paidAt: Date | null;
+  totalCents: number;
   isOwner: boolean;
-  payments: { provider: string; pixQrCode: string | null; pixExpiresAt: Date | null }[];
+  payments: PaymentRow[];
 }) {
   if (status === "PAID") {
+    const approved = payments.find((payment) => payment.status === "APPROVED");
+    const how =
+      approved?.method === "CREDIT_CARD"
+        ? ` no cartão ${brandLabels[approved.cardBrand ?? ""] ?? ""} final ${approved.cardLastFour}` +
+          (approved.installments && approved.installments > 1
+            ? ` em ${approved.installments}x`
+            : "")
+        : approved?.method === "PIX"
+          ? " via Pix"
+          : "";
     return (
       <p className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-        Pagamento aprovado{paidAt && ` em ${dateTime.format(paidAt)}`}. Já estamos separando seu
-        pedido.
+        Pagamento aprovado{how}
+        {paidAt && ` em ${dateTime.format(paidAt)}`}. Já estamos separando seu pedido.
       </p>
     );
   }
   if (status !== "PENDING_PAYMENT") return null;
-
-  const pix = payments[0];
-  return (
-    <section className="flex flex-col gap-4 rounded-md bg-zinc-100 p-4 text-sm dark:bg-zinc-900">
-      <h2 className="font-medium">Pagamento</h2>
-      {!isOwner ? (
+  if (!isOwner) {
+    return (
+      <section className="rounded-md bg-zinc-100 p-4 text-sm dark:bg-zinc-900">
+        <h2 className="font-medium">Pagamento</h2>
         <p>Aguardando o pagamento do cliente.</p>
-      ) : pix?.pixQrCode ? (
-        <>
-          <p>
-            Copie o código abaixo e pague no app do seu banco
-            {pix.pixExpiresAt && <> até as {time.format(pix.pixExpiresAt)}</>}. A confirmação é
-            automática.
-          </p>
-          <PixCode code={pix.pixQrCode} />
-          {pix.provider === SIMULATED_PROVIDER && simulatedPaymentsAllowed() && (
-            <SimulatePixForm orderNumber={orderNumber} />
-          )}
-        </>
-      ) : (
-        <>
-          <p>Os itens estão reservados para você. Pague com Pix para confirmar o pedido.</p>
-          <StartPixForm orderNumber={orderNumber} />
-        </>
-      )}
+      </section>
+    );
+  }
+
+  const pix = payments.find((payment) => payment.method === "PIX" && payment.status === "PENDING");
+  const simulated = usingSimulatedGateway();
+  const installmentOptions = Array.from({ length: MAX_INSTALLMENTS }, (_, i) => ({
+    value: String(i + 1),
+    label: `${i + 1}x de ${formatBRL(Math.ceil(totalCents / (i + 1)))} sem juros`,
+  }));
+
+  return (
+    <section className="flex flex-col gap-6 rounded-md bg-zinc-100 p-4 text-sm dark:bg-zinc-900">
+      <div className="flex flex-col gap-4">
+        <h2 className="font-medium">Pagar com Pix</h2>
+        {pix?.pixQrCode ? (
+          <>
+            <p>
+              Copie o código abaixo e pague no app do seu banco
+              {pix.pixExpiresAt && <> até as {time.format(pix.pixExpiresAt)}</>}. A confirmação é
+              automática.
+            </p>
+            <PixCode code={pix.pixQrCode} />
+            {pix.provider === SIMULATED_PROVIDER && simulatedPaymentsAllowed() && (
+              <SimulatePixForm orderNumber={orderNumber} />
+            )}
+          </>
+        ) : (
+          <>
+            <p>Os itens estão reservados para você. Pague com Pix ou cartão para confirmar.</p>
+            <StartPixForm orderNumber={orderNumber} />
+          </>
+        )}
+      </div>
+      <div className="flex flex-col gap-4 border-t border-zinc-300 pt-6 dark:border-zinc-700">
+        <h2 className="font-medium">Pagar com cartão de crédito</h2>
+        <CardPaymentForm
+          orderNumber={orderNumber}
+          installmentOptions={installmentOptions}
+          testCards={
+            simulated ? { cards: TEST_CARD_LIST, holderNames: TEST_HOLDER_NAMES } : undefined
+          }
+        />
+      </div>
     </section>
   );
 }
