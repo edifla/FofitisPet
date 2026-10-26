@@ -115,7 +115,9 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
           {donation ? "Doação" : "Pedido"} #{order.number}
         </h1>
         <p className="mt-1 inline-block rounded-full bg-amber-100 px-3 py-0.5 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
-          {orderStatusLabels[order.status]}
+          {donation && order.status === "DELIVERED"
+            ? "Entregue ao abrigo"
+            : orderStatusLabels[order.status]}
         </p>
       </header>
 
@@ -259,7 +261,7 @@ function PaymentSection({
   isOwner: boolean;
   payments: PaymentRow[];
 }) {
-  if (status === "PAID") {
+  if (status === "PAID" || (donation && status === "DELIVERED")) {
     const approved = payments.find((payment) => payment.status === "APPROVED");
     const how =
       approved?.method === "CREDIT_CARD"

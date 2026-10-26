@@ -110,7 +110,9 @@ async function OrderList({ searchParams }: Pick<Props, "searchParams">) {
                 </span>
                 <span className="flex items-center gap-3">
                   <span className={`rounded-full px-3 py-0.5 text-sm ${statusTone[order.status]}`}>
-                    {orderStatusLabels[order.status]}
+                    {order.destination === "SHELTER" && order.status === "DELIVERED"
+                      ? "Entregue ao abrigo"
+                      : orderStatusLabels[order.status]}
                   </span>
                   <span className="font-medium">{formatBRL(order.totalCents)}</span>
                 </span>

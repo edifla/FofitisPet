@@ -98,3 +98,33 @@ export async function expireStaleOrders(limit = 100) {
   }
   return canceled;
 }
+
+// Doação paga (KAN-32): as unidades reservadas na loja entram no estoque do abrigo e o pedido vai
+// direto para entregue. Roda na mesma transação que marca o pagamento como aprovado.
+export async function deliverDonation(tx: Prisma.TransactionClient, orderId: string) {
+  const now = new Date();
+  const delivered = await tx.order.updateMany({
+    where: { id: orderId, destination: "SHELTER", status: "PAID" },
+    data: { status: "DELIVERED", deliveredAt: now },
+  });
+  if (delivered.count === 0) return false;
+
+  const reserved = await tx.stockMovement.groupBy({
+    by: ["variantId"],
+    where: { orderId, type: "DONATION_TRANSFER", fromLocation: "STORE", toLocation: null },
+    _sum: { quantity: true },
+  });
+  for (const line of reserved) {
+    if (!line._sum.quantity) continue;
+    await moveStock(tx, {
+      variantId: line.variantId,
+      type: "DONATION_TRANSFER",
+      from: null,
+      to: "SHELTER",
+      quantity: line._sum.quantity,
+      orderId,
+      note: "Doação paga: entregue ao abrigo",
+    });
+  }
+  return true;
+}
