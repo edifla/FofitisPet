@@ -14,6 +14,51 @@ const dateTime = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
 });
 
+// Comprovante da doação ao abrigo (KAN-35): agradecimento e resumo, sem valor fiscal.
+function donationReceipt(
+  order: {
+    number: number;
+    totalCents: number;
+    anonymous: boolean;
+    paidAt: Date | null;
+    user: { name: string };
+    payments: {
+      method: "PIX" | "CREDIT_CARD";
+      cardBrand: string | null;
+      cardLastFour: string | null;
+      installments: number | null;
+    }[];
+  },
+  items: string[],
+  link: string,
+) {
+  const payment = order.payments[0];
+  const method = !payment
+    ? null
+    : payment.method === "PIX"
+      ? "Pix"
+      : `Cartão de crédito final ${payment.cardLastFour}${payment.installments && payment.installments > 1 ? ` em ${payment.installments}x` : ""}`;
+  return [
+    "Muito obrigado por ajudar os animais do abrigo da FofitisPet!",
+    "Sua doação foi paga e os itens já entraram no estoque do abrigo.",
+    "",
+    "COMPROVANTE DE DOAÇÃO",
+    `Número: ${order.number}`,
+    ...(order.paidAt ? [`Data do pagamento: ${dateTime.format(order.paidAt)}`] : []),
+    `Doador(a): ${order.user.name}${order.anonymous ? " (doação anônima: seu nome não aparece na transparência)" : ""}`,
+    "Destino: abrigo da FofitisPet",
+    ...(method ? [`Forma de pagamento: ${method}`] : []),
+    "",
+    "Itens doados:",
+    ...items,
+    `Total doado: ${formatBRL(order.totalCents)}`,
+    "",
+    "Este comprovante é só um agradecimento e não tem valor fiscal.",
+    "",
+    `Veja a doação: ${link}`,
+  ];
+}
+
 export async function sendOrderEmail(orderId: string, kind: OrderEmailKind) {
   try {
     const order = await prisma.order.findUnique({
@@ -25,6 +70,14 @@ export async function sendOrderEmail(orderId: string, kind: OrderEmailKind) {
         totalCents: true,
         cancelReason: true,
         trackingCode: true,
+        anonymous: true,
+        paidAt: true,
+        payments: {
+          where: { status: "APPROVED" },
+          orderBy: { paidAt: "desc" },
+          take: 1,
+          select: { method: true, cardBrand: true, cardLastFour: true, installments: true },
+        },
         user: { select: { name: true, email: true } },
         items: {
           orderBy: { productName: "asc" },
@@ -55,17 +108,10 @@ export async function sendOrderEmail(orderId: string, kind: OrderEmailKind) {
       },
       paid: {
         subject: donation
-          ? `Obrigado pela doação! Pedido #${order.number}`
+          ? `Comprovante da sua doação #${order.number} ao abrigo`
           : `Pagamento aprovado: pedido #${order.number}`,
         body: donation
-          ? [
-              "Seu pagamento foi aprovado e os itens já foram entregues ao estoque do abrigo.",
-              "Muito obrigado por ajudar os nossos animais!",
-              "",
-              ...summary,
-              "",
-              link,
-            ]
+          ? donationReceipt(order, items, link)
           : [
               "Seu pagamento foi aprovado. Já estamos separando o seu pedido.",
               "",

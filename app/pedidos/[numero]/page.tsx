@@ -14,6 +14,7 @@ import { formatZipCode } from "@/lib/validation/address";
 import { MAX_INSTALLMENTS } from "@/lib/validation/card";
 import { CardPaymentForm } from "./card-payment";
 import { PixCode, SimulatePixForm, StartPixForm } from "./pix-payment";
+import { ResendReceiptButton } from "./receipt-button";
 
 export const metadata: Metadata = {
   title: "Pedido",
@@ -273,13 +274,18 @@ function PaymentSection({
           ? " via Pix"
           : "";
     return (
-      <p className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-        Pagamento aprovado{how}
-        {paidAt && ` em ${dateTime.format(paidAt)}`}.
-        {donation
-          ? " Obrigado! Os itens foram para o estoque do abrigo."
-          : " Já estamos separando seu pedido."}
-      </p>
+      <div className="flex flex-col gap-2 rounded-md bg-emerald-50 p-4 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+        <p>
+          Pagamento aprovado{how}
+          {paidAt && ` em ${dateTime.format(paidAt)}`}.
+          {donation
+            ? " Obrigado! Os itens foram para o estoque do abrigo."
+            : " Já estamos separando seu pedido."}
+        </p>
+        {donation && status === "DELIVERED" && isOwner && (
+          <ResendReceiptButton orderNumber={orderNumber} />
+        )}
+      </div>
     );
   }
   if (status === "CANCELED") {
