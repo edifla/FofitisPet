@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getCart } from "@/lib/cart";
+import { getCart, MAX_QUANTITY_PER_ITEM } from "@/lib/cart";
 import { formatBRL } from "@/lib/money";
 import { removeFromCart } from "./actions";
+import { QuantityForm } from "./quantity-form";
 
 export const metadata: Metadata = {
   title: "Carrinho",
@@ -69,7 +70,16 @@ async function CartContents() {
               )}
             </div>
             <div className="flex flex-col items-end gap-1 text-right">
-              <p className="text-sm text-zinc-500">Qtd. {item.quantity}</p>
+              {item.available ? (
+                <QuantityForm
+                  itemId={item.id}
+                  quantity={item.quantity}
+                  max={Math.min(item.stock, MAX_QUANTITY_PER_ITEM)}
+                  productName={item.productName}
+                />
+              ) : (
+                <p className="text-sm text-zinc-500">Qtd. {item.quantity}</p>
+              )}
               <p className="font-semibold">{formatBRL(item.totalCents)}</p>
               <form action={removeFromCart.bind(null, item.id)}>
                 <button type="submit" className="text-sm text-red-700 underline dark:text-red-400">
