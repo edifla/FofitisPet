@@ -1,6 +1,7 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
-import { type CardCharge, GatewayInputError, type PaymentGateway } from "./types";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import * as z from "zod";
+import { type CardCharge, GatewayInputError, type PaymentGateway, WebhookError } from "./types";
 
 // Gateway simulado: não fala com nenhum provedor. Gera identificadores e códigos de mentira no
 // mesmo formato que um gateway real, para o checkout e os pedidos funcionarem de ponta a ponta.
@@ -30,7 +31,51 @@ export const simulatedGateway: PaymentGateway = {
     const outcome = TEST_OUTCOMES[card.holderName.trim().toUpperCase()] ?? TEST_OUTCOMES.APRO;
     return { providerPaymentId: `sim_card_${randomUUID()}`, ...outcome };
   },
+
+  // Aviso no formato do simulado: JSON assinado com HMAC-SHA256 do corpo no cabeçalho
+  // x-simulado-signature ("sha256=<hex>"), com o segredo PAYMENT_WEBHOOK_SECRET.
+  readWebhook({ headers, body, secret }) {
+    const expected = Buffer.from(signSimulatedWebhook(body, secret));
+    const received = Buffer.from(headers.get(SIGNATURE_HEADER) ?? "");
+    if (received.length !== expected.length || !timingSafeEqual(received, expected)) {
+      throw new WebhookError("Assinatura inválida.");
+    }
+    let json: unknown;
+    try {
+      json = JSON.parse(body);
+    } catch {
+      throw new WebhookError("Corpo inválido.");
+    }
+    const parsed = webhookSchema.safeParse(json);
+    if (!parsed.success) throw new WebhookError("Corpo inválido.");
+    const { id, type, data } = parsed.data;
+    return {
+      provider: SIMULATED_PROVIDER,
+      eventId: id,
+      type,
+      providerPaymentId: data.id,
+      status: data.status,
+      statusDetail: data.status_detail ?? null,
+      payload: parsed.data,
+    };
+  },
 };
+
+export const SIGNATURE_HEADER = "x-simulado-signature";
+
+export function signSimulatedWebhook(body: string, secret: string) {
+  return `sha256=${createHmac("sha256", secret).update(body).digest("hex")}`;
+}
+
+const webhookSchema = z.object({
+  id: z.string().min(1).max(100),
+  type: z.string().min(1).max(50),
+  data: z.object({
+    id: z.string().min(1).max(100),
+    status: z.enum(["PENDING", "APPROVED", "REJECTED", "CANCELED"]),
+    status_detail: z.string().max(100).optional(),
+  }),
+});
 
 // Os mesmos cartões e nomes de teste do Mercado Pago, para a troca na KAN-55 ser natural.
 export const TEST_CARD_LIST = [

@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { Prisma } from "@/app/generated/prisma/client";
+import { expireOrderIfStale } from "@/lib/orders";
 import { prisma } from "@/lib/prisma";
 import {
   GatewayInputError,
@@ -30,6 +31,9 @@ async function payableOrder(userId: string, orderNumber: number) {
     },
   });
   if (!order) throw new PaymentError("Pedido não encontrado.");
+  if (order.status === "PENDING_PAYMENT" && (await expireOrderIfStale({ id: order.id }))) {
+    throw new PaymentError("O prazo de pagamento deste pedido expirou e ele foi cancelado.");
+  }
   if (order.status !== "PENDING_PAYMENT")
     throw new PaymentError("Este pedido não está aguardando pagamento.");
   return order;
@@ -173,7 +177,12 @@ export async function applyGatewayUpdate(update: GatewayUpdate): Promise<UpdateR
           .then(() => result);
 
       if (!payment) return done("unknown-payment");
-      if (payment.status !== "PENDING" || update.status === "PENDING") return done("ignored");
+      // Só pagamentos pendentes mudam. Exceção: um pagamento que nós cancelamos (pedido expirado)
+      // e que o gateway aprovou mesmo assim é registrado, para ser estornado.
+      const canChange =
+        payment.status === "PENDING" ||
+        (payment.status === "CANCELED" && update.status === "APPROVED");
+      if (!canChange || update.status === "PENDING") return done("ignored");
 
       const now = new Date();
       await tx.payment.update({
@@ -185,15 +194,19 @@ export async function applyGatewayUpdate(update: GatewayUpdate): Promise<UpdateR
         },
       });
       if (update.status === "APPROVED") {
-        if (payment.order.status === "PENDING_PAYMENT") {
-          await tx.order.update({
-            where: { id: payment.order.id },
-            data: { status: "PAID", paidAt: now },
-          });
-        } else {
+        // Condicional: se o pedido expirou no mesmo instante, não volta para pago.
+        const paid = await tx.order.updateMany({
+          where: { id: payment.order.id, status: "PENDING_PAYMENT" },
+          data: { status: "PAID", paidAt: now },
+        });
+        if (paid.count === 0) {
           // Pago depois de cancelado (ex.: Pix pago após o prazo): precisa de reembolso manual.
+          await tx.payment.update({
+            where: { id: payment.id },
+            data: { statusDetail: "approved_after_order_closed" },
+          });
           console.warn(
-            `Pagamento aprovado para o pedido #${payment.order.number}, que está ${payment.order.status}. Verificar reembolso.`,
+            `Pagamento aprovado para o pedido #${payment.order.number}, que não aguardava mais pagamento. Verificar reembolso.`,
           );
         }
       }
