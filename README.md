@@ -86,6 +86,14 @@ Os testes em [`tests/`](tests) cobrem os fluxos críticos (KAN-47): checkout, co
 - **Entrada**: formulários validados com Zod no servidor; argumentos de Server Actions ligados com `.bind` (ids, número do pedido) passam por `lib/validation/args.ts`, porque também vêm do navegador.
 - **Limite de tentativas** (`lib/rate-limit.ts`, guardado no banco): login por IP e por e-mail (também no endpoint do Auth.js), cadastro, recuperação de senha, checkout, pagamento com cartão e Pix, reenvio de comprovante e formulário de adoção. O IP vem de `x-forwarded-for`, que só é confiável atrás de um proxy como o da Vercel. Os contadores vencidos são apagados pela rotina `/api/pedidos/expirar`.
 
+## Monitoramento
+
+Sem serviço externo (KAN-51):
+
+- **Erros**: os do servidor chegam pelo `onRequestError` de [`instrumentation.ts`](instrumentation.ts) e os do navegador pelas telas `app/error.tsx` e `app/global-error.tsx`. Ficam agrupados em `/admin/erros`, onde podem ser marcados como resolvidos (voltam a abrir se repetirem).
+- **Métricas**: `/admin/metricas` mostra visualizações por dia e páginas mais vistas (contagem anônima, sem cookies nem IP; bots e "Não rastrear" ficam de fora), contas, vendas, doações, adoções e erros abertos.
+- A rotina `/api/pedidos/expirar` apaga erros resolvidos há mais de 90 dias e visualizações com mais de 13 meses.
+
 ## Como contribuir
 
 1. Crie uma branch a partir do `master` com a chave do card do Jira, por exemplo `feat/KAN-22-catalogo`.
