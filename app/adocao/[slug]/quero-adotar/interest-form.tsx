@@ -185,8 +185,18 @@ export function InterestForm({
             defaultChecked={state?.values?.consent === "on"}
             aria-invalid={state?.errors?.consent ? true : undefined}
           />
-          Autorizo o abrigo da FofitisPet a usar estes dados só para avaliar a adoção e entrar em
-          contato comigo.
+          <span>
+            Autorizo o abrigo da FofitisPet a usar estes dados só para avaliar a adoção e entrar em
+            contato comigo, conforme a{" "}
+            <Link href="/privacidade" className="underline" target="_blank">
+              política de privacidade
+            </Link>
+            . Li o{" "}
+            <Link href="/termo-de-adocao" className="underline" target="_blank">
+              termo de adoção responsável
+            </Link>
+            .
+          </span>
         </label>
         {state?.errors?.consent && (
           <p className="ml-6 text-sm text-red-600">{state.errors.consent.join(" ")}</p>

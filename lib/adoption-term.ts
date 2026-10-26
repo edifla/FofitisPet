@@ -7,26 +7,16 @@ import {
   animalSpeciesLabels,
   housingTypeLabels,
 } from "@/lib/labels";
+import { ADOPTION_TERM_CLAUSES, LEGAL } from "@/lib/legal";
 import { prisma } from "@/lib/prisma";
 import { formatPhone } from "@/lib/validation/adoption";
 
 // Termo de adoção em PDF (KAN-41), preenchido com os dados do adotante e do animal. CPF, RG e
 // endereço completo não são pedidos no formulário: ficam em branco para preencher à mão na
-// entrega, junto com as assinaturas. As cláusulas são provisórias até os textos legais (KAN-14).
+// entrega, junto com as assinaturas. As cláusulas ficam em lib/legal.ts (KAN-14, em revisão).
 
 const date = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "America/Sao_Paulo" });
 const shortDate = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "UTC" });
-
-const CLAUSES = [
-  "Oferecer ao animal alimentação adequada, água limpa, abrigo contra sol e chuva, espaço compatível com o porte e atenção diária.",
-  "Manter as vacinas e a vermifugação em dia e levar o animal ao veterinário sempre que necessário.",
-  "Castrar o animal, caso ainda não seja castrado, na idade indicada pelo veterinário.",
-  "Não abandonar, vender, doar ou repassar o animal a terceiros. Se não puder mais ficar com ele, devolvê-lo ao abrigo.",
-  "Não manter o animal acorrentado ou preso em espaço pequeno, e não usá-lo para guarda, reprodução ou fins comerciais.",
-  "Permitir que o abrigo acompanhe a adaptação por contato ou visita combinada nos primeiros meses.",
-  "Avisar o abrigo em caso de mudança de endereço ou telefone, perda, fuga ou morte do animal.",
-  "Estar ciente de que maus-tratos a animais são crime (Lei 9.605/1998, art. 32) e de que o descumprimento deste termo permite ao abrigo pedir a devolução do animal.",
-];
 
 export async function getTermData(requestId: string) {
   return prisma.adoptionRequest.findUnique({
@@ -140,7 +130,7 @@ export async function buildAdoptionTerm(data: TermData): Promise<Uint8Array> {
   const female = animal.sex === "FEMALE";
 
   w.text("TERMO DE ADOÇÃO RESPONSÁVEL", { size: 15, bold: true, gap: 2 });
-  w.text("Abrigo FofitisPet", { size: 10, gap: 14 });
+  w.text(`Abrigo ${LEGAL.companyName}`, { size: 10, gap: 14 });
 
   w.text("Adotante", { size: 12, bold: true });
   w.text(`Nome: ${data.applicantName}`);
@@ -174,10 +164,12 @@ export async function buildAdoptionTerm(data: TermData): Promise<Uint8Array> {
     `Ao adotar ${animal.name}, o adotante assume a guarda e a responsabilidade pelo animal e se compromete a:`,
     { gap: 6 },
   );
-  CLAUSES.forEach((clause, index) => w.text(`${index + 1}. ${clause}`, { indent: 8 }));
+  ADOPTION_TERM_CLAUSES.forEach((clause, index) =>
+    w.text(`${index + 1}. ${clause}`, { indent: 8 }),
+  );
   w.space(8);
   w.text(
-    `Adoção aprovada pelo abrigo em ${data.decidedAt ? date.format(data.decidedAt) : "—"}. Solicitação nº ${data.id}.`,
+    `Adoção aprovada pelo abrigo em ${data.decidedAt ? date.format(data.decidedAt) : "—"}. Solicitação nº ${data.id}. Versão do termo: ${LEGAL.version}.`,
     { size: 9 },
   );
   w.text("Local e data: ________________________________________", { gap: 8 });

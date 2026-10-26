@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { buildDonationSummary } from "@/lib/checkout";
 import { requireUser } from "@/lib/dal";
+import { DONATION_NOTICE } from "@/lib/legal";
 import { formatBRL } from "@/lib/money";
 import { ConfirmDonationForm } from "./confirm-donation-form";
 
@@ -20,6 +21,7 @@ export default function DonationCheckoutPage() {
         Os itens vão direto para o estoque do abrigo da FofitisPet assim que o pagamento for
         aprovado. Não há frete nem endereço.
       </p>
+      <p className="mb-6 text-sm text-zinc-500">{DONATION_NOTICE}</p>
       <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>
         <DonationSummary />
       </Suspense>
