@@ -136,3 +136,10 @@ export const getCart = cache(async () => {
 });
 
 export type CartLine = Awaited<ReturnType<typeof getCart>>["items"][number];
+
+// Remove um item do carrinho atual. Itens de outro carrinho são ignorados.
+export async function removeItem(itemId: string) {
+  const cartId = await readCartId();
+  if (!cartId) return;
+  await prisma.cartItem.deleteMany({ where: { id: itemId, cartId } });
+}

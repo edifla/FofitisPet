@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import * as z from "zod";
-import { addItem, CartError, MAX_QUANTITY_PER_ITEM } from "@/lib/cart";
+import { addItem, CartError, MAX_QUANTITY_PER_ITEM, removeItem } from "@/lib/cart";
 import type { FormState } from "@/lib/validation/form";
 
 const addSchema = z.object({
@@ -30,4 +30,9 @@ export async function addToCart(_state: FormState, formData: FormData): Promise<
     if (error instanceof CartError) return { message: error.message };
     throw error;
   }
+}
+
+export async function removeFromCart(itemId: string) {
+  await removeItem(itemId);
+  refresh();
 }
