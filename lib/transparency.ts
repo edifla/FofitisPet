@@ -8,6 +8,8 @@ import { prisma } from "@/lib/prisma";
 
 const DELIVERED_DONATION = { destination: "SHELTER", status: "DELIVERED" } as const;
 const RECENT_DAYS = 30;
+// Meses no gráfico de doações por mês.
+const CHART_MONTHS = 6;
 
 // "Maria Souza" → "Maria S."; doações anônimas não mostram nome (KAN-31).
 export function donorLabel(name: string, anonymous: boolean) {
@@ -33,6 +35,7 @@ export async function getTransparencyReport() {
     shelterStock,
     recentDonations,
     photos,
+    byMonth,
   ] = await Promise.all([
     prisma.order.aggregate({
       where: DELIVERED_DONATION,
@@ -91,6 +94,14 @@ export async function getTransparencyReport() {
       take: 24,
       select: { id: true, url: true, caption: true, takenOn: true },
     }),
+    // Valor das doações entregues por mês (fuso de São Paulo).
+    prisma.$queryRaw<{ month: string; cents: number; count: number }[]>`
+      SELECT to_char(("deliveredAt" AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM') AS month,
+             SUM("totalCents")::int AS cents, COUNT(*)::int AS count
+      FROM "Order"
+      WHERE destination = 'SHELTER' AND status = 'DELIVERED'
+        AND "deliveredAt" >= date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') - make_interval(months => ${CHART_MONTHS - 1}::int)
+      GROUP BY 1`,
   ]);
 
   const consumedVariants = await prisma.productVariant.findMany({
@@ -134,5 +145,25 @@ export async function getTransparencyReport() {
       items: order.items,
     })),
     photos,
+    monthly: lastMonths(CHART_MONTHS).map((month) => {
+      const row = byMonth.find((r) => r.month === month);
+      return { month, cents: row?.cents ?? 0, count: row?.count ?? 0 };
+    }),
   };
+}
+
+// Os últimos n meses (AAAA-MM), do mais antigo ao atual, no fuso de São Paulo.
+function lastMonths(n: number) {
+  const [year, month] = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+  })
+    .format(new Date())
+    .split("-")
+    .map(Number);
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(Date.UTC(year, month - 1 - (n - 1 - i), 1));
+    return d.toISOString().slice(0, 7);
+  });
 }

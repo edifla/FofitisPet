@@ -36,13 +36,14 @@ async function EditProductForm({ params }: Pick<PageProps<"/admin/produtos/[id]"
       <section className="border-t border-zinc-200 pt-6 dark:border-zinc-800">
         <h2 className="mb-2 font-medium">Excluir produto</h2>
         <p className="mb-3 text-sm text-zinc-500">
-          Só é possível excluir produtos que nunca foram vendidos. Para tirar da loja, desmarque
-          &quot;Ativo na loja&quot;.
+          O produto sai da loja e do admin. Se ele já tiver vendas, os pedidos antigos continuam com
+          o histórico. Para só tirar da loja por um tempo, desmarque &quot;Ativo na loja&quot;.
         </p>
         <DeleteButton
           action={deleteProduct.bind(null, product.id)}
           confirmMessage={`Excluir o produto "${product.name}" e as variações dele?`}
           label="Excluir produto"
+          appearance="button"
         />
       </section>
     </div>

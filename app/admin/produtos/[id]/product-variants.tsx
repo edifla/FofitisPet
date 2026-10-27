@@ -5,6 +5,7 @@ import { formatBRL, formatWeight } from "@/lib/money";
 import { Notice } from "@/components/ui/notice";
 import { deleteVariant } from "../../actions";
 import { VariantForm } from "./variant-form";
+import { table, tableClasses } from "@/components/ui/table";
 
 export async function ProductVariants({ productId }: { productId: string }) {
   const variants = await listProductVariants(productId);
@@ -34,23 +35,23 @@ export async function ProductVariants({ productId }: { productId: string }) {
         </p>
       </div>
       {variants.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
+        <div className={table.wrap}>
+          <table className={table.table}>
+            <thead className={table.head}>
               <tr>
-                <th className="py-2 pr-4 font-medium">Variação</th>
-                <th className="py-2 pr-4 font-medium">SKU</th>
-                <th className="py-2 pr-4 font-medium">Preço</th>
-                <th className="py-2 pr-4 font-medium">Peso</th>
-                <th className="py-2 font-medium">
+                <th className={tableClasses("th")}>Variação</th>
+                <th className={tableClasses("th")}>SKU</th>
+                <th className={tableClasses("th")}>Preço</th>
+                <th className={tableClasses("th")}>Peso</th>
+                <th className={tableClasses("th")}>
                   <span className="sr-only">Ações</span>
                 </th>
               </tr>
             </thead>
             <tbody>
               {variants.map((variant) => (
-                <tr key={variant.id} className="border-b border-zinc-100 dark:border-zinc-900">
-                  <td className="py-2 pr-4">
+                <tr key={variant.id} className={table.row}>
+                  <td className={tableClasses("td")}>
                     <Link
                       href={`/admin/produtos/${productId}/variacoes/${variant.id}`}
                       className="font-medium underline"
@@ -59,10 +60,10 @@ export async function ProductVariants({ productId }: { productId: string }) {
                     </Link>
                     {!variant.active && <span className="ml-2 text-zinc-500">(inativa)</span>}
                   </td>
-                  <td className="py-2 pr-4 font-mono">{variant.sku}</td>
-                  <td className="py-2 pr-4">{formatBRL(variant.priceCents)}</td>
-                  <td className="py-2 pr-4">{formatWeight(variant.weightGrams)}</td>
-                  <td className="py-2">
+                  <td className={tableClasses("td", "font-mono")}>{variant.sku}</td>
+                  <td className={tableClasses("td")}>{formatBRL(variant.priceCents)}</td>
+                  <td className={tableClasses("td")}>{formatWeight(variant.weightGrams)}</td>
+                  <td className={tableClasses("td")}>
                     <DeleteButton
                       action={deleteVariant.bind(null, variant.id)}
                       confirmMessage={`Excluir a variação "${variant.name}"?`}

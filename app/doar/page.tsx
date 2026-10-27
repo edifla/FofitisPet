@@ -8,6 +8,7 @@ import { DONATION_NOTICE } from "@/lib/legal";
 import { formatBRL } from "@/lib/money";
 import { DonateKitButton } from "./donate-kit-button";
 import { cardClasses } from "@/components/ui/card";
+import { ImpactLink } from "@/components/donation/impact-link";
 import { PageHero } from "@/components/ui/page-hero";
 import { containerClasses, gridClasses } from "@/components/ui/layout";
 
@@ -29,6 +30,7 @@ export default function DonatePage() {
         <p className="max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">{DONATION_NOTICE}</p>
       </PageHero>
       <div className={containerClasses("default", "flex flex-col gap-8 pt-4")}>
+        <ImpactLink />
         <Suspense>
           <CampaignList heading="Campanhas em andamento" />
         </Suspense>
@@ -45,19 +47,19 @@ export default function DonatePage() {
         <p className="flex flex-wrap gap-3 text-sm">
           <Link
             href="/abrigo"
-            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-donate-300 dark:ring-zinc-800"
           >
             Ver o que está faltando no abrigo
           </Link>
           <Link
             href="/produtos?doacao=sim"
-            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-donate-300 dark:ring-zinc-800"
           >
             Escolher produtos avulsos para doar
           </Link>
           <Link
             href="/transparencia"
-            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-donate-300 dark:ring-zinc-800"
           >
             Ver como as doações são usadas
           </Link>

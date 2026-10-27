@@ -45,7 +45,7 @@ const swatches = [
   ["brand-600", "bg-brand-600"],
   ["brand-700 (primary)", "bg-brand-700"],
   ["brand-800", "bg-brand-800"],
-  ["emerald-700 (doação)", "bg-emerald-700"],
+  ["donate-700 (doação, coral)", "bg-donate-700"],
 ] as const;
 
 async function Showcase() {

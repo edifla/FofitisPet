@@ -53,7 +53,7 @@ export async function CampaignList({
                   aria-valuenow={percent}
                   aria-valuetext={`${formatFoodTotal(raisedGrams)} de ${formatFoodTotal(campaign.goalGrams)}`}
                 >
-                  <div className="h-full bg-emerald-600" style={{ width: `${percent}%` }} />
+                  <div className="h-full bg-donate-600" style={{ width: `${percent}%` }} />
                 </div>
                 <p className="text-sm">
                   <strong>{formatFoodTotal(raisedGrams)}</strong> de{" "}

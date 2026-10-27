@@ -232,7 +232,7 @@ async function AnimalProfile({ params }: Pick<Props, "params">) {
 
           {/* Selo de ração recebida (KAN-45). */}
           {(foodGrams > 0 || animal.status !== "ADOPTED") && (
-            <section className="flex flex-col gap-1 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+            <section className="flex flex-col gap-1 rounded-2xl bg-donate-50 p-4 text-sm text-donate-900 dark:bg-donate-950 dark:text-donate-100">
               {foodGrams > 0 ? (
                 <p>
                   <strong>{formatFoodTotal(foodGrams)} de ração</strong> já alimentaram {a}{" "}

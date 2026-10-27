@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { Suspense } from "react";
 import { PageViews } from "@/components/monitoring/page-views";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { themeScript } from "@/components/theme-toggle";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -30,7 +32,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="pt-BR"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // O script de tema muda data-theme antes da hidratação.
+      suppressHydrationWarning
+    >
       <body className="flex min-h-full flex-col">
         {/* Atalho para quem navega pelo teclado ou leitor de tela (KAN-50). */}
         <a
@@ -53,6 +60,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </div>
         <SiteFooter />
+        {/* Tema claro/escuro antes da página aparecer, sem piscar (components/theme-toggle.tsx). */}
+        <Script id="tema" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
         {/* usePathname só existe no momento do pedido: fica fora da pré-renderização. */}
         <Suspense fallback={null}>
           <PageViews />

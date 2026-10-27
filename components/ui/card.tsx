@@ -10,7 +10,7 @@ export function cardClasses({
   return cn(
     "flex flex-col gap-3 rounded-2xl border bg-surface p-4 shadow-sm shadow-zinc-900/5",
     tone === "donate"
-      ? "border-emerald-200 dark:border-emerald-900"
+      ? "border-donate-200 dark:border-donate-900"
       : "border-zinc-200 dark:border-zinc-800",
     className,
   );

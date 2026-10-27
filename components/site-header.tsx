@@ -4,6 +4,7 @@ import { Logo } from "@/components/brand/logo";
 import { CartLink } from "@/components/cart-link";
 import { HeaderNav, MobileMenu } from "@/components/header-nav";
 import { NAV_LINKS } from "@/components/nav-links";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonClasses } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/dal";
 import { formatBRL } from "@/lib/money";
@@ -24,7 +25,7 @@ export function SiteHeader() {
         </Link>
       </aside>
       <header className="sticky top-0 z-40 border-b border-zinc-200/80 bg-background/85 backdrop-blur-md dark:border-zinc-800/80">
-        <div className="relative mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3">
+        <div className="relative flex h-16 w-full items-center justify-between gap-4 px-4 md:px-8">
           <Link href="/" aria-label="FofitisPet, página inicial" className="shrink-0">
             <Logo />
           </Link>
@@ -32,6 +33,7 @@ export function SiteHeader() {
             <HeaderNav />
           </Suspense>
           <div className="flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
             <Suspense fallback={<span className="size-10" />}>
               <CartLink />
             </Suspense>

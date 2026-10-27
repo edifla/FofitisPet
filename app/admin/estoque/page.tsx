@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { LOW_STOCK, listStock } from "@/lib/admin/catalog";
+import { table, tableClasses } from "@/components/ui/table";
 
 export const metadata: Metadata = { title: "Estoque" };
 
@@ -37,35 +38,35 @@ async function StockTable({ searchParams }: Pick<Props, "searchParams">) {
           {onlyLow ? "Nenhuma variação com estoque baixo." : "Nenhuma variação cadastrada ainda."}
         </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
+        <div className={table.wrap}>
+          <table className={table.table}>
+            <thead className={table.head}>
               <tr>
-                <th className="py-2 pr-4 font-medium">Produto</th>
-                <th className="py-2 pr-4 font-medium">SKU</th>
-                <th className="py-2 pr-4 text-right font-medium">Loja</th>
-                <th className="py-2 pr-4 text-right font-medium">Abrigo</th>
-                <th className="py-2 font-medium">
+                <th className={tableClasses("th")}>Produto</th>
+                <th className={tableClasses("th")}>SKU</th>
+                <th className={tableClasses("th", "text-right")}>Loja</th>
+                <th className={tableClasses("th", "text-right")}>Abrigo</th>
+                <th className={tableClasses("th")}>
                   <span className="sr-only">Ações</span>
                 </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} className="border-b border-zinc-100 dark:border-zinc-900">
-                  <td className="py-2 pr-4">
+                <tr key={row.id} className={table.row}>
+                  <td className={tableClasses("td")}>
                     {row.product.name} · {row.name}
                     {(!row.active || !row.product.active) && (
                       <span className="ml-2 text-zinc-500">(inativo)</span>
                     )}
                   </td>
-                  <td className="py-2 pr-4 font-mono">{row.sku}</td>
+                  <td className={tableClasses("td", "font-mono")}>{row.sku}</td>
                   <td
                     className={`py-2 pr-4 text-right tabular-nums ${row.store <= LOW_STOCK ? "font-semibold text-red-700 dark:text-red-400" : ""}`}
                   >
                     {row.store}
                   </td>
-                  <td className="py-2 pr-4 text-right tabular-nums">
+                  <td className={tableClasses("td", "text-right tabular-nums")}>
                     {row.shelter}
                     {row.shelterTarget !== null && (
                       <span
@@ -80,7 +81,7 @@ async function StockTable({ searchParams }: Pick<Props, "searchParams">) {
                       </span>
                     )}
                   </td>
-                  <td className="py-2">
+                  <td className={tableClasses("td")}>
                     <Link href={`/admin/estoque/${row.id}`} className="underline">
                       Movimentar
                     </Link>

@@ -15,8 +15,8 @@ const variants: Record<ButtonVariant, string> = {
   primary: "bg-primary text-on-primary hover:bg-primary-hover",
   // Ações secundárias e "voltar".
   secondary: "border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900",
-  // Tudo que leva ao abrigo: doar, ajudar (branco sobre emerald-700 = 5,4:1).
-  donate: "bg-emerald-700 text-white hover:bg-emerald-800",
+  // Tudo que leva ao abrigo: doar, ajudar (branco sobre donate-700 = 5,9:1).
+  donate: "bg-donate-700 text-white hover:bg-donate-800",
   // Ações destrutivas (excluir conta).
   danger: "bg-red-700 text-white hover:bg-red-800",
 };

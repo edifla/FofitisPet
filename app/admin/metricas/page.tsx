@@ -1,133 +1,176 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getMetrics, METRICS_DAYS } from "@/lib/admin/metrics";
+import { Panel, StatTile } from "@/components/admin/panel";
+import { BarList } from "@/components/charts/bar-list";
+import { TimeChart } from "@/components/charts/time-chart";
+import { cn } from "@/components/ui/cn";
+import {
+  AlertIcon,
+  BagIcon,
+  EyeIcon,
+  GiftIcon,
+  HeartIcon,
+  PawOutlineIcon,
+} from "@/components/ui/icons";
+import { adoptionStatusLabels } from "@/lib/adoption-flow";
+import { getMetrics, METRICS_RANGES, parseMetricsDays } from "@/lib/admin/metrics";
 import { formatBRL } from "@/lib/money";
-import { gridClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = { title: "Métricas" };
 
-const day = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
+type Props = PageProps<"/admin/metricas">;
 
-// Métricas básicas de uso (KAN-51): visualizações anônimas e números do negócio, sem serviço
-// externo.
-export default function MetricsPage() {
+// Métricas de uso e do negócio (KAN-51), sem serviço externo: visualizações anônimas, vendas,
+// doações e adoções, com gráficos por dia e filtro de período.
+export default function MetricsPage({ searchParams }: Props) {
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Métricas</h1>
+        <p className="text-sm text-zinc-500">
+          Como a loja, as doações e a adoção estão indo. Contagem anônima, sem cookies.
+        </p>
+      </div>
+      <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>
+        <Metrics searchParams={searchParams} />
+      </Suspense>
+    </div>
+  );
+}
+
+const shortDay = (day: string) => `${day.slice(8, 10)}/${day.slice(5, 7)}`;
+
+async function Metrics({ searchParams }: Pick<Props, "searchParams">) {
+  const days = parseMetricsDays((await searchParams).dias);
+  const m = await getMetrics(days);
+  const totalViews = m.daily.reduce((sum, d) => sum + d.views, 0);
+
   return (
     <>
-      <h1 className="mb-2 text-2xl font-semibold">Métricas</h1>
-      <p className="mb-6 text-sm text-zinc-500">Últimos {METRICS_DAYS} dias.</p>
-      <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>
-        <Metrics />
-      </Suspense>
-    </>
-  );
-}
-
-function Stat({ label, value, href }: { label: string; value: string; href?: string }) {
-  return (
-    <div className="flex flex-col gap-1 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-      <dt className="text-sm text-zinc-500">{label}</dt>
-      <dd className="text-2xl font-semibold">
-        {href ? (
-          <Link href={href} className="hover:underline">
-            {value}
+      {/* Período: vale para todos os números e gráficos abaixo. */}
+      <nav aria-label="Período" className="flex flex-wrap items-center gap-2">
+        {METRICS_RANGES.map((range) => (
+          <Link
+            key={range}
+            href={`/admin/metricas?dias=${range}`}
+            aria-current={range === days ? "page" : undefined}
+            className={cn(
+              "rounded-full px-4 py-1.5 text-sm font-medium ring-1 transition-colors",
+              range === days
+                ? "bg-primary text-on-primary ring-primary"
+                : "bg-surface ring-zinc-200 hover:bg-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-800",
+            )}
+          >
+            Últimos {range} dias
           </Link>
-        ) : (
-          value
-        )}
-      </dd>
-    </div>
-  );
-}
+        ))}
+      </nav>
 
-async function Metrics() {
-  const {
-    viewsByDay,
-    topPages,
-    signups,
-    sales,
-    donations,
-    adoptionRequests,
-    approved,
-    openErrors,
-  } = await getMetrics();
-
-  const totalViews = viewsByDay.reduce((sum, row) => sum + (row._sum.views ?? 0), 0);
-  const maxViews = Math.max(1, ...viewsByDay.map((row) => row._sum.views ?? 0));
-
-  return (
-    <div className="flex flex-col gap-8">
-      <dl className={gridClasses("stats")}>
-        <Stat label="Visualizações de página" value={String(totalViews)} />
-        <Stat label="Contas criadas" value={String(signups)} />
-        <Stat
-          label={`Vendas pagas (${sales._count._all})`}
-          value={formatBRL(sales._sum.totalCents ?? 0)}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile
+          label="Visualizações"
+          value={totalViews.toLocaleString("pt-BR")}
+          detail={`${m.signups} conta(s) nova(s)`}
+          Icon={EyeIcon}
         />
-        <Stat
-          label={`Doações entregues (${donations._count._all})`}
-          value={formatBRL(donations._sum.totalCents ?? 0)}
+        <StatTile
+          label="Vendas pagas"
+          value={formatBRL(m.sales._sum.totalCents ?? 0)}
+          detail={`${m.sales._count._all} pedido(s)`}
+          Icon={BagIcon}
         />
-        <Stat
-          label="Solicitações de adoção"
-          value={String(adoptionRequests)}
+        <StatTile
+          label="Doações entregues"
+          value={formatBRL(m.donations._sum.totalCents ?? 0)}
+          detail={`${m.donations._count._all} doação(ões)`}
+          Icon={GiftIcon}
+          tone="donate"
+        />
+        <StatTile
+          label="Pedidos de adoção"
+          value={String(m.adoptionRequests)}
+          detail={`${m.approved} aprovada(s)`}
           href="/admin/adocoes"
+          Icon={HeartIcon}
+          tone="adopt"
         />
-        <Stat label="Adoções aprovadas" value={String(approved)} />
-        <Stat label="Erros em aberto" value={String(openErrors)} href="/admin/erros" />
-      </dl>
+      </div>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="font-medium">Visualizações por dia</h2>
-        {viewsByDay.length === 0 ? (
-          <p className="text-sm text-zinc-500">Nenhuma visualização registrada ainda.</p>
-        ) : (
-          <ul className="flex flex-col gap-1 text-sm">
-            {viewsByDay.map((row) => {
-              const views = row._sum.views ?? 0;
-              return (
-                <li key={row.day.toISOString()} className="flex items-center gap-2">
-                  <span className="w-12 text-zinc-500">{day.format(row.day)}</span>
-                  <span
-                    aria-hidden
-                    className="h-3 rounded bg-emerald-600"
-                    style={{ width: `${(views / maxViews) * 70}%` }}
-                  />
-                  <span>{views}</span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      <Panel title="Visualizações por dia" description="Páginas abertas por visitantes reais.">
+        <TimeChart
+          title="Visualizações por dia"
+          data={m.daily.map((d) => ({ label: shortDay(d.day), value: d.views }))}
+        />
+      </Panel>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="font-medium">Páginas mais vistas</h2>
-        {topPages.length === 0 ? (
-          <p className="text-sm text-zinc-500">Nenhuma visualização registrada ainda.</p>
-        ) : (
-          <table className="text-left text-sm">
-            <thead className="text-zinc-500">
-              <tr>
-                <th className="py-1 pr-4 font-normal">Página</th>
-                <th className="py-1 text-right font-normal">Visualizações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topPages.map((row) => (
-                <tr key={row.path} className="border-t border-zinc-200 dark:border-zinc-800">
-                  <td className="py-1 pr-4 break-all">{row.path}</td>
-                  <td className="py-1 text-right">{row._sum.views ?? 0}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-      <p className="text-sm text-zinc-500">
-        A contagem é anônima: guarda só a página e o dia, sem cookies nem dados de quem visitou.
-        Bots e navegadores com &quot;Não rastrear&quot; ligado não entram.
-      </p>
-    </div>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <Panel title="Vendas por dia" description="Valor dos pedidos pagos da loja.">
+          <TimeChart
+            title="Vendas por dia"
+            kind="columns"
+            format="brl"
+            data={m.daily.map((d) => ({ label: shortDay(d.day), value: d.salesCents }))}
+          />
+        </Panel>
+        <Panel title="Doações por dia" description="Valor das compras pagas para o abrigo.">
+          <TimeChart
+            title="Doações por dia"
+            kind="columns"
+            format="brl"
+            tone="donate"
+            data={m.daily.map((d) => ({ label: shortDay(d.day), value: d.donationsCents }))}
+          />
+        </Panel>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <Panel title="Páginas mais vistas">
+          <BarList
+            title="Páginas mais vistas"
+            items={m.topPages.map((row) => ({
+              key: row.path,
+              label: <span className="font-mono text-xs">{row.path}</span>,
+              value: row._sum.views ?? 0,
+            }))}
+          />
+        </Panel>
+        <Panel
+          title="Pedidos de adoção por situação"
+          action={
+            <Link href="/admin/adocoes" className="text-sm text-brand-text hover:underline">
+              Ver todos
+            </Link>
+          }
+        >
+          <BarList
+            title="Pedidos de adoção por situação"
+            tone="adopt"
+            items={m.requestsByStatus
+              .sort((a, b) => b.count - a.count)
+              .map((row) => ({
+                key: row.status,
+                label: adoptionStatusLabels[row.status],
+                value: row.count,
+              }))}
+          />
+        </Panel>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-zinc-100/70 px-5 py-4 text-sm text-zinc-600 dark:bg-zinc-900/60 dark:text-zinc-400">
+        <PawOutlineIcon className="size-5 text-brand-text" />
+        <p className="flex-1">
+          A contagem é anônima: guarda só a página e o dia. Bots e navegadores com &quot;Não
+          rastrear&quot; ligado não entram.
+        </p>
+        <Link
+          href="/admin/erros"
+          className="inline-flex items-center gap-1.5 font-medium text-brand-text hover:underline"
+        >
+          <AlertIcon className="size-4" />
+          {m.openErrors} erro(s) em aberto
+        </Link>
+      </div>
+    </>
   );
 }

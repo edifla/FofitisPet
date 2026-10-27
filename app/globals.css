@@ -1,48 +1,79 @@
 @import "tailwindcss";
 
-/* Identidade visual provisória (KAN-15). Tudo o que é marca passa por estes tokens: para trocar a
-   identidade, mude só os valores aqui (e o desenho em components/brand/logo.tsx e app/icon.svg).
-   Contrastes conferidos para WCAG AA (texto normal ≥ 4,5:1). */
+/* Identidade visual (KAN-15, revisada): transparência, profissionalismo e calor humano.
+   - Verde-azulado (brand): a cor da loja e dos botões principais. Claro, confiável, cuidadoso.
+   - Coral (donate): doações e abrigo. Quente e humano, conversa com o verde-azulado.
+   - Azul (adopt): a área de adoção.
+   - Neutros frios e limpos, com fundo quase branco. O tema escuro é um azul-noite.
+   Tudo o que é marca passa por estes tokens. Contrastes conferidos para WCAG AA (≥ 4,5:1). */
+
+/* Tema escuro: segue o sistema só com CSS (sem piscar, mesmo sem JavaScript). Quem escolhe pelo
+   botão do cabeçalho grava data-theme="light" ou "dark" no <html>, que vence o sistema. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
 :root {
-  /* Fundo creme e texto marrom-escuro: mais aconchegante que branco e preto puros. */
-  --background: #fffaf3;
-  --foreground: #292524; /* 14,6:1 sobre o creme */
-  --surface: #ffffff; /* cards e menus sobre o creme */
+  color-scheme: light;
+  --background: #f7f9fc;
+  --foreground: #0f1b2d; /* 16,9:1 sobre o fundo */
+  --surface: #ffffff; /* cards e menus */
 
-  /* Cinzas quentes: toda a paleta "zinc" usada nas telas passa a puxar para o marrom (stone).
-     Contrastes: zinc-500 4,6:1 e zinc-600 7,4:1 sobre o creme. */
-  --color-zinc-50: #fafaf9;
-  --color-zinc-100: #f5f2ee;
-  --color-zinc-200: #e9e4de;
-  --color-zinc-300: #d8d2cb;
-  --color-zinc-400: #a6a09b;
-  --color-zinc-500: #79716b;
-  --color-zinc-600: #57534d;
-  --color-zinc-700: #44403b;
-  --color-zinc-800: #292524;
-  --color-zinc-900: #1c1917;
-  --color-zinc-950: #0c0a09;
+  /* Neutros: a paleta "zinc" usada nas telas vira um cinza-azulado limpo (slate).
+     zinc-500 4,6:1 e zinc-600 7,3:1 sobre o fundo. */
+  --color-zinc-50: #f8fafc;
+  --color-zinc-100: #f1f5f9;
+  --color-zinc-200: #e2e8f0;
+  --color-zinc-300: #cbd5e1;
+  --color-zinc-400: #94a3b8;
+  --color-zinc-500: #64748b;
+  --color-zinc-600: #475569;
+  --color-zinc-700: #334155;
+  --color-zinc-800: #1e293b;
+  --color-zinc-900: #0f172a;
+  --color-zinc-950: #020617;
 
-  /* Laranja "patinha": cor da marca. */
-  --brand-50: #fff7ed;
-  --brand-100: #ffedd5;
-  --brand-200: #fed7aa;
-  --brand-300: #fdba74;
-  --brand-400: #fb923c;
-  --brand-500: #f97316;
-  --brand-600: #ea580c;
-  --brand-700: #c2410c;
-  --brand-800: #9a3412;
+  /* Verde-azulado da marca. */
+  --brand-50: #f0fdfa;
+  --brand-100: #ccfbf1;
+  --brand-200: #99f6e4;
+  --brand-300: #5eead4;
+  --brand-400: #2dd4bf;
+  --brand-500: #14b8a6;
+  --brand-600: #0d9488;
+  --brand-700: #0f766e; /* branco sobre ele: 5,5:1 */
+  --brand-800: #115e59;
+  --brand-900: #134e4a;
+  --brand-950: #042f2e;
+
+  /* Coral das doações. */
+  --donate-50: #fff4f1;
+  --donate-100: #ffe4dc;
+  --donate-200: #ffc9b9;
+  --donate-300: #ffa189;
+  --donate-400: #ff7a5a;
+  --donate-500: #f75b38;
+  --donate-600: #e2431f;
+  --donate-700: #b9321a; /* branco sobre ele: 5,9:1 */
+  --donate-800: #962b19;
+  --donate-900: #7a2719;
+  --donate-950: #43100a;
 
   /* Papéis de cor usados pelos componentes. */
-  --primary: var(--brand-700); /* botões principais: branco sobre ele = 5,2:1 */
+  --primary: var(--brand-700);
   --primary-hover: var(--brand-800);
   --on-primary: #ffffff;
-  --brand-text: var(--brand-700); /* texto e logo da marca sobre o fundo: 5,2:1 */
+  --brand-text: var(--brand-700); /* texto e logo da marca: 5,3:1 sobre o fundo */
   --focus-ring: var(--brand-600);
 
-  /* Área de adoção: azul, mais calma e acolhedora que a loja. Os mesmos papéis de cor mudam
-     dentro de .theme-adocao (app/adocao/layout.tsx). */
+  /* Área de adoção: azul. Os mesmos papéis de cor mudam dentro de .theme-adocao. */
   --adopt-50: #eff6ff;
   --adopt-100: #dbeafe;
   --adopt-200: #bfdbfe;
@@ -68,6 +99,19 @@
   --color-brand-600: var(--brand-600);
   --color-brand-700: var(--brand-700);
   --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+  --color-donate-50: var(--donate-50);
+  --color-donate-100: var(--donate-100);
+  --color-donate-200: var(--donate-200);
+  --color-donate-300: var(--donate-300);
+  --color-donate-400: var(--donate-400);
+  --color-donate-500: var(--donate-500);
+  --color-donate-600: var(--donate-600);
+  --color-donate-700: var(--donate-700);
+  --color-donate-800: var(--donate-800);
+  --color-donate-900: var(--donate-900);
+  --color-donate-950: var(--donate-950);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-on-primary: var(--on-primary);
@@ -88,21 +132,36 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Tema escuro: azul-noite, com as cores da marca mais claras para manter o contraste. Os mesmos
+   valores valem para a escolha pelo botão e para o sistema (quando não há escolha). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0b1220;
+  --foreground: #e6edf7; /* 16:1 */
+  --surface: #121b2d;
+  --primary: var(--brand-400);
+  --primary-hover: var(--brand-300);
+  --on-primary: #042f2e; /* 9,6:1 */
+  --brand-text: var(--brand-300); /* 12:1 */
+  --focus-ring: var(--brand-400);
+  /* Textos secundários e erros com pelo menos 4,5:1 no fundo escuro. */
+  --color-zinc-500: #8796ad; /* 6,2:1 */
+  --color-red-600: #ff6b6b;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #14110f;
-    --foreground: #f2ede8;
-    --surface: #1c1917;
-    /* No escuro, o laranja fica mais claro e o texto do botão escuro: 7,7:1. */
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #0b1220;
+    --foreground: #e6edf7; /* 16:1 */
+    --surface: #121b2d;
     --primary: var(--brand-400);
     --primary-hover: var(--brand-300);
-    --on-primary: #1c1917;
-    --brand-text: var(--brand-400); /* 8,8:1 */
+    --on-primary: #042f2e; /* 9,6:1 */
+    --brand-text: var(--brand-300); /* 12:1 */
     --focus-ring: var(--brand-400);
-    /* Contraste mínimo de 4,5:1 (WCAG AA) no fundo escuro (KAN-50): o zinc-500 dos textos
-       secundários ficava em 4,1:1 e o vermelho dos erros em 4,2:1. */
-    --color-zinc-500: #958d86; /* 5,8:1 sobre o fundo escuro */
-    --color-red-600: #ff6467;
+    /* Textos secundários e erros com pelo menos 4,5:1 no fundo escuro. */
+    --color-zinc-500: #8796ad; /* 6,2:1 */
+    --color-red-600: #ff6b6b;
   }
 }
 
@@ -115,8 +174,15 @@
   --focus-ring: var(--adopt-600);
 }
 
+[data-theme="dark"] .theme-adocao {
+  --primary: var(--adopt-400);
+  --primary-hover: var(--adopt-300);
+  --on-primary: #0b1220; /* 7,4:1 */
+  --brand-text: var(--adopt-300); /* 11:1 */
+  --focus-ring: var(--adopt-400);
+}
 @media (prefers-color-scheme: dark) {
-  .theme-adocao {
+  :root:not([data-theme="light"]) .theme-adocao {
     --primary: var(--adopt-400);
     --primary-hover: var(--adopt-300);
     --on-primary: #0b1220; /* 7,4:1 */
