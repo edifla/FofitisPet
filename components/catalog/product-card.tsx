@@ -8,7 +8,10 @@ import { formatBRL } from "@/lib/money";
 // Card de produto do design system (KAN-77): o card inteiro é o link.
 export function ProductCard({ product }: { product: CatalogItem }) {
   return (
-    <Link href={`/produtos/${product.slug}`} className="group flex flex-col gap-2">
+    <Link
+      href={`/produtos/${product.slug}`}
+      className="group flex h-full flex-col gap-3 rounded-2xl bg-surface p-3 shadow-sm ring-1 ring-zinc-200/70 transition-shadow hover:shadow-md dark:ring-zinc-800"
+    >
       <div className={cardMediaClasses}>
         {product.coverUrl ? (
           <Image

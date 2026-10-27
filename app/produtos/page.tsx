@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { FilterLayout } from "@/components/catalog/filter-layout";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SortSelect } from "@/components/catalog/sort-select";
+import { buttonClasses } from "@/components/ui/button";
+import { ChevronIcon, CloseIcon, SearchIcon } from "@/components/ui/icons";
+import { PageHero } from "@/components/ui/page-hero";
 import { getCatalogFilterOptions, searchCatalog } from "@/lib/catalog";
 import {
   type CatalogFilters,
@@ -12,8 +16,6 @@ import {
   toCatalogQuery,
 } from "@/lib/catalog-params";
 import { speciesLabels } from "@/lib/labels";
-import { buttonClasses } from "@/components/ui/button";
-import { containerClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Produtos",
@@ -21,20 +23,28 @@ export const metadata: Metadata = {
 };
 
 type Props = PageProps<"/produtos">;
-
-const inputClass =
-  "w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900";
+type Options = Awaited<ReturnType<typeof getCatalogFilterOptions>>;
 
 export default function CatalogPage({ searchParams }: Props) {
   return (
-    <main className={containerClasses("wide", "flex flex-col gap-6")}>
-      <h1 className="text-2xl font-semibold">Produtos</h1>
-      <Suspense fallback={<p className="text-zinc-500">Carregando produtos...</p>}>
-        <Catalog searchParams={searchParams} />
-      </Suspense>
+    <main className="flex flex-1 flex-col">
+      <PageHero
+        tone="brand"
+        eyebrow="Loja FofitisPet"
+        title="Tudo para o seu pet, com carinho"
+        description="Rações, brinquedos e cuidados escolhidos com atenção. Os produtos marcados como doáveis também podem ir direto para o nosso abrigo."
+      />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
+        <Suspense fallback={<p className="text-zinc-500">Carregando produtos...</p>}>
+          <Catalog searchParams={searchParams} />
+        </Suspense>
+      </div>
     </main>
   );
 }
+
+const fieldClass =
+  "w-full rounded-full border border-zinc-300 bg-surface px-4 py-2.5 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/30 dark:border-zinc-700";
 
 async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
   const filters = parseCatalogParams(await searchParams);
@@ -42,59 +52,96 @@ async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
     searchCatalog(toCatalogQuery(filters)),
     getCatalogFilterOptions(),
   ]);
-  const hasFilters = Boolean(
-    filters.species ||
-    filters.category ||
-    filters.brands.length ||
-    filters.minPrice ||
-    filters.maxPrice ||
-    filters.donation,
-  );
+  const active = activeFilters(filters, options);
 
   return (
-    <div className="flex flex-col gap-6 md:flex-row">
-      <FilterPanel filters={filters} options={options} hasFilters={hasFilters} />
+    <>
+      <form action="/produtos" role="search" className="relative">
+        <label htmlFor="q" className="sr-only">
+          Buscar produtos
+        </label>
+        <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-zinc-500" />
+        <input
+          id="q"
+          name="q"
+          type="search"
+          defaultValue={filters.q}
+          placeholder="Buscar ração, brinquedo, marca..."
+          className={`${fieldClass} py-3 pr-28 pl-12 text-base shadow-sm`}
+        />
+        <HiddenFilters filters={filters} omit="q" />
+        <button
+          type="submit"
+          className={buttonClasses({
+            size: "sm",
+            className: "absolute top-1/2 right-1.5 -translate-y-1/2",
+          })}
+        >
+          Buscar
+        </button>
+      </form>
 
-      <div className="flex flex-1 flex-col gap-6">
-        <form action="/produtos" role="search" className="flex gap-2">
-          <label htmlFor="q" className="sr-only">
-            Buscar produtos
-          </label>
-          <input
-            id="q"
-            name="q"
-            type="search"
-            defaultValue={filters.q}
-            placeholder="Buscar ração, brinquedo, marca..."
-            className={inputClass}
-          />
-          <HiddenFilters filters={filters} omit="q" />
-          <button type="submit" className={buttonClasses()}>
-            Buscar
-          </button>
-        </form>
-
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-zinc-500" aria-live="polite">
-            {filters.q ? `${total} resultado(s) para "${filters.q}"` : `${total} produto(s)`}
-          </p>
-          <form action="/produtos" className="flex items-center gap-2">
-            <HiddenFilters filters={filters} omit="sort" />
-            <SortSelect value={filters.sort} />
-          </form>
-        </div>
+      <FilterLayout
+        activeCount={active.length}
+        panel={<FilterForm filters={filters} options={options} hasFilters={active.length > 0} />}
+        toolbar={
+          <>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400" aria-live="polite">
+              {filters.q
+                ? `${total} resultado(s) para "${filters.q}"`
+                : total === 1
+                  ? "1 produto"
+                  : `${total} produtos`}
+            </p>
+            <form action="/produtos" className="ml-auto flex items-center gap-2">
+              <HiddenFilters filters={filters} omit="sort" />
+              <SortSelect value={filters.sort} />
+            </form>
+          </>
+        }
+      >
+        {active.length > 0 && (
+          <ul aria-label="Filtros ativos" className="flex flex-wrap gap-2">
+            {active.map((chip) => (
+              <li key={chip.key}>
+                <Link
+                  href={chip.href}
+                  className="flex items-center gap-1.5 rounded-full bg-brand-100 py-1.5 pr-2 pl-3 text-sm font-medium text-brand-800 hover:bg-brand-50 dark:bg-brand-800/40 dark:text-brand-100"
+                >
+                  {chip.label}
+                  <CloseIcon className="size-4" />
+                  <span className="sr-only">(remover filtro)</span>
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link
+                href={catalogHref(filters, CLEARED)}
+                className="flex items-center px-2 py-1.5 text-sm text-zinc-600 underline dark:text-zinc-400"
+              >
+                Limpar tudo
+              </Link>
+            </li>
+          </ul>
+        )}
 
         {items.length === 0 ? (
-          <div className="flex flex-col gap-2 py-8 text-center">
-            <p className="font-medium">Nenhum produto encontrado.</p>
-            {(filters.q || hasFilters) && (
-              <Link href="/produtos" className="text-sm underline">
+          <div className="flex flex-col items-center gap-2 rounded-3xl bg-surface px-6 py-12 text-center shadow-sm">
+            <p className="text-lg font-semibold">Nada por aqui com essa busca.</p>
+            <p className="text-zinc-600 dark:text-zinc-400">
+              Tente outras palavras ou tire algum filtro.
+            </p>
+            {(filters.q || active.length > 0) && (
+              <Link
+                href="/produtos"
+                className={buttonClasses({ variant: "secondary", className: "mt-2" })}
+              >
                 Limpar busca e filtros
               </Link>
             )}
           </div>
         ) : (
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 xl:grid-cols-4">
             {items.map((product) => (
               <li key={product.id}>
                 <ProductCard product={product} />
@@ -116,9 +163,62 @@ async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
             )}
           </nav>
         )}
-      </div>
-    </div>
+      </FilterLayout>
+    </>
   );
+}
+
+const CLEARED: Partial<CatalogFilters> = {
+  species: null,
+  category: null,
+  brands: [],
+  minPrice: "",
+  maxPrice: "",
+  donation: false,
+};
+
+// Filtros aplicados, cada um com o link que o remove.
+function activeFilters(filters: CatalogFilters, options: Options) {
+  const chips: { key: string; label: string; href: string }[] = [];
+  if (filters.species) {
+    chips.push({
+      key: "especie",
+      label: speciesLabels[speciesSlugs[filters.species]],
+      href: catalogHref(filters, { species: null }),
+    });
+  }
+  if (filters.category) {
+    const category = options.categories.find((c) => c.slug === filters.category);
+    chips.push({
+      key: "categoria",
+      label: category?.name ?? filters.category,
+      href: catalogHref(filters, { category: null }),
+    });
+  }
+  for (const slug of filters.brands) {
+    chips.push({
+      key: `marca-${slug}`,
+      label: options.brands.find((b) => b.slug === slug)?.name ?? slug,
+      href: catalogHref(filters, { brands: filters.brands.filter((b) => b !== slug) }),
+    });
+  }
+  if (filters.minPrice || filters.maxPrice) {
+    const label =
+      filters.minPrice && filters.maxPrice
+        ? `R$ ${filters.minPrice} a R$ ${filters.maxPrice}`
+        : filters.minPrice
+          ? `A partir de R$ ${filters.minPrice}`
+          : `Até R$ ${filters.maxPrice}`;
+    chips.push({ key: "preco", label, href: catalogHref(filters, { minPrice: "", maxPrice: "" }) });
+  }
+  if (filters.donation) {
+    chips.push({
+      key: "doacao",
+      label: "Doáveis ao abrigo",
+      href: catalogHref(filters, { donation: false }),
+    });
+  }
+  return chips;
 }
 
 // Mantém o estado atual ao enviar um dos formulários (busca, filtros ou ordem), menos a parte
@@ -152,137 +252,180 @@ function HiddenFilters({
   );
 }
 
-function FilterPanel({
+// Opção em forma de "chip": a caixa fica escondida e o rótulo muda de cor quando marcado.
+const chip =
+  "cursor-pointer rounded-full border border-zinc-300 bg-surface px-3.5 py-1.5 text-sm transition-colors hover:border-brand-400 has-checked:border-brand-700 has-checked:bg-brand-700 has-checked:font-medium has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-brand-600 dark:border-zinc-700 dark:has-checked:border-brand-400 dark:has-checked:bg-brand-400 dark:has-checked:text-zinc-950";
+
+// Seção do painel que abre e fecha.
+function Section({
+  title,
+  open = true,
+  children,
+}: {
+  title: string;
+  open?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details open={open} className="group border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+      <summary className="flex cursor-pointer list-none items-center justify-between font-semibold [&::-webkit-details-marker]:hidden">
+        {title}
+        <ChevronIcon className="size-4 text-zinc-500 transition-transform group-open:rotate-90" />
+      </summary>
+      <div className="pt-3">{children}</div>
+    </details>
+  );
+}
+
+function FilterForm({
   filters,
   options,
   hasFilters,
 }: {
   filters: CatalogFilters;
-  options: Awaited<ReturnType<typeof getCatalogFilterOptions>>;
+  options: Options;
   hasFilters: boolean;
 }) {
   return (
-    <details open className="md:w-60 md:shrink-0">
-      <summary className="mb-4 cursor-pointer font-medium md:hidden">Filtros</summary>
-      <form action="/produtos" className="flex flex-col gap-6" aria-label="Filtros">
-        <HiddenFilters filters={filters} omit="filters" />
+    <form action="/produtos" className="flex flex-1 flex-col" aria-label="Filtros">
+      <HiddenFilters filters={filters} omit="filters" />
 
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium">Espécie</legend>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="especie" value="" defaultChecked={!filters.species} />
-            Todas
+      <Section title="Para quem?">
+        <fieldset className="flex flex-wrap gap-2">
+          <legend className="sr-only">Espécie</legend>
+          <label className={chip}>
+            <input
+              type="radio"
+              name="especie"
+              value=""
+              defaultChecked={!filters.species}
+              className="sr-only"
+            />
+            Todos
           </label>
           {Object.entries(speciesSlugs).map(([slug, species]) => (
-            <label key={slug} className="flex items-center gap-2 text-sm">
+            <label key={slug} className={chip}>
               <input
                 type="radio"
                 name="especie"
                 value={slug}
                 defaultChecked={filters.species === slug}
+                className="sr-only"
               />
               {speciesLabels[species]}
             </label>
           ))}
         </fieldset>
+      </Section>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="categoria" className="text-sm font-medium">
-            Categoria
-          </label>
-          <select
-            id="categoria"
-            name="categoria"
-            defaultValue={filters.category ?? ""}
-            className={inputClass}
-          >
-            <option value="">Todas</option>
-            {options.categories.map((category) => (
-              <option key={category.slug} value={category.slug}>
-                {category.depth ? `— ${category.name}` : category.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      <Section title="Categoria">
+        <fieldset className="flex flex-col gap-1">
+          <legend className="sr-only">Categoria</legend>
+          {[{ slug: "", name: "Todas", depth: 0 }, ...options.categories].map((category) => (
+            <label
+              key={category.slug || "todas"}
+              className={`flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-zinc-100 has-checked:bg-brand-100 has-checked:font-medium has-checked:text-brand-800 dark:hover:bg-zinc-800 dark:has-checked:bg-brand-800/40 dark:has-checked:text-brand-100 ${category.depth ? "ml-4" : ""}`}
+            >
+              <input
+                type="radio"
+                name="categoria"
+                value={category.slug}
+                defaultChecked={(filters.category ?? "") === category.slug}
+                className="size-4 accent-brand-600"
+              />
+              {category.name}
+            </label>
+          ))}
+        </fieldset>
+      </Section>
 
-        {options.brands.length > 0 && (
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium">Marca</legend>
+      {options.brands.length > 0 && (
+        <Section title="Marca" open={filters.brands.length > 0}>
+          <fieldset className="flex flex-wrap gap-2">
+            <legend className="sr-only">Marca</legend>
             {options.brands.map((brand) => (
-              <label key={brand.slug} className="flex items-center gap-2 text-sm">
+              <label key={brand.slug} className={chip}>
                 <input
                   type="checkbox"
                   name="marca"
                   value={brand.slug}
                   defaultChecked={filters.brands.includes(brand.slug)}
-                  className="size-4"
+                  className="sr-only"
                 />
                 {brand.name}
               </label>
             ))}
           </fieldset>
-        )}
+        </Section>
+      )}
 
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium">Preço (R$)</legend>
-          <div className="flex items-center gap-2">
-            <label htmlFor="preco_min" className="sr-only">
-              Preço mínimo
+      <Section title="Preço" open={Boolean(filters.minPrice || filters.maxPrice)}>
+        <fieldset className="grid grid-cols-2 gap-2">
+          <legend className="sr-only">Faixa de preço</legend>
+          {(
+            [
+              ["preco_min", "De", filters.minPrice],
+              ["preco_max", "Até", filters.maxPrice],
+            ] as const
+          ).map(([name, label, value]) => (
+            <label
+              key={name}
+              className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400"
+            >
+              {label}
+              <span className="relative">
+                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-zinc-500">
+                  R$
+                </span>
+                <input
+                  name={name}
+                  inputMode="decimal"
+                  defaultValue={value}
+                  placeholder="0"
+                  className={`${fieldClass} pl-9 text-sm`}
+                />
+              </span>
             </label>
-            <input
-              id="preco_min"
-              name="preco_min"
-              inputMode="decimal"
-              placeholder="de"
-              defaultValue={filters.minPrice}
-              className={inputClass}
-            />
-            <label htmlFor="preco_max" className="sr-only">
-              Preço máximo
-            </label>
-            <input
-              id="preco_max"
-              name="preco_max"
-              inputMode="decimal"
-              placeholder="até"
-              defaultValue={filters.maxPrice}
-              className={inputClass}
-            />
-          </div>
+          ))}
         </fieldset>
+      </Section>
 
-        <label className="flex items-center gap-2 text-sm">
+      <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+        <label className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium">
+          <span>
+            Só doáveis ao abrigo
+            <span className="block text-xs font-normal text-zinc-600 dark:text-zinc-400">
+              Itens que você pode mandar para o abrigo
+            </span>
+          </span>
           <input
             type="checkbox"
             name="doacao"
             value="sim"
             defaultChecked={filters.donation}
-            className="size-4"
+            className="peer sr-only"
           />
-          Pode ser doado ao abrigo
+          {/* Interruptor visual; a caixa de seleção real fica escondida acima. */}
+          <span
+            aria-hidden
+            className="relative h-6 w-11 shrink-0 rounded-full bg-zinc-300 transition-colors peer-checked:bg-emerald-700 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-600 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-5 dark:bg-zinc-700"
+          />
         </label>
+      </div>
 
-        <div className="flex items-center gap-4">
-          <button type="submit" className={buttonClasses({ size: "sm" })}>
-            Aplicar filtros
-          </button>
-          {hasFilters && (
-            <Link
-              href={catalogHref(filters, {
-                species: null,
-                category: null,
-                brands: [],
-                minPrice: "",
-                maxPrice: "",
-                donation: false,
-              })}
-              className="text-sm underline"
-            >
-              Limpar
-            </Link>
-          )}
-        </div>
-      </form>
-    </details>
+      <div className="sticky bottom-0 mt-auto flex items-center gap-3 bg-surface px-5 py-4">
+        <button type="submit" className={buttonClasses({ block: true })}>
+          Mostrar resultados
+        </button>
+        {hasFilters && (
+          <Link
+            href={catalogHref(filters, CLEARED)}
+            className="shrink-0 text-sm text-zinc-600 underline dark:text-zinc-400"
+          >
+            Limpar
+          </Link>
+        )}
+      </div>
+    </form>
   );
 }

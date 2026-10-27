@@ -7,6 +7,7 @@ import { formatBRL } from "@/lib/money";
 import { getShelterNeeds } from "@/lib/shelter";
 import { DonateButton } from "./donate-button";
 import { cardClasses } from "@/components/ui/card";
+import { PageHero } from "@/components/ui/page-hero";
 import { containerClasses, gridClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
@@ -17,33 +18,40 @@ export const metadata: Metadata = {
 // Página do abrigo (KAN-33): o que está em falta, para direcionar as doações.
 export default function ShelterPage() {
   return (
-    <main className={containerClasses("default", "flex flex-col gap-8")}>
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Ajude o abrigo da FofitisPet</h1>
-        <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
-          Você compra o item na loja e ele vai direto para o estoque do abrigo, sem frete. Abaixo
-          estão os itens que mais estão faltando agora.
-        </p>
-      </header>
-      <Suspense>
-        <CampaignList />
-      </Suspense>
-      <section className="flex flex-col gap-4" aria-labelledby="necessarios">
-        <h2 id="necessarios" className="text-lg font-semibold">
-          Itens mais necessários
-        </h2>
-        <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>
-          <NeedsList />
+    <main className="flex flex-1 flex-col">
+      <PageHero
+        tone="donate"
+        eyebrow="Abrigo FofitisPet"
+        title="Ajude o abrigo da FofitisPet"
+        description="Você compra o item na loja e ele vai direto para o estoque do abrigo, sem frete. Abaixo estão os itens que mais estão faltando agora."
+      />
+      <div className={containerClasses("default", "flex flex-col gap-8 pt-4")}>
+        <Suspense>
+          <CampaignList />
         </Suspense>
-      </section>
-      <p className="flex flex-wrap gap-4 text-sm">
-        <Link href="/produtos?doacao=sim" className="underline">
-          Ver todos os produtos que podem ser doados
-        </Link>
-        <Link href="/transparencia" className="underline">
-          Ver como as doações são usadas
-        </Link>
-      </p>
+        <section className="flex flex-col gap-4" aria-labelledby="necessarios">
+          <h2 id="necessarios" className="text-lg font-semibold">
+            Itens mais necessários
+          </h2>
+          <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>
+            <NeedsList />
+          </Suspense>
+        </section>
+        <p className="flex flex-wrap gap-3 text-sm">
+          <Link
+            href="/produtos?doacao=sim"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+          >
+            Ver todos os produtos que podem ser doados
+          </Link>
+          <Link
+            href="/transparencia"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+          >
+            Ver como as doações são usadas
+          </Link>
+        </p>
+      </div>
     </main>
   );
 }
@@ -65,7 +73,7 @@ async function NeedsList() {
         return (
           <li key={need.variantId} className={cardClasses()}>
             <div className="flex gap-3">
-              <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-900">
+              <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900">
                 {need.image && (
                   <Image
                     src={need.image.url}

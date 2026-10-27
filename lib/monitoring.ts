@@ -50,8 +50,11 @@ export async function recordError(report: ErrorReport) {
     await prisma.errorLog.upsert({
       where: { fingerprint },
       create: { fingerprint, source: report.source, message, routePath, ...data },
-      update: { ...data, count: { increment: 1 }, lastSeenAt: new Date(), resolvedAt: null },
+      update: { ...data, count: { increment: 1 }, resolvedAt: null },
     });
+    // A hora vem do banco: o erro pode acontecer durante a pré-renderização, onde o Next.js não
+    // aceita new Date().
+    await prisma.$executeRaw`UPDATE "ErrorLog" SET "lastSeenAt" = NOW() WHERE "fingerprint" = ${fingerprint}`;
   } catch (error) {
     console.error("Falha ao registrar erro no monitoramento:", error);
   }

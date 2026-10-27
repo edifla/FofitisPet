@@ -8,7 +8,7 @@ export function cardClasses({
   className,
 }: { tone?: "default" | "donate"; className?: string } = {}) {
   return cn(
-    "flex flex-col gap-3 rounded-lg border p-4",
+    "flex flex-col gap-3 rounded-2xl border bg-surface p-4 shadow-sm shadow-zinc-900/5",
     tone === "donate"
       ? "border-emerald-200 dark:border-emerald-900"
       : "border-zinc-200 dark:border-zinc-800",
@@ -26,6 +26,6 @@ export function Card({
 
 // Área da foto dos cartões, com o aviso quando não há foto.
 export const cardMediaClasses =
-  "relative aspect-square overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-900";
+  "relative aspect-square overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900";
 export const cardMediaEmptyClasses =
   "flex h-full items-center justify-center text-sm text-zinc-600 dark:text-zinc-400";

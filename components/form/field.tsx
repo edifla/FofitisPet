@@ -5,7 +5,7 @@ import { buttonClasses } from "@/components/ui/button";
 // aria-describedby; foco na cor da marca; erro em vermelho (tokens de app/globals.css).
 
 const controlClass =
-  "rounded-md border border-zinc-300 bg-background px-3 py-2 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/30 aria-invalid:border-red-600 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-brand-400";
+  "rounded-lg border border-zinc-300 bg-surface px-3 py-2 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/30 aria-invalid:border-red-600 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-brand-400";
 
 type LabeledProps = {
   label: string;

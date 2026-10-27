@@ -4,12 +4,29 @@
    identidade, mude só os valores aqui (e o desenho em components/brand/logo.tsx e app/icon.svg).
    Contrastes conferidos para WCAG AA (texto normal ≥ 4,5:1). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Fundo creme e texto marrom-escuro: mais aconchegante que branco e preto puros. */
+  --background: #fffaf3;
+  --foreground: #292524; /* 14,6:1 sobre o creme */
+  --surface: #ffffff; /* cards e menus sobre o creme */
+
+  /* Cinzas quentes: toda a paleta "zinc" usada nas telas passa a puxar para o marrom (stone).
+     Contrastes: zinc-500 4,6:1 e zinc-600 7,4:1 sobre o creme. */
+  --color-zinc-50: #fafaf9;
+  --color-zinc-100: #f5f2ee;
+  --color-zinc-200: #e9e4de;
+  --color-zinc-300: #d8d2cb;
+  --color-zinc-400: #a6a09b;
+  --color-zinc-500: #79716b;
+  --color-zinc-600: #57534d;
+  --color-zinc-700: #44403b;
+  --color-zinc-800: #292524;
+  --color-zinc-900: #1c1917;
+  --color-zinc-950: #0c0a09;
 
   /* Laranja "patinha": cor da marca. */
   --brand-50: #fff7ed;
   --brand-100: #ffedd5;
+  --brand-200: #fed7aa;
   --brand-300: #fdba74;
   --brand-400: #fb923c;
   --brand-500: #f97316;
@@ -41,8 +58,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
   --color-brand-50: var(--brand-50);
   --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
   --color-brand-300: var(--brand-300);
   --color-brand-400: var(--brand-400);
   --color-brand-500: var(--brand-500);
@@ -71,8 +90,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #14110f;
+    --foreground: #f2ede8;
+    --surface: #1c1917;
     /* No escuro, o laranja fica mais claro e o texto do botão escuro: 7,7:1. */
     --primary: var(--brand-400);
     --primary-hover: var(--brand-300);
@@ -81,7 +101,7 @@
     --focus-ring: var(--brand-400);
     /* Contraste mínimo de 4,5:1 (WCAG AA) no fundo escuro (KAN-50): o zinc-500 dos textos
        secundários ficava em 4,1:1 e o vermelho dos erros em 4,2:1. */
-    --color-zinc-500: #8a8a94;
+    --color-zinc-500: #958d86; /* 5,8:1 sobre o fundo escuro */
     --color-red-600: #ff6467;
   }
 }

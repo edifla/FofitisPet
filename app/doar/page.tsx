@@ -8,6 +8,7 @@ import { DONATION_NOTICE } from "@/lib/legal";
 import { formatBRL } from "@/lib/money";
 import { DonateKitButton } from "./donate-kit-button";
 import { cardClasses } from "@/components/ui/card";
+import { PageHero } from "@/components/ui/page-hero";
 import { containerClasses, gridClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
@@ -18,40 +19,50 @@ export const metadata: Metadata = {
 // Aba "Doar" (KAN-43): kits prontos que usam o fluxo de compra para o abrigo (KAN-30 a 32).
 export default function DonatePage() {
   return (
-    <main className={containerClasses("default", "flex flex-col gap-8")}>
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Doe para o abrigo</h1>
-        <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
-          Escolha um kit pronto: os itens saem do estoque da loja direto para o abrigo, sem frete.
-          Você paga como numa compra comum e recebe o comprovante da doação por e-mail.
-        </p>
-        <p className="max-w-2xl text-sm text-zinc-500">{DONATION_NOTICE}</p>
-      </header>
-
-      <Suspense>
-        <CampaignList heading="Campanhas em andamento" />
-      </Suspense>
-
-      <section className="flex flex-col gap-4" aria-labelledby="kits">
-        <h2 id="kits" className="text-lg font-semibold">
-          Kits prontos
-        </h2>
-        <Suspense fallback={<p className="text-zinc-500">Carregando kits...</p>}>
-          <KitList />
+    <main className="flex flex-1 flex-col">
+      <PageHero
+        tone="donate"
+        eyebrow="Doações"
+        title="Doe para o abrigo"
+        description="Escolha um kit pronto: os itens saem do estoque da loja direto para o abrigo, sem frete. Você paga como numa compra comum e recebe o comprovante da doação por e-mail."
+      >
+        <p className="max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">{DONATION_NOTICE}</p>
+      </PageHero>
+      <div className={containerClasses("default", "flex flex-col gap-8 pt-4")}>
+        <Suspense>
+          <CampaignList heading="Campanhas em andamento" />
         </Suspense>
-      </section>
 
-      <p className="flex flex-wrap gap-4 text-sm">
-        <Link href="/abrigo" className="underline">
-          Ver o que está faltando no abrigo
-        </Link>
-        <Link href="/produtos?doacao=sim" className="underline">
-          Escolher produtos avulsos para doar
-        </Link>
-        <Link href="/transparencia" className="underline">
-          Ver como as doações são usadas
-        </Link>
-      </p>
+        <section className="flex flex-col gap-4" aria-labelledby="kits">
+          <h2 id="kits" className="text-lg font-semibold">
+            Kits prontos
+          </h2>
+          <Suspense fallback={<p className="text-zinc-500">Carregando kits...</p>}>
+            <KitList />
+          </Suspense>
+        </section>
+
+        <p className="flex flex-wrap gap-3 text-sm">
+          <Link
+            href="/abrigo"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+          >
+            Ver o que está faltando no abrigo
+          </Link>
+          <Link
+            href="/produtos?doacao=sim"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+          >
+            Escolher produtos avulsos para doar
+          </Link>
+          <Link
+            href="/transparencia"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+          >
+            Ver como as doações são usadas
+          </Link>
+        </p>
+      </div>
     </main>
   );
 }
@@ -70,7 +81,7 @@ async function KitList() {
     <ul className={gridClasses("compact")}>
       {kits.map((kit) => (
         <li key={kit.id} className={cardClasses()}>
-          <div className="relative aspect-video overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-900">
+          <div className="relative aspect-video overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900">
             {kit.image && (
               <Image
                 src={kit.image.url}

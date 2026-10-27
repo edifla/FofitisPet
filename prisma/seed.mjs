@@ -2,6 +2,9 @@
 // Contas de teste (só para o banco local, nunca em produção):
 //   admin@fofitispet.test   / Admin1234    (ADMIN)
 //   cliente@fofitispet.test / Cliente1234  (CUSTOMER)
+import { createHash } from "node:crypto";
+import { copyFile, mkdir, readFile } from "node:fs/promises";
+import path from "node:path";
 import { hashPassword, withClient } from "../scripts/db.mjs";
 
 if (process.env.NODE_ENV === "production") {
@@ -46,6 +49,7 @@ await withClient(async (client) => {
   await seedCatalog(client);
   await seedAnimals(client);
   await seedDonationKits(client);
+  await seedImages(client);
 });
 
 // Catálogo de exemplo para navegar pela loja. Só cria o que ainda não existe (por slug e SKU),
@@ -321,4 +325,58 @@ async function seedDonationKits(client) {
     }
   }
   console.log(`Kits de doação de exemplo prontos (${kits.length}).`);
+}
+
+// Fotos de exemplo (prisma/seed-images, créditos em CREDITOS.md). Só entram em produto ou animal
+// que ainda não tem foto, para não mexer no que o admin enviou. A chave leva o hash do arquivo
+// porque /arquivos serve tudo com cache imutável.
+async function seedImages(client) {
+  const images = [
+    ["produtos", "racao-premier-caes-adultos", "Tigela branca com ração seca para cães"],
+    ["produtos", "racao-golden-gatos-castrados", "Porção de ração seca para gatos"],
+    [
+      "produtos",
+      "sache-golden-gatos-frango",
+      "Gato preto e branco comendo ração úmida numa tigela",
+    ],
+    ["produtos", "bolinha-de-borracha-macica", "Cachorro pulando para pegar uma bola vermelha"],
+    ["produtos", "varinha-com-penas", "Gata tricolor brincando com penas"],
+    ["produtos", "shampoo-neutro-caes-gatos", "Cachorro tomando banho com shampoo e escova"],
+    ["animais", "thor", "Thor, cachorro grande de pelo marrom e preto, deitado na grama"],
+    ["animais", "mel", "Mel, cachorrinha pequena marrom e branca, ao lado de uma bolinha"],
+    ["animais", "luna", "Luna, gatinha rajada, sobre uma manta azul"],
+    ["animais", "bolinha", "Bolinha, gato laranja rajado, olhando para a câmera"],
+  ];
+  const storageDir = path.resolve(process.env.STORAGE_DIR ?? "storage");
+  let added = 0;
+  for (const [folder, slug, alt] of images) {
+    const source = path.join(import.meta.dirname, "seed-images", folder, `${slug}.jpg`);
+    const hash = createHash("sha256")
+      .update(await readFile(source))
+      .digest("hex")
+      .slice(0, 12);
+    const key = `seed/${folder}/${slug}-${hash}.jpg`;
+    const [table, ownerColumn, ownerId] =
+      folder === "produtos"
+        ? ["ProductImage", "productId", `seed_prod_${slug}`]
+        : ["AnimalImage", "animalId", `seed_animal_${slug}`];
+    const inserted = await client.query(
+      `INSERT INTO "${table}" (id, "${ownerColumn}", "storageKey", url, alt, position)
+       SELECT $1, $2, $3, $4, $5, 0
+       WHERE EXISTS (SELECT 1 FROM "${table.replace("Image", "")}" WHERE id = $2)
+         AND NOT EXISTS (SELECT 1 FROM "${table}" WHERE "${ownerColumn}" = $2)
+       ON CONFLICT DO NOTHING`,
+      [`seed_img_${folder}_${slug}`, ownerId, key, `/arquivos/${key}`, alt],
+    );
+    if (inserted.rowCount === 0) {
+      // Já existia: só repõe o arquivo se a foto da seed estiver no banco mas não no disco.
+      const ours = await client.query(`SELECT 1 FROM "${table}" WHERE "storageKey" = $1`, [key]);
+      if (ours.rowCount === 0) continue;
+    } else {
+      added++;
+    }
+    await mkdir(path.join(storageDir, "seed", folder), { recursive: true });
+    await copyFile(source, path.join(storageDir, key));
+  }
+  console.log(`Fotos de exemplo: ${added} nova(s) de ${images.length}.`);
 }

@@ -8,7 +8,7 @@ export type ButtonVariant = "primary" | "secondary" | "donate" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:pointer-events-none disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors disabled:pointer-events-none disabled:opacity-60";
 
 const variants: Record<ButtonVariant, string> = {
   // Ação principal da tela: no máximo uma por área.
@@ -22,9 +22,9 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "px-3 py-2 text-sm",
-  md: "px-4 py-2",
-  lg: "px-6 py-3",
+  sm: "px-4 py-2 text-sm",
+  md: "px-5 py-2.5",
+  lg: "px-7 py-3",
 };
 
 export function buttonClasses({

@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { formatFoodTotal } from "@/lib/food";
 import { formatBRL } from "@/lib/money";
 import { getTransparencyReport } from "@/lib/transparency";
+import { PageHero } from "@/components/ui/page-hero";
 import { containerClasses, gridClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
@@ -22,33 +23,39 @@ const day = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "UTC
 // Página de transparência (KAN-44).
 export default function TransparencyPage() {
   return (
-    <main className={containerClasses("default", "flex flex-col gap-10")}>
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Transparência</h1>
-        <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
-          Cada doação feita na loja vira estoque do abrigo. Aqui você vê quanto foi doado, o que
-          chegou, o que já foi usado com os animais e o que temos hoje. Os números são atualizados
-          na hora.
+    <main className="flex flex-1 flex-col">
+      <PageHero
+        tone="donate"
+        eyebrow="Transparência"
+        title="Transparência"
+        description="Cada doação feita na loja vira estoque do abrigo. Aqui você vê quanto foi doado, o que chegou, o que já foi usado com os animais e o que temos hoje. Os números são atualizados na hora."
+      />
+      <div className={containerClasses("default", "flex flex-col gap-10 pt-4")}>
+        <Suspense fallback={<p className="text-zinc-500">Carregando os números...</p>}>
+          <Report />
+        </Suspense>
+        <p className="flex flex-wrap gap-3 text-sm">
+          <Link
+            href="/doar"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+          >
+            Fazer uma doação
+          </Link>
+          <Link
+            href="/abrigo"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+          >
+            Ver o que está faltando
+          </Link>
         </p>
-      </header>
-      <Suspense fallback={<p className="text-zinc-500">Carregando os números...</p>}>
-        <Report />
-      </Suspense>
-      <p className="flex flex-wrap gap-4 text-sm">
-        <Link href="/doar" className="underline">
-          Fazer uma doação
-        </Link>
-        <Link href="/abrigo" className="underline">
-          Ver o que está faltando
-        </Link>
-      </p>
+      </div>
     </main>
   );
 }
 
 function Stat({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+    <div className="flex flex-col gap-1 rounded-2xl bg-surface p-4 shadow-sm ring-1 ring-zinc-200/70 dark:ring-zinc-800">
       <dt className="text-sm text-zinc-500">{label}</dt>
       <dd className="text-2xl font-semibold">{value}</dd>
       {detail && <dd className="text-sm text-zinc-500">{detail}</dd>}
