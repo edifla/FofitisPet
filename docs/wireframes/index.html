@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wireframes das jornadas | FofitisPet</title>
+    <style>
+      /* Wireframes de baixa fidelidade (KAN-16): só estrutura, em tons de cinza. A cor de destaque
+         marca a ação principal de cada tela. Telas no tamanho de celular (mobile first). */
+      :root {
+        --ink: #27272a;
+        --muted: #71717b;
+        --line: #d4d4d8;
+        --fill: #f4f4f5;
+        --accent: #c2410c;
+        --donate: #007a55;
+        --bg: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #e4e4e7;
+          --muted: #8a8a94;
+          --line: #3f3f46;
+          --fill: #18181b;
+          --accent: #fb923c;
+          --donate: #34d399;
+          --bg: #0a0a0a;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px 16px 64px;
+      }
+      h1 {
+        margin: 0 0 4px;
+      }
+      h2 {
+        margin: 48px 0 4px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+      }
+      .lead,
+      .meta {
+        color: var(--muted);
+        max-width: 760px;
+      }
+      nav.toc {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        margin: 16px 0;
+      }
+      nav.toc a {
+        color: var(--accent);
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .flow {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 16px 4px 8px;
+        align-items: flex-start;
+      }
+      .step {
+        flex: 0 0 236px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .arrow {
+        flex: 0 0 20px;
+        align-self: center;
+        color: var(--muted);
+        font-size: 22px;
+        text-align: center;
+      }
+      .num {
+        font-weight: 600;
+      }
+      .route {
+        font:
+          12px ui-monospace,
+          monospace;
+        color: var(--muted);
+      }
+      .note {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0;
+        padding-left: 16px;
+      }
+      /* Moldura de celular. */
+      .screen {
+        border: 2px solid var(--ink);
+        border-radius: 18px;
+        padding: 10px;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        background: var(--bg);
+      }
+      .hdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .t {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .s {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .bar {
+        height: 7px;
+        border-radius: 4px;
+        background: var(--line);
+      }
+      .w40 {
+        width: 40%;
+      }
+      .w60 {
+        width: 60%;
+      }
+      .w80 {
+        width: 80%;
+      }
+      .img {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(
+            to top right,
+            transparent calc(50% - 1px),
+            var(--line),
+            transparent calc(50% + 1px)
+          ),
+          linear-gradient(
+            to top left,
+            transparent calc(50% - 1px),
+            var(--line),
+            transparent calc(50% + 1px)
+          ),
+          var(--fill);
+        aspect-ratio: 4 / 3;
+      }
+      .sq {
+        aspect-ratio: 1;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 11px;
+      }
+      .field {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 5px 6px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        font-size: 11px;
+      }
+      .chip {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 1px 7px;
+        font-size: 10px;
+      }
+      .btn {
+        border: 1px solid var(--ink);
+        border-radius: 6px;
+        padding: 6px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .btn.primary {
+        border-color: var(--accent);
+        color: var(--accent);
+        border-width: 2px;
+      }
+      .btn.donate {
+        border-color: var(--donate);
+        color: var(--donate);
+        border-width: 2px;
+      }
+      .box {
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        padding: 6px;
+        font-size: 11px;
+      }
+      .progress {
+        height: 8px;
+        border-radius: 4px;
+        background: linear-gradient(to right, var(--donate) 60%, var(--line) 60%);
+      }
+      .spacer {
+        flex: 1;
+      }
+      .rules {
+        max-width: 760px;
+      }
+      .rules li {
+        margin: 2px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Wireframes das jornadas principais</h1>
+      <p class="lead">
+        Baixa fidelidade, no tamanho de celular. Mostram a estrutura e a ordem das telas das quatro
+        jornadas como elas funcionam hoje no site; o visual final segue o design system
+        (<code>/admin/design</code>). Role cada jornada para os lados.
+      </p>
+      <div class="legend">
+        <span><b style="color: var(--accent)">Contorno laranja</b>: ação principal</span>
+        <span><b style="color: var(--donate)">Contorno verde</b>: ação que ajuda o abrigo</span>
+        <span>Caixa riscada: foto</span>
+        <span>Barras: texto</span>
+      </div>
+      <nav class="toc" aria-label="Jornadas">
+        <a href="#comprar">1. Comprar</a>
+        <a href="#adotar">2. Adotar</a>
+        <a href="#doar">3. Doar</a>
+        <a href="#abrigo">4. Comprar para o abrigo</a>
+      </nav>
+
+      <!-- ===================================================================== -->
+      <h2 id="comprar">1. Comprar (KAN-72)</h2>
+      <p class="meta">Do catálogo ao pedido pago, para receber em casa.</p>
+      <div class="flow">
+        <div class="step">
+          <span class="num">1. Catálogo</span><span class="route">/produtos</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Carrinho (2)</span></div>
+            <div class="field">Buscar ração, brinquedo…</div>
+            <div class="row">
+              <span class="chip">Cães</span><span class="chip">Gatos</span
+              ><span class="chip">Doável</span>
+            </div>
+            <div class="grid2">
+              <div class="card">
+                <div class="img sq"></div>
+                <div class="bar w80"></div>
+                <b>R$ 39,90</b>
+              </div>
+              <div class="card">
+                <div class="img sq"></div>
+                <div class="bar w60"></div>
+                <b>R$ 34,90</b>
+              </div>
+              <div class="card">
+                <div class="img sq"></div>
+                <div class="bar w80"></div>
+                <b>R$ 12,90</b>
+              </div>
+              <div class="card">
+                <div class="img sq"></div>
+                <div class="bar w60"></div>
+                <b>R$ 3,49</b>
+              </div>
+            </div>
+          </div>
+          <ul class="note">
+            <li>Filtros por espécie, categoria, marca, preço e "doável ao abrigo".</li>
+            <li>Selo "Esgotado" e "Doável".</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">2. Produto</span><span class="route">/produtos/[slug]</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Carrinho</span></div>
+            <div class="img"></div>
+            <div class="row">
+              <div class="img" style="width: 40px"></div>
+              <div class="img" style="width: 40px"></div>
+            </div>
+            <span class="t">Ração Premier 1 kg</span>
+            <div class="row"><span class="chip">1 kg</span><span class="chip">15 kg</span></div>
+            <b>R$ 39,90</b>
+            <div class="row">
+              <span class="field">Qtd 1</span>
+              <div class="btn primary" style="flex: 1">Adicionar ao carrinho</div>
+            </div>
+            <div class="btn donate">Doar este item ao abrigo</div>
+            <div class="bar"></div>
+            <div class="bar w80"></div>
+          </div>
+          <ul class="note">
+            <li>Escolhe a variação; mostra "últimas unidades".</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">3. Carrinho</span><span class="route">/carrinho</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Carrinho</span></div>
+            <span class="t">Para você</span>
+            <div class="card">
+              <div class="row">
+                <div class="img" style="width: 36px"></div>
+                <div style="flex: 1"><div class="bar"></div></div>
+                <span>− 2 +</span>
+              </div>
+            </div>
+            <span class="s">Mover para o abrigo · Remover</span>
+            <span class="t">Para o abrigo</span>
+            <div class="card">
+              <div class="row">
+                <div class="img" style="width: 36px"></div>
+                <div style="flex: 1"><div class="bar"></div></div>
+                <span>− 1 +</span>
+              </div>
+            </div>
+            <div class="spacer"></div>
+            <div class="row"><span>Subtotal</span><span class="spacer"></span><b>R$ 79,80</b></div>
+            <div class="btn primary">Finalizar compra</div>
+            <div class="btn donate">Finalizar doação</div>
+          </div>
+          <ul class="note">
+            <li>Compra e doação seguem separadas.</li>
+            <li>Pede login no passo seguinte se preciso (o carrinho vai junto).</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">4. Entrega</span><span class="route">/checkout</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Olá, Ana</span></div>
+            <span class="t">Onde entregar?</span>
+            <div class="card"><div class="row">◉ Casa · Rua Teste, 10</div></div>
+            <div class="card"><div class="row">○ Trabalho · Av. Brasil, 200</div></div>
+            <span class="s">+ Novo endereço</span>
+            <span class="t">Frete</span>
+            <div class="card"><div class="row">◉ Econômica · 7 dias · R$ 19,90</div></div>
+            <div class="card"><div class="row">○ Expressa · 3 dias · R$ 34,90</div></div>
+            <div class="spacer"></div>
+            <div class="btn primary">Continuar</div>
+          </div>
+          <ul class="note">
+            <li>Frete grátis a partir de R$ 199.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">5. Resumo</span><span class="route">/checkout/resumo</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Olá, Ana</span></div>
+            <span class="t">Confira o pedido</span>
+            <div class="box">
+              <div class="bar w80"></div>
+              <div class="bar w60"></div>
+            </div>
+            <div class="row">
+              <span>Itens</span><span class="spacer"></span><span>R$ 79,80</span>
+            </div>
+            <div class="row">
+              <span>Frete</span><span class="spacer"></span><span>R$ 19,90</span>
+            </div>
+            <div class="row"><b>Total</b><span class="spacer"></span><b>R$ 99,70</b></div>
+            <div class="spacer"></div>
+            <div class="btn primary">Confirmar pedido</div>
+          </div>
+          <ul class="note">
+            <li>Se preço ou frete mudar, pede para revisar.</li>
+            <li>Reserva o estoque na confirmação.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">6. Pagamento</span><span class="route">/pedidos/[número]</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Olá, Ana</span></div>
+            <span class="t">Pedido #42</span>
+            <span class="s">Pague em até 60 minutos</span>
+            <div class="row"><span class="chip">Pix</span><span class="chip">Cartão</span></div>
+            <div class="img sq" style="width: 60%; align-self: center"></div>
+            <div class="field">Copia e cola do Pix</div>
+            <div class="btn primary">Gerar Pix</div>
+            <span class="s">ou cartão: número, nome, validade, CVV, parcelas</span>
+          </div>
+          <ul class="note">
+            <li>Sem pagamento no prazo, o pedido é cancelado e o estoque volta.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">7. Pedido pago</span><span class="route">/pedidos/[número]</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Olá, Ana</span></div>
+            <span class="t">Pagamento aprovado ✓</span>
+            <div class="box">Preparando → Enviado → Entregue</div>
+            <div class="bar w80"></div>
+            <div class="bar w60"></div>
+            <div class="spacer"></div>
+            <div class="btn">Meus pedidos</div>
+          </div>
+          <ul class="note">
+            <li>E-mails em cada etapa.</li>
+            <li>Histórico em /conta/pedidos.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <h2 id="adotar">2. Adotar (KAN-73)</h2>
+      <p class="meta">Da listagem ao termo assinado na entrega. A decisão é sempre do abrigo.</p>
+      <div class="flow">
+        <div class="step">
+          <span class="num">1. Animais</span><span class="route">/adocao</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Entrar</span></div>
+            <span class="t">Adote um amigo</span>
+            <div class="row">
+              <span class="chip">Cães</span><span class="chip">Porte</span
+              ><span class="chip">Idade</span>
+            </div>
+            <div class="grid2">
+              <div class="card">
+                <div class="img sq"></div>
+                <b>Mel</b><span class="s">Cão · Fêmea · 2 anos</span>
+              </div>
+              <div class="card">
+                <div class="img sq"></div>
+                <b>Thor</b><span class="s">Cão · Macho · 5 anos</span>
+              </div>
+              <div class="card">
+                <div class="img sq"></div>
+                <b>Luna</b><span class="s">Reservado</span>
+              </div>
+              <div class="card">
+                <div class="img sq"></div>
+                <b>Bolinha</b><span class="s">Gato · 3 anos</span>
+              </div>
+            </div>
+          </div>
+          <ul class="note">
+            <li>Filtros: espécie, porte, idade e temperamento.</li>
+            <li>Reservados aparecem com selo.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">2. Perfil</span><span class="route">/adocao/[slug]</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Entrar</span></div>
+            <div class="img"></div>
+            <span class="t">Mel</span>
+            <span class="s">Cão · Fêmea · Pequeno · 2 anos</span>
+            <div class="row">
+              <span class="chip">Brincalhona</span><span class="chip">Bem com cães</span>
+            </div>
+            <div class="box">3,5 kg de ração já alimentaram a Mel · Doar ração</div>
+            <div class="btn primary">Quero adotar</div>
+            <span class="s">História · Saúde e vacinas</span>
+            <div class="bar"></div>
+            <div class="bar w80"></div>
+          </div>
+          <ul class="note">
+            <li>Botão só para disponíveis; reservado e adotado mostram aviso.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">3. Interesse</span
+          ><span class="route">/adocao/[slug]/quero-adotar</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Entrar</span></div>
+            <span class="t">Quero adotar a Mel</span>
+            <div class="field">Nome</div>
+            <div class="row">
+              <div class="field" style="flex: 1">E-mail</div>
+              <div class="field" style="flex: 1">Telefone</div>
+            </div>
+            <div class="field">Tipo de moradia</div>
+            <span class="s">Moradia própria? ◉ Sim ○ Não</span>
+            <span class="s">Outros animais? ○ Sim ◉ Não</span>
+            <div class="field" style="height: 36px">Experiência com animais</div>
+            <div class="field" style="height: 36px">Por que quer adotar</div>
+            <span class="s">☑ Autorizo o uso dos dados (política, termo)</span>
+            <div class="btn primary">Enviar interesse</div>
+          </div>
+          <ul class="note">
+            <li>Funciona sem login.</li>
+            <li>Um pedido aberto por animal e e-mail.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">4. Recebido</span><span class="route">(mesma página) + e-mail</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Entrar</span></div>
+            <div class="box">
+              <b>Recebemos seu interesse!</b>
+              <div class="bar"></div>
+              <div class="bar w60"></div>
+            </div>
+            <div class="spacer"></div>
+            <div class="btn">Ver outros animais</div>
+          </div>
+          <ul class="note">
+            <li>E-mail de confirmação; o abrigo é avisado.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">5. Análise (abrigo)</span><span class="route">/admin/adocoes/[id]</span>
+          <div class="screen">
+            <div class="hdr"><span>Admin</span><span>Adoções</span></div>
+            <span class="t">Ana quer adotar a Mel</span>
+            <div class="box">Respostas do formulário</div>
+            <div class="field">Novo status: Entrevista ▾</div>
+            <div class="field">Data e hora</div>
+            <div class="field" style="height: 30px">Anotação</div>
+            <div class="btn primary">Salvar status</div>
+            <span class="s">Histórico: Recebido → Em análise → Entrevista</span>
+          </div>
+          <ul class="note">
+            <li>Recebido → Em análise → Entrevista → Aprovado ou Recusado.</li>
+            <li>E-mail ao interessado na entrevista, aprovação e recusa.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">6. Termo e entrega</span
+          ><span class="route">/admin/adocoes/[id]/termo</span>
+          <div class="screen">
+            <div class="hdr"><span>Admin</span><span>Adoções</span></div>
+            <span class="t">Adoção aprovada</span>
+            <div class="btn primary">Baixar termo (PDF)</div>
+            <div class="box">
+              Termo de adoção responsável
+              <div class="bar"></div>
+              <div class="bar w80"></div>
+              <span class="s">CPF ____ RG ____ Assinaturas ____</span>
+            </div>
+          </div>
+          <ul class="note">
+            <li>Ao aprovar, o animal vira "adotado" e os outros pedidos são recusados.</li>
+            <li>CPF, RG e assinaturas só no papel.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <h2 id="doar">3. Doar (KAN-74)</h2>
+      <p class="meta">
+        Kits prontos e campanhas de ração. A doação em dinheiro (valor livre e recorrente, KAN-46)
+        fica para depois do MEI.
+      </p>
+      <div class="flow">
+        <div class="step">
+          <span class="num">1. Aba Doar</span><span class="route">/doar</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Doar</span></div>
+            <span class="t">Doe para o abrigo</span>
+            <span class="s">Não dedutível do IR; sem valor fiscal.</span>
+            <div class="card">
+              <b>Ração para o inverno</b>
+              <div class="progress"></div>
+              <span class="s">30 kg de 50 kg · 12 doações · faltam 9 dias</span>
+            </div>
+            <div class="card">
+              <div class="img"></div>
+              <b>Kit gatinho</b><span class="s">1 kg ração + 6 sachês</span><b>R$ 55,84</b>
+              <div class="btn donate">Doar este kit</div>
+            </div>
+          </div>
+          <ul class="note">
+            <li>Kit com item esgotado fica indisponível.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">2. Confirmar</span><span class="route">/checkout/doacao</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Olá, Ana</span></div>
+            <span class="t">Doação ao abrigo</span>
+            <span class="s">Sem frete nem endereço.</span>
+            <div class="box">
+              <div class="bar w80"></div>
+              <div class="bar w60"></div>
+            </div>
+            <div class="row"><b>Total</b><span class="spacer"></span><b>R$ 55,84</b></div>
+            <span class="s">☐ Doar de forma anônima</span>
+            <div class="spacer"></div>
+            <div class="btn donate">Confirmar doação</div>
+          </div>
+          <ul class="note">
+            <li>Anônima: o nome não aparece na transparência.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">3. Pagamento</span><span class="route">/pedidos/[número]</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Olá, Ana</span></div>
+            <span class="t">Doação #43</span>
+            <div class="row"><span class="chip">Pix</span><span class="chip">Cartão</span></div>
+            <div class="img sq" style="width: 60%; align-self: center"></div>
+            <div class="btn primary">Gerar Pix</div>
+          </div>
+          <ul class="note">
+            <li>Mesmo pagamento da loja.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">4. Entregue e comprovante</span
+          ><span class="route">/pedidos/[número] + e-mail</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Olá, Ana</span></div>
+            <span class="t">Entregue ao abrigo ✓</span>
+            <div class="box">Comprovante da doação enviado por e-mail</div>
+            <div class="btn">Reenviar comprovante</div>
+            <div class="btn">Ver a transparência</div>
+          </div>
+          <ul class="note">
+            <li>Os itens entram no estoque do abrigo assim que o pagamento é aprovado.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">5. Transparência</span><span class="route">/transparencia</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Doar</span></div>
+            <span class="t">Transparência</span>
+            <div class="grid2">
+              <div class="card"><span class="s">Total doado</span><b>R$ 309,20</b></div>
+              <div class="card"><span class="s">Ração entregue</span><b>7,9 kg</b></div>
+            </div>
+            <div class="box">O que chegou · O que foi usado · Estoque hoje</div>
+            <div class="box">Últimas doações: Ana S. · Doador anônimo</div>
+            <div class="grid2">
+              <div class="img sq"></div>
+              <div class="img sq"></div>
+            </div>
+          </div>
+          <ul class="note">
+            <li>Nome abreviado; nunca o valor por pessoa.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <h2 id="abrigo">4. Comprar para o abrigo (KAN-75)</h2>
+      <p class="meta">
+        Escolher um produto específico da loja para mandar ao abrigo, a partir do que está faltando.
+      </p>
+      <div class="flow">
+        <div class="step">
+          <span class="num">1. O que falta</span><span class="route">/abrigo</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Abrigo</span></div>
+            <span class="t">Ajude o abrigo</span>
+            <span class="s">Campanhas</span>
+            <div class="card">
+              <b>Gatinhos bem alimentados</b>
+              <div class="progress"></div>
+            </div>
+            <span class="s">Itens mais necessários</span>
+            <div class="card">
+              <div class="row">
+                <div class="img" style="width: 36px"></div>
+                <div style="flex: 1">
+                  <div class="bar"></div>
+                  <span class="s">0 de 20 · faltam 20</span>
+                </div>
+              </div>
+              <div class="btn donate">Doar 1 unidade</div>
+            </div>
+          </div>
+          <ul class="note">
+            <li>Itens abaixo da meta, dos mais em falta para os menos.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">2. Ou pelo produto</span><span class="route">/produtos/[slug]</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Carrinho</span></div>
+            <div class="img"></div>
+            <span class="t">Sachê Golden 85 g</span>
+            <b>R$ 3,49</b>
+            <div class="btn primary">Adicionar ao carrinho</div>
+            <div class="btn donate">Doar este item ao abrigo</div>
+          </div>
+          <ul class="note">
+            <li>Só produtos marcados como doáveis.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">3. Carrinho</span><span class="route">/carrinho</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Carrinho</span></div>
+            <span class="t">Para o abrigo</span>
+            <div class="card">
+              <div class="row">
+                <div class="img" style="width: 36px"></div>
+                <div style="flex: 1"><div class="bar"></div></div>
+                <span>− 6 +</span>
+              </div>
+            </div>
+            <span class="s">Mover para "Para você"</span>
+            <div class="spacer"></div>
+            <div class="btn donate">Finalizar doação</div>
+          </div>
+          <ul class="note">
+            <li>Itens podem trocar entre compra e doação.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">4. Doação e pagamento</span
+          ><span class="route">/checkout/doacao → /pedidos/[n]</span>
+          <div class="screen">
+            <div class="hdr"><span>🐾 FofitisPet</span><span>Olá, Ana</span></div>
+            <span class="t">Doação ao abrigo</span>
+            <div class="box"><div class="bar w80"></div></div>
+            <span class="s">☐ Doar de forma anônima</span>
+            <div class="btn donate">Confirmar doação</div>
+            <span class="s">→ Pix ou cartão</span>
+          </div>
+          <ul class="note">
+            <li>O estoque da loja é reservado na confirmação.</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          <span class="num">5. No abrigo</span
+          ><span class="route">/admin/abrigo · /adocao/[slug]</span>
+          <div class="screen">
+            <div class="hdr"><span>Admin</span><span>Abrigo</span></div>
+            <span class="t">Estoque do abrigo</span>
+            <div class="box">Sachê Golden: 6 (meta 120)</div>
+            <span class="t">Registrar consumo</span>
+            <div class="field">Item ▾</div>
+            <div class="row">
+              <div class="field" style="flex: 1">Qtd</div>
+              <div class="field" style="flex: 1">Animal ▾</div>
+            </div>
+            <div class="btn primary">Registrar</div>
+          </div>
+          <ul class="note">
+            <li>O consumo por animal vira o selo "ração recebida" no perfil.</li>
+            <li>Tudo aparece na transparência.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Regras que valem para as jornadas</h2>
+      <ul class="rules">
+        <li>Mobile first: uma coluna no celular; listagens ganham colunas a partir de 640 px.</li>
+        <li>Uma ação principal por tela (laranja); ações de doação em verde.</li>
+        <li>
+          Login só quando precisa (checkout, pedidos, conta); o carrinho do visitante vai junto.
+        </li>
+        <li>
+          Regras detalhadas da compra para o abrigo:
+          <code>docs/compra-para-o-abrigo.md</code> (KAN-12).
+        </li>
+      </ul>
+    </main>
+  </body>
+</html>
