@@ -35,7 +35,7 @@ async function ProductTable() {
             <th className="py-2 pr-4 font-medium">Produto</th>
             <th className="py-2 pr-4 font-medium">Categoria</th>
             <th className="py-2 pr-4 font-medium">Marca</th>
-            <th className="py-2 pr-4 font-medium">Variações</th>
+            <th className="py-2 pr-4 font-medium">Variações ativas</th>
             <th className="py-2 font-medium">Situação</th>
           </tr>
         </thead>
@@ -53,6 +53,11 @@ async function ProductTable() {
               <td className="py-2 pr-4">{product._count.variants}</td>
               <td className="py-2">
                 {product.active ? "Ativo" : "Inativo"}
+                {product._count.variants === 0 && (
+                  <span className="block font-medium text-amber-800 dark:text-amber-300">
+                    Fora da loja: falta uma variação
+                  </span>
+                )}
                 {product.donationEligible && (
                   <span className="block text-zinc-500">Doável ao abrigo</span>
                 )}

@@ -2,16 +2,32 @@ import Link from "next/link";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { listProductVariants } from "@/lib/admin/catalog";
 import { formatBRL, formatWeight } from "@/lib/money";
+import { Notice } from "@/components/ui/notice";
 import { deleteVariant } from "../../actions";
 import { VariantForm } from "./variant-form";
 
 export async function ProductVariants({ productId }: { productId: string }) {
   const variants = await listProductVariants(productId);
+  const hasActive = variants.some((variant) => variant.active);
 
   return (
-    <section className="flex flex-col gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+    <section
+      id="variacoes"
+      aria-labelledby="variacoes-titulo"
+      className="flex scroll-mt-24 flex-col gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800"
+    >
+      {!hasActive && (
+        <Notice tone="warning" role="status">
+          <strong>Este produto ainda não aparece na loja nem no estoque.</strong>{" "}
+          {variants.length === 0
+            ? "Cadastre abaixo pelo menos uma variação, com preço e estoque."
+            : "Ative pelo menos uma variação."}
+        </Notice>
+      )}
       <div>
-        <h2 className="font-medium">Variações</h2>
+        <h2 id="variacoes-titulo" className="font-medium">
+          Variações
+        </h2>
         <p className="text-sm text-zinc-500">
           Cada variação tem preço e estoque próprios. O produto só aparece na loja com pelo menos
           uma variação ativa.
