@@ -80,6 +80,11 @@ O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em cada p
 
 Os testes em [`tests/`](tests) cobrem os fluxos críticos (KAN-47): checkout, compra para o abrigo, adoção e webhooks de pagamento. Eles chamam a camada de serviço e as rotas de API contra um Postgres de verdade, num banco separado criado na hora (`<banco>_test`, ao lado do `DATABASE_URL`), então não mexem nos dados de desenvolvimento. Com o banco no ar (`npm run db:up`), rode `npm test`.
 
+## Documentação
+
+- [Wireframes das jornadas](docs/wireframes/index.html) (KAN-16): comprar, adotar, doar e comprar para o abrigo, em baixa fidelidade. Abra o arquivo no navegador.
+- Design system: componentes em `components/ui` e vitrine em `/admin/design` (KAN-17).
+
 ## Segurança
 
 - **Autorização**: o `proxy.ts` só faz uma checagem rápida pelo cookie; a que vale é a de `lib/dal.ts` (`requireUser`/`requireAdmin`), chamada em cada página, Server Action e rota. O teste `tests/security.test.ts` falha se uma action, página ou leitura do admin ficar sem essa checagem.
