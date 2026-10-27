@@ -10,27 +10,35 @@ const controlClass =
 type LabeledProps = {
   label: string;
   name: string;
+  // Por padrão o id do campo é o name; passe um id quando o mesmo formulário aparece várias vezes
+  // na página (ex.: um por item de uma lista).
+  id?: string;
   errors?: string[];
   hint?: string;
 };
 
+type A11y = { id: string; "aria-invalid"?: true; "aria-describedby"?: string };
+
 function FieldShell({
   label,
   name,
+  id,
   errors,
   hint,
   children,
 }: LabeledProps & {
-  children: (a11y: { "aria-invalid"?: true; "aria-describedby"?: string }) => React.ReactNode;
+  children: (a11y: A11y) => React.ReactNode;
 }) {
-  const errorId = errors?.length ? `${name}-error` : undefined;
-  const hintId = hint ? `${name}-hint` : undefined;
+  const fieldId = id ?? name;
+  const errorId = errors?.length ? `${fieldId}-error` : undefined;
+  const hintId = hint ? `${fieldId}-hint` : undefined;
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={name} className="text-sm font-medium">
+      <label htmlFor={fieldId} className="text-sm font-medium">
         {label}
       </label>
       {children({
+        id: fieldId,
         "aria-invalid": errorId ? true : undefined,
         "aria-describedby": [hintId, errorId].filter(Boolean).join(" ") || undefined,
       })}
@@ -53,13 +61,14 @@ function FieldShell({
 export function Field({
   label,
   name,
+  id,
   errors,
   hint,
   ...inputProps
 }: LabeledProps & InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <FieldShell label={label} name={name} errors={errors} hint={hint}>
-      {(a11y) => <input id={name} name={name} className={controlClass} {...a11y} {...inputProps} />}
+    <FieldShell label={label} name={name} id={id} errors={errors} hint={hint}>
+      {(a11y) => <input name={name} className={controlClass} {...a11y} {...inputProps} />}
     </FieldShell>
   );
 }
@@ -67,15 +76,14 @@ export function Field({
 export function TextAreaField({
   label,
   name,
+  id,
   errors,
   hint,
   ...props
 }: LabeledProps & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
-    <FieldShell label={label} name={name} errors={errors} hint={hint}>
-      {(a11y) => (
-        <textarea id={name} name={name} rows={5} className={controlClass} {...a11y} {...props} />
-      )}
+    <FieldShell label={label} name={name} id={id} errors={errors} hint={hint}>
+      {(a11y) => <textarea name={name} rows={5} className={controlClass} {...a11y} {...props} />}
     </FieldShell>
   );
 }
@@ -83,6 +91,7 @@ export function TextAreaField({
 export function SelectField({
   label,
   name,
+  id,
   errors,
   hint,
   options,
@@ -94,9 +103,9 @@ export function SelectField({
     placeholder?: string;
   }) {
   return (
-    <FieldShell label={label} name={name} errors={errors} hint={hint}>
+    <FieldShell label={label} name={name} id={id} errors={errors} hint={hint}>
       {(a11y) => (
-        <select id={name} name={name} className={controlClass} {...a11y} {...props}>
+        <select name={name} className={controlClass} {...a11y} {...props}>
           {placeholder !== undefined && <option value="">{placeholder}</option>}
           {options.map((option) => (
             <option key={option.value} value={option.value}>

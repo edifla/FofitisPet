@@ -19,6 +19,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         <Link href="/admin/transparencia">Transparência</Link>
         <Link href="/admin/metricas">Métricas</Link>
         <Link href="/admin/erros">Erros</Link>
+        <Link href="/admin/feedback">Feedback</Link>
         <Link href="/admin/design">Design</Link>
         <Link href="/admin/animais">Animais</Link>
         <Link href="/admin/adocoes">Adoções</Link>
