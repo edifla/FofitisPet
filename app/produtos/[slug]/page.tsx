@@ -7,6 +7,7 @@ import { FEW_LEFT, getProductBySlug } from "@/lib/catalog";
 import { speciesLabels } from "@/lib/labels";
 import { siteUrl } from "@/lib/site";
 import { PurchasePanel } from "./purchase-panel";
+import { containerClasses } from "@/components/ui/layout";
 
 type Props = PageProps<"/produtos/[slug]">;
 
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function ProductPage({ params }: Props) {
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+    <main className={containerClasses()}>
       <Suspense fallback={<p className="text-zinc-500">Carregando produto...</p>}>
         <ProductDetails params={params} />
       </Suspense>

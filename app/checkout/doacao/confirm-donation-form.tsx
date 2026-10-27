@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { CheckboxField, FormMessage } from "@/components/form/field";
 import { confirmDonation } from "../actions";
+import { buttonClasses } from "@/components/ui/button";
 
 // Confirma a doação com o total que o cliente está vendo (KAN-31).
 export function ConfirmDonationForm({ totalCents }: { totalCents: number }) {
@@ -21,7 +22,7 @@ export function ConfirmDonationForm({ totalCents }: { totalCents: number }) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-emerald-700 px-6 py-3 font-medium text-white disabled:opacity-60"
+          className={buttonClasses({ variant: "donate", size: "lg" })}
         >
           {pending ? "Criando doação..." : "Confirmar doação"}
         </button>

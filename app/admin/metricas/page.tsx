@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getMetrics, METRICS_DAYS } from "@/lib/admin/metrics";
 import { formatBRL } from "@/lib/money";
+import { gridClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = { title: "Métricas" };
 
@@ -56,7 +57,7 @@ async function Metrics() {
 
   return (
     <div className="flex flex-col gap-8">
-      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className={gridClasses("stats")}>
         <Stat label="Visualizações de página" value={String(totalViews)} />
         <Stat label="Contas criadas" value={String(signups)} />
         <Stat

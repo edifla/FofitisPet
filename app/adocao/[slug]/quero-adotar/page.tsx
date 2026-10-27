@@ -5,6 +5,8 @@ import { Suspense } from "react";
 import { getAnimalBySlug } from "@/lib/adoption";
 import { getCurrentUser } from "@/lib/dal";
 import { InterestForm } from "./interest-form";
+import { noticeClasses } from "@/components/ui/notice";
+import { containerClasses } from "@/components/ui/layout";
 
 type Props = PageProps<"/adocao/[slug]/quero-adotar">;
 
@@ -16,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // Formulário de interesse em adoção (KAN-39).
 export default function InterestPage({ params }: Props) {
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
+    <main className={containerClasses("narrow")}>
       <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>
         <InterestContent params={params} />
       </Suspense>
@@ -57,7 +59,7 @@ async function InterestContent({ params }: Pick<Props, "params">) {
           defaults={{ applicantName: user?.name ?? "", applicantEmail: user?.email ?? "" }}
         />
       ) : (
-        <p className="rounded-md bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+        <p className={noticeClasses("warning")}>
           {animal.name} não está mais disponível para adoção. Conheça os{" "}
           <Link href="/adocao" className="underline">
             outros animais

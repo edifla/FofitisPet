@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { listCategories } from "@/lib/admin/catalog";
 import { deleteCategory } from "../actions";
+import { buttonClasses } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Categorias" };
 
@@ -12,10 +13,7 @@ export default function CategoriesPage() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Categorias</h1>
-        <Link
-          href="/admin/categorias/nova"
-          className="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        <Link href="/admin/categorias/nova" className={buttonClasses({ size: "sm" })}>
           Nova categoria
         </Link>
       </div>

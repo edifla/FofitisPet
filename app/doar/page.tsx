@@ -7,6 +7,8 @@ import { getActiveKits } from "@/lib/kits";
 import { DONATION_NOTICE } from "@/lib/legal";
 import { formatBRL } from "@/lib/money";
 import { DonateKitButton } from "./donate-kit-button";
+import { cardClasses } from "@/components/ui/card";
+import { containerClasses, gridClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Doar",
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
 // Aba "Doar" (KAN-43): kits prontos que usam o fluxo de compra para o abrigo (KAN-30 a 32).
 export default function DonatePage() {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-8">
+    <main className={containerClasses("default", "flex flex-col gap-8")}>
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">Doe para o abrigo</h1>
         <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
@@ -65,12 +67,9 @@ async function KitList() {
   }
 
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className={gridClasses("compact")}>
       {kits.map((kit) => (
-        <li
-          key={kit.id}
-          className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
-        >
+        <li key={kit.id} className={cardClasses()}>
           <div className="relative aspect-video overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-900">
             {kit.image && (
               <Image

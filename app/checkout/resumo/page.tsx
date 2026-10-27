@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/dal";
 import { formatBRL } from "@/lib/money";
 import { formatZipCode } from "@/lib/validation/address";
 import { ConfirmOrderForm } from "./confirm-form";
+import { containerClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Resumo do pedido",
@@ -19,7 +20,7 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 // Passo 2 do checkout (KAN-106): itens, endereço, frete e total antes de confirmar.
 export default function CheckoutSummaryPage({ searchParams }: Props) {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+    <main className={containerClasses("text")}>
       <p className="text-sm text-zinc-500">Checkout · passo 2 de 2</p>
       <h1 className="mb-6 text-2xl font-semibold">Resumo do pedido</h1>
       <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ageGroups, formatAge, searchAnimals } from "@/lib/adoption";
+import { AnimalCard } from "@/components/adoption/animal-card";
+import { ageGroups, searchAnimals } from "@/lib/adoption";
 import {
   type AdoptionFilters,
   adoptionHref,
@@ -12,13 +12,9 @@ import {
   toAdoptionQuery,
 } from "@/lib/adoption-params";
 import { speciesSlugs } from "@/lib/catalog-params";
-import {
-  animalSexLabels,
-  animalSizeLabels,
-  animalSpeciesLabels,
-  speciesLabels,
-  temperamentLabels,
-} from "@/lib/labels";
+import { animalSizeLabels, speciesLabels, temperamentLabels } from "@/lib/labels";
+import { buttonClasses } from "@/components/ui/button";
+import { containerClasses, gridClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Adoção",
@@ -33,7 +29,7 @@ const SPECIES_FILTER = ["caes", "gatos"] as const;
 // Listagem de animais para adoção (KAN-37).
 export default function AdoptionPage({ searchParams }: Props) {
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8">
+    <main className={containerClasses("wide", "flex flex-col gap-6")}>
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">Adote um amigo</h1>
         <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
@@ -72,55 +68,10 @@ async function AnimalList({ searchParams }: Pick<Props, "searchParams">) {
             )}
           </div>
         ) : (
-          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className={gridClasses("cards")}>
             {animals.map((animal) => (
-              <li key={animal.id} className="relative flex flex-col gap-2">
-                <div className="relative aspect-square overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-900">
-                  {animal.images[0] ? (
-                    <Image
-                      src={animal.images[0].url}
-                      alt={animal.images[0].alt ?? animal.name}
-                      fill
-                      sizes="(min-width: 1024px) 18rem, (min-width: 640px) 45vw, 90vw"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-full items-center justify-center text-sm text-zinc-600 dark:text-zinc-400">
-                      Foto em breve
-                    </span>
-                  )}
-                  {animal.status === "RESERVED" && (
-                    <span className="absolute top-2 left-2 rounded bg-amber-500 px-2 py-0.5 text-xs text-white">
-                      Reservado
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-lg font-medium">
-                    <Link
-                      href={`/adocao/${animal.slug}`}
-                      className="after:absolute after:inset-0 hover:underline"
-                    >
-                      {animal.name}
-                    </Link>
-                  </h2>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    {animalSpeciesLabels[animal.species]} · {animalSexLabels[animal.sex]} ·{" "}
-                    {animalSizeLabels[animal.size]} · {formatAge(animal.birthDate)}
-                  </p>
-                  {animal.temperament.length > 0 && (
-                    <ul className="mt-2 flex flex-wrap gap-1">
-                      {animal.temperament.slice(0, 3).map((t) => (
-                        <li
-                          key={t}
-                          className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs dark:bg-zinc-800"
-                        >
-                          {temperamentLabels[t]}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+              <li key={animal.id}>
+                <AnimalCard animal={animal} />
               </li>
             ))}
           </ul>
@@ -215,10 +166,7 @@ function FilterPanel({ filters, hasFilters }: { filters: AdoptionFilters; hasFil
         </fieldset>
 
         <div className="flex items-center gap-4">
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-          >
+          <button type="submit" className={buttonClasses({ size: "sm" })}>
             Aplicar filtros
           </button>
           {hasFilters && (

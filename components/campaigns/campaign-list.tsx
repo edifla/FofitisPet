@@ -2,6 +2,9 @@ import Link from "next/link";
 import { daysLeft, getActiveCampaigns } from "@/lib/campaigns";
 import { speciesSlugs } from "@/lib/catalog-params";
 import { formatFoodTotal } from "@/lib/food";
+import { buttonClasses } from "@/components/ui/button";
+import { cardClasses } from "@/components/ui/card";
+import { gridClasses } from "@/components/ui/layout";
 
 // Campanhas de ração no ar, com barra de progresso (KAN-42). Componente de servidor: quem usa
 // precisa estar dentro de um <Suspense>.
@@ -20,7 +23,7 @@ export async function CampaignList({
       <h2 id="campanhas" className="text-lg font-semibold">
         {heading}
       </h2>
-      <ul className="grid gap-4 md:grid-cols-2">
+      <ul className={gridClasses("halves")}>
         {campaigns.map((campaign) => {
           const { raisedGrams, donations, percent } = campaign.progress;
           const left = daysLeft(campaign.endsAt);
@@ -33,10 +36,7 @@ export async function CampaignList({
             ...(speciesSlug && { especie: speciesSlug }),
           })}`;
           return (
-            <li
-              key={campaign.id}
-              className="flex flex-col gap-3 rounded-lg border border-emerald-200 p-4 dark:border-emerald-900"
-            >
+            <li key={campaign.id} className={cardClasses({ tone: "donate" })}>
               <div>
                 <h3 className="font-semibold">{campaign.title}</h3>
                 <p className="text-sm whitespace-pre-line text-zinc-600 dark:text-zinc-400">
@@ -67,7 +67,11 @@ export async function CampaignList({
               </div>
               <Link
                 href={donateHref}
-                className="self-start rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
+                className={buttonClasses({
+                  variant: "donate",
+                  size: "sm",
+                  className: "self-start",
+                })}
               >
                 Doar ração
               </Link>

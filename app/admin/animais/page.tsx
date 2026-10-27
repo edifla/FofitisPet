@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { listAnimals } from "@/lib/admin/animals";
 import { animalSizeLabels, animalStatusLabels, speciesLabels } from "@/lib/labels";
+import { buttonClasses } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Animais" };
 
@@ -13,10 +14,7 @@ export default function AnimalsPage() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Animais</h1>
-        <Link
-          href="/admin/animais/novo"
-          className="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        <Link href="/admin/animais/novo" className={buttonClasses({ size: "sm" })}>
           Novo animal
         </Link>
       </div>

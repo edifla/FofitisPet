@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { FormMessage } from "@/components/form/field";
 import { donateKit } from "./actions";
+import { buttonClasses } from "@/components/ui/button";
 
 export function DonateKitButton({ kitId, kitName }: { kitId: string; kitName: string }) {
   const [state, action, pending] = useActionState(donateKit.bind(null, kitId), undefined);
@@ -12,7 +13,7 @@ export function DonateKitButton({ kitId, kitName }: { kitId: string; kitName: st
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className={buttonClasses({ variant: "donate", size: "sm" })}
       >
         {pending ? "Adicionando..." : "Doar este kit"}
         <span className="sr-only"> ({kitName})</span>

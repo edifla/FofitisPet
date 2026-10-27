@@ -7,6 +7,8 @@ import { formatBRL } from "@/lib/money";
 import { quoteShipping, type ShippingQuote } from "@/lib/shipping";
 import { moveCartItem, removeFromCart } from "./actions";
 import { QuantityForm } from "./quantity-form";
+import { buttonClasses } from "@/components/ui/button";
+import { containerClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Carrinho",
@@ -17,7 +19,7 @@ type Props = PageProps<"/carrinho">;
 
 export default function CartPage({ searchParams }: Props) {
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
+    <main className={containerClasses("text", "max-w-4xl")}>
       <h1 className="mb-6 text-2xl font-semibold">Carrinho</h1>
       <Suspense fallback={<p className="text-zinc-500">Carregando carrinho...</p>}>
         <CartContents searchParams={searchParams} />
@@ -69,10 +71,7 @@ async function CartContents({ searchParams }: Pick<Props, "searchParams">) {
             <p className="text-2xl font-semibold">{formatBRL(subtotalCents)}</p>
             <ShippingEstimate cep={cep} quote={quote} />
             {purchaseCount > 0 && (
-              <Link
-                href="/checkout"
-                className="mt-2 rounded-md bg-zinc-900 px-6 py-2 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-              >
+              <Link href="/checkout" className={buttonClasses({ className: "mt-2" })}>
                 Continuar para o checkout
               </Link>
             )}
@@ -198,10 +197,7 @@ function ShippingEstimate({ cep, quote }: { cep: string; quote: ShippingQuote | 
             className="w-32 rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
           />
         </div>
-        <button
-          type="submit"
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700"
-        >
+        <button type="submit" className={buttonClasses({ variant: "secondary", size: "sm" })}>
           Calcular
         </button>
       </form>

@@ -8,9 +8,7 @@ export async function CartLink() {
     <Link href="/carrinho" className="text-sm">
       Carrinho
       {count > 0 && (
-        <span className="ml-1 rounded-full bg-zinc-900 px-1.5 text-xs text-white dark:bg-zinc-100 dark:text-zinc-900">
-          {count}
-        </span>
+        <span className="ml-1 rounded-full bg-primary px-1.5 text-xs text-on-primary">{count}</span>
       )}
       <span className="sr-only"> ({count} item(ns))</span>
     </Link>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PawIcon } from "@/components/brand/logo";
+import { buttonClasses } from "@/components/ui/button";
 
 // Página inicial provisória até os wireframes (KAN-16) e o design system (KAN-17).
 export default function Home() {
@@ -15,19 +16,13 @@ export default function Home() {
         Itens para o seu pet, adoção responsável e compras que vão direto para o nosso abrigo.
       </p>
       <div className="flex flex-wrap gap-3">
-        <Link
-          href="/produtos"
-          className="rounded-md bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover"
-        >
+        <Link href="/produtos" className={buttonClasses()}>
           Ver produtos
         </Link>
-        <Link href="/abrigo" className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">
+        <Link href="/abrigo" className={buttonClasses({ variant: "donate" })}>
           Ajudar o abrigo
         </Link>
-        <Link
-          href="/cadastro"
-          className="rounded-md border border-zinc-300 px-4 py-2 font-medium dark:border-zinc-700"
-        >
+        <Link href="/cadastro" className={buttonClasses({ variant: "secondary" })}>
           Criar conta
         </Link>
       </div>
