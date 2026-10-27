@@ -7,6 +7,7 @@ import { ADOPTION_TRANSITIONS, adoptionStatusLabels } from "@/lib/adoption-flow"
 import { animalStatusLabels, housingTypeLabels } from "@/lib/labels";
 import { formatPhone } from "@/lib/validation/adoption";
 import { NotesForm, StatusForm } from "./forms";
+import { buttonClasses } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Solicitação de adoção" };
 
@@ -129,7 +130,7 @@ async function RequestDetails({ params }: Pick<Props, "params">) {
               {/* Rota que gera o PDF: link comum, sem prefetch. */}
               <a
                 href={`/admin/adocoes/${request.id}/termo`}
-                className="rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+                className={buttonClasses({ size: "sm" })}
               >
                 Baixar termo (PDF)
               </a>

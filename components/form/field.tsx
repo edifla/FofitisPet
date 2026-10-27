@@ -1,9 +1,11 @@
 import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { buttonClasses } from "@/components/ui/button";
 
-// Campos de formulário com rótulo e mensagens de erro. Estilo provisório até o design system (KAN-17).
+// Componentes de formulário do design system (KAN-78): rótulo, dica e erros ligados ao campo por
+// aria-describedby; foco na cor da marca; erro em vermelho (tokens de app/globals.css).
 
 const controlClass =
-  "rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900 aria-invalid:border-red-600 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-100";
+  "rounded-md border border-zinc-300 bg-background px-3 py-2 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/30 aria-invalid:border-red-600 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-brand-400";
 
 type LabeledProps = {
   label: string;
@@ -116,7 +118,7 @@ export function CheckboxField({
   return (
     <div className="flex flex-col gap-1">
       <label className="flex items-center gap-2 text-sm font-medium">
-        <input type="checkbox" name={name} className="size-4" {...props} />
+        <input type="checkbox" name={name} className="size-4 accent-brand-600" {...props} />
         {label}
       </label>
       {hint && <p className="ml-6 text-sm text-zinc-500">{hint}</p>}
@@ -149,7 +151,7 @@ export function CheckboxGroup({
               name={name}
               value={option.value}
               defaultChecked={defaultValues.includes(option.value)}
-              className="size-4"
+              className="size-4 accent-brand-600"
             />
             {option.label}
           </label>
@@ -186,12 +188,54 @@ export function SubmitButton({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-md bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:opacity-60"
-    >
+    <button type="submit" disabled={pending} className={buttonClasses()}>
       {pending ? "Aguarde..." : children}
     </button>
   );
 }
+
+// Grupo de opções exclusivas (ex.: perguntas de sim ou não do formulário de adoção).
+export function RadioGroup({
+  legend,
+  name,
+  options,
+  value,
+  errors,
+}: {
+  legend: string;
+  name: string;
+  options: { value: string; label: string }[];
+  value?: string;
+  errors?: string[];
+}) {
+  const errorId = errors?.length ? `${name}-error` : undefined;
+  return (
+    <fieldset className="flex flex-col gap-1" aria-describedby={errorId}>
+      <legend className="text-sm font-medium">{legend}</legend>
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        {options.map((option) => (
+          <label key={option.value} className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name={name}
+              value={option.value}
+              defaultChecked={value === option.value}
+              className="size-4 accent-brand-600"
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+      {errorId && (
+        <p id={errorId} className="text-sm text-red-600">
+          {errors!.join(" ")}
+        </p>
+      )}
+    </fieldset>
+  );
+}
+
+export const YES_NO_OPTIONS = [
+  { value: "sim", label: "Sim" },
+  { value: "nao", label: "Não" },
+];

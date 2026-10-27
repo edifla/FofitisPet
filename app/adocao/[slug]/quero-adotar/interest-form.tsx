@@ -5,9 +5,11 @@ import { useActionState } from "react";
 import {
   Field,
   FormMessage,
+  RadioGroup,
   SelectField,
   SubmitButton,
   TextAreaField,
+  YES_NO_OPTIONS,
 } from "@/components/form/field";
 import { housingTypeLabels, toOptions } from "@/lib/labels";
 import { UFS } from "@/lib/validation/address";
@@ -123,25 +125,29 @@ export function InterestForm({
           defaultValue={value("housingType")}
           errors={state?.errors?.housingType}
         />
-        <YesNo
+        <RadioGroup
+          options={YES_NO_OPTIONS}
           legend="A moradia é própria?"
           name="ownsHome"
           value={value("ownsHome")}
           errors={state?.errors?.ownsHome}
         />
-        <YesNo
+        <RadioGroup
+          options={YES_NO_OPTIONS}
           legend="Tem quintal ou área externa?"
           name="hasYard"
           value={value("hasYard")}
           errors={state?.errors?.hasYard}
         />
-        <YesNo
+        <RadioGroup
+          options={YES_NO_OPTIONS}
           legend="Todos que moram com você concordam com a adoção?"
           name="householdAgrees"
           value={value("householdAgrees")}
           errors={state?.errors?.householdAgrees}
         />
-        <YesNo
+        <RadioGroup
+          options={YES_NO_OPTIONS}
           legend="Já tem outros animais em casa?"
           name="hasOtherPets"
           value={value("hasOtherPets")}
@@ -206,41 +212,5 @@ export function InterestForm({
       <FormMessage message={state?.message} />
       <SubmitButton pending={pending}>Enviar interesse</SubmitButton>
     </form>
-  );
-}
-
-function YesNo({
-  legend,
-  name,
-  value,
-  errors,
-}: {
-  legend: string;
-  name: string;
-  value: string;
-  errors?: string[];
-}) {
-  return (
-    <fieldset className="flex flex-col gap-1">
-      <legend className="text-sm font-medium">{legend}</legend>
-      <div className="flex gap-6">
-        {[
-          ["sim", "Sim"],
-          ["nao", "Não"],
-        ].map(([option, label]) => (
-          <label key={option} className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name={name}
-              value={option}
-              defaultChecked={value === option}
-              className="size-4"
-            />
-            {label}
-          </label>
-        ))}
-      </div>
-      {errors?.length ? <p className="text-sm text-red-600">{errors.join(" ")}</p> : null}
-    </fieldset>
   );
 }

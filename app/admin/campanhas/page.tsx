@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/dal";
 import { formatFoodTotal } from "@/lib/food";
 import { speciesLabels } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
+import { buttonClasses } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Campanhas" };
 
@@ -18,10 +19,7 @@ export default function CampaignsPage() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Campanhas de ração</h1>
-        <Link
-          href="/admin/campanhas/nova"
-          className="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        <Link href="/admin/campanhas/nova" className={buttonClasses({ size: "sm" })}>
           Nova campanha
         </Link>
       </div>

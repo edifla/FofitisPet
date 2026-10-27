@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { formatFoodTotal } from "@/lib/food";
 import { formatBRL } from "@/lib/money";
 import { getTransparencyReport } from "@/lib/transparency";
+import { containerClasses, gridClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Transparência",
@@ -21,7 +22,7 @@ const day = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "UTC
 // Página de transparência (KAN-44).
 export default function TransparencyPage() {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-4 py-8">
+    <main className={containerClasses("default", "flex flex-col gap-10")}>
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">Transparência</h1>
         <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
@@ -102,7 +103,7 @@ async function Report() {
 
   return (
     <div className="flex flex-col gap-10">
-      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className={gridClasses("stats")}>
         <Stat
           label="Total doado"
           value={formatBRL(report.raisedCents)}

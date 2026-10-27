@@ -12,6 +12,8 @@ import {
   toCatalogQuery,
 } from "@/lib/catalog-params";
 import { speciesLabels } from "@/lib/labels";
+import { buttonClasses } from "@/components/ui/button";
+import { containerClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Produtos",
@@ -25,7 +27,7 @@ const inputClass =
 
 export default function CatalogPage({ searchParams }: Props) {
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8">
+    <main className={containerClasses("wide", "flex flex-col gap-6")}>
       <h1 className="text-2xl font-semibold">Produtos</h1>
       <Suspense fallback={<p className="text-zinc-500">Carregando produtos...</p>}>
         <Catalog searchParams={searchParams} />
@@ -67,10 +69,7 @@ async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
             className={inputClass}
           />
           <HiddenFilters filters={filters} omit="q" />
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-          >
+          <button type="submit" className={buttonClasses()}>
             Buscar
           </button>
         </form>
@@ -264,10 +263,7 @@ function FilterPanel({
         </label>
 
         <div className="flex items-center gap-4">
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-          >
+          <button type="submit" className={buttonClasses({ size: "sm" })}>
             Aplicar filtros
           </button>
           {hasFilters && (

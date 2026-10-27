@@ -11,6 +11,9 @@ import {
   animalSpeciesLabels,
   temperamentLabels,
 } from "@/lib/labels";
+import { buttonClasses } from "@/components/ui/button";
+import { noticeClasses } from "@/components/ui/notice";
+import { containerClasses } from "@/components/ui/layout";
 
 type Props = PageProps<"/adocao/[slug]">;
 
@@ -35,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // Perfil do animal para adoção (KAN-38).
 export default function AnimalPage({ params }: Props) {
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+    <main className={containerClasses()}>
       <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>
         <AnimalProfile params={params} />
       </Suspense>
@@ -115,7 +118,7 @@ async function AnimalProfile({ params }: Pick<Props, "params">) {
             <div className="flex flex-col gap-2">
               <Link
                 href={`/adocao/${animal.slug}/quero-adotar`}
-                className="rounded-md bg-zinc-900 px-4 py-3 text-center font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+                className={buttonClasses({ size: "lg" })}
               >
                 Quero adotar
               </Link>
@@ -125,7 +128,7 @@ async function AnimalProfile({ params }: Pick<Props, "params">) {
             </div>
           )}
           {animal.status === "RESERVED" && (
-            <p className="rounded-md bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            <p className={noticeClasses("warning")}>
               {animal.name} já tem uma adoção em andamento. Conheça os{" "}
               <Link href="/adocao" className="underline">
                 outros animais
@@ -134,7 +137,7 @@ async function AnimalProfile({ params }: Pick<Props, "params">) {
             </p>
           )}
           {animal.status === "ADOPTED" && (
-            <p className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+            <p className={noticeClasses("success")}>
               {animal.name} já encontrou uma família! Conheça os{" "}
               <Link href="/adocao" className="underline">
                 outros animais

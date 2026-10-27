@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { FormMessage } from "@/components/form/field";
 import { addToCart } from "../carrinho/actions";
+import { buttonClasses } from "@/components/ui/button";
 
 // Põe 1 unidade na doação ao abrigo (KAN-30) direto da lista de necessidades.
 export function DonateButton({
@@ -22,7 +23,7 @@ export function DonateButton({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className={buttonClasses({ variant: "donate", size: "sm" })}
       >
         {pending ? "Adicionando..." : "Doar 1 unidade"}
         <span className="sr-only"> de {productName}</span>

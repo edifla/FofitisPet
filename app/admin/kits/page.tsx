@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { requireAdmin } from "@/lib/dal";
 import { listKitsForAdmin } from "@/lib/kits";
 import { formatBRL } from "@/lib/money";
+import { buttonClasses } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Kits de doação" };
 
@@ -13,10 +14,7 @@ export default function KitsPage() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Kits de doação</h1>
-        <Link
-          href="/admin/kits/novo"
-          className="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        <Link href="/admin/kits/novo" className={buttonClasses({ size: "sm" })}>
           Novo kit
         </Link>
       </div>

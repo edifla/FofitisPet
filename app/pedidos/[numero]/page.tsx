@@ -15,6 +15,8 @@ import { MAX_INSTALLMENTS } from "@/lib/validation/card";
 import { CardPaymentForm } from "./card-payment";
 import { PixCode, SimulatePixForm, StartPixForm } from "./pix-payment";
 import { ResendReceiptButton } from "./receipt-button";
+import { noticeClasses } from "@/components/ui/notice";
+import { containerClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Pedido",
@@ -28,7 +30,7 @@ const dateTime = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeStyle
 // Página do pedido (KAN-107). Só o dono do pedido (ou um admin) vê.
 export default function OrderPage({ params }: Props) {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+    <main className={containerClasses("text")}>
       <Suspense fallback={<p className="text-zinc-500">Carregando pedido...</p>}>
         <OrderDetails params={params} />
       </Suspense>
@@ -290,7 +292,7 @@ function PaymentSection({
   }
   if (status === "CANCELED") {
     return (
-      <p className="rounded-md bg-red-50 p-4 text-sm text-red-900 dark:bg-red-950 dark:text-red-200">
+      <p className={noticeClasses("danger")}>
         Pedido cancelado{canceledAt && ` em ${dateTime.format(canceledAt)}`}
         {cancelReason && `: ${cancelReason.toLowerCase()}`}. Os itens voltaram para o estoque.
         {payments.some((payment) => payment.status === "APPROVED")

@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Field, FormMessage } from "@/components/form/field";
 import { deleteAccountAction } from "./actions";
+import { buttonClasses } from "@/components/ui/button";
 
 // Exclusão da conta (KAN-126): senha e confirmação explícita.
 export function DeleteAccountForm() {
@@ -30,7 +31,7 @@ export function DeleteAccountForm() {
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className={buttonClasses({ variant: "danger", size: "sm", className: "self-start" })}
       >
         {pending ? "Excluindo..." : "Excluir minha conta"}
       </button>

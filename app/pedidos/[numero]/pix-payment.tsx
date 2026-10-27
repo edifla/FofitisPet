@@ -3,9 +3,9 @@
 import { useActionState, useState } from "react";
 import { FormMessage } from "@/components/form/field";
 import { payWithPix, simulatePixPaid } from "../actions";
+import { buttonClasses } from "@/components/ui/button";
 
-const buttonClass =
-  "rounded-md bg-zinc-900 px-5 py-2.5 font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900";
+const buttonClass = buttonClasses({ size: "lg" });
 
 // Botão que gera o Pix do pedido (KAN-108).
 export function StartPixForm({ orderNumber }: { orderNumber: number }) {

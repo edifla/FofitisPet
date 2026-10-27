@@ -6,6 +6,8 @@ import { getCart } from "@/lib/cart";
 import { requireUser } from "@/lib/dal";
 import { formatZipCode } from "@/lib/validation/address";
 import { AddressForm } from "./address-form";
+import { buttonClasses } from "@/components/ui/button";
+import { containerClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Endereço de entrega",
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
 // Passo 1 do checkout (KAN-105): escolher ou cadastrar o endereço de entrega.
 export default function CheckoutAddressPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+    <main className={containerClasses("text")}>
       <p className="text-sm text-zinc-500">Checkout · passo 1 de 2</p>
       <h1 className="mb-6 text-2xl font-semibold">Endereço de entrega</h1>
       <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>
@@ -79,10 +81,7 @@ async function AddressStep() {
             ))}
           </fieldset>
           <div>
-            <button
-              type="submit"
-              className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-            >
+            <button type="submit" className={buttonClasses()}>
               Entregar neste endereço
             </button>
           </div>

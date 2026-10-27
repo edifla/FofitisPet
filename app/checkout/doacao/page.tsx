@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/dal";
 import { DONATION_NOTICE } from "@/lib/legal";
 import { formatBRL } from "@/lib/money";
 import { ConfirmDonationForm } from "./confirm-donation-form";
+import { containerClasses } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Doação ao abrigo",
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 // Checkout da doação (KAN-31): um passo só, sem endereço e sem frete.
 export default function DonationCheckoutPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+    <main className={containerClasses("text")}>
       <h1 className="mb-2 text-2xl font-semibold">Doação ao abrigo</h1>
       <p className="mb-6 text-sm text-zinc-500">
         Os itens vão direto para o estoque do abrigo da FofitisPet assim que o pagamento for
