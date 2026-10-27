@@ -83,6 +83,7 @@ Os testes em [`tests/`](tests) cobrem os fluxos críticos (KAN-47): checkout, co
 ## Documentação
 
 - [Wireframes das jornadas](docs/wireframes/index.html) (KAN-16): comprar, adotar, doar e comprar para o abrigo, em baixa fidelidade. Abra o arquivo no navegador.
+- [Regras da compra para o abrigo](docs/compra-para-o-abrigo.md) (KAN-12): fluxo do pedido, transferência de estoque Loja → Abrigo, o que conta como entregue e decisões em aberto.
 - Design system: componentes em `components/ui` e vitrine em `/admin/design` (KAN-17).
 
 ## Segurança
