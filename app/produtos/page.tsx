@@ -28,18 +28,31 @@ type Options = Awaited<ReturnType<typeof getCatalogFilterOptions>>;
 export default function CatalogPage({ searchParams }: Props) {
   return (
     <main className="flex flex-1 flex-col">
-      <PageHero
-        tone="brand"
-        eyebrow="Loja FofitisPet"
-        title="Tudo para o seu pet, com carinho"
-        description="Rações, brinquedos e cuidados escolhidos com atenção. Os produtos marcados como doáveis também podem ir direto para o nosso abrigo."
-      />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
-        <Suspense fallback={<p className="text-zinc-500">Carregando produtos...</p>}>
-          <Catalog searchParams={searchParams} />
-        </Suspense>
-      </div>
+      <Suspense
+        fallback={
+          <>
+            <Hero />
+            <p className="px-4 text-zinc-500 md:px-8">Carregando produtos...</p>
+          </>
+        }
+      >
+        <Catalog searchParams={searchParams} />
+      </Suspense>
     </main>
+  );
+}
+
+function Hero({ children }: { children?: React.ReactNode }) {
+  return (
+    <PageHero
+      tone="brand"
+      wide
+      eyebrow="Loja FofitisPet"
+      title="Tudo para o seu pet, com carinho"
+      description="Rações, brinquedos e cuidados escolhidos com atenção. Os produtos marcados como doáveis também podem ir direto para o nosso abrigo."
+    >
+      {children}
+    </PageHero>
   );
 }
 
@@ -56,33 +69,36 @@ async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
 
   return (
     <>
-      <form action="/produtos" role="search" className="relative">
-        <label htmlFor="q" className="sr-only">
-          Buscar produtos
-        </label>
-        <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-zinc-500" />
-        <input
-          id="q"
-          name="q"
-          type="search"
-          defaultValue={filters.q}
-          placeholder="Buscar ração, brinquedo, marca..."
-          className={`${fieldClass} py-3 pr-28 pl-12 text-base shadow-sm`}
-        />
-        <HiddenFilters filters={filters} omit="q" />
-        <button
-          type="submit"
-          className={buttonClasses({
-            size: "sm",
-            className: "absolute top-1/2 right-1.5 -translate-y-1/2",
-          })}
-        >
-          Buscar
-        </button>
-      </form>
-
       <FilterLayout
         activeCount={active.length}
+        header={
+          <Hero>
+            <form action="/produtos" role="search" className="relative mt-2 max-w-2xl">
+              <label htmlFor="q" className="sr-only">
+                Buscar produtos
+              </label>
+              <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-zinc-500" />
+              <input
+                id="q"
+                name="q"
+                type="search"
+                defaultValue={filters.q}
+                placeholder="Buscar ração, brinquedo, marca..."
+                className={`${fieldClass} py-3 pr-28 pl-12 text-base shadow-sm`}
+              />
+              <HiddenFilters filters={filters} omit="q" />
+              <button
+                type="submit"
+                className={buttonClasses({
+                  size: "sm",
+                  className: "absolute top-1/2 right-1.5 -translate-y-1/2",
+                })}
+              >
+                Buscar
+              </button>
+            </form>
+          </Hero>
+        }
         panel={<FilterForm filters={filters} options={options} hasFilters={active.length > 0} />}
         toolbar={
           <>
@@ -141,7 +157,7 @@ async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
             )}
           </div>
         ) : (
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 xl:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {items.map((product) => (
               <li key={product.id}>
                 <ProductCard product={product} />
@@ -408,7 +424,7 @@ function FilterForm({
           {/* Interruptor visual; a caixa de seleção real fica escondida acima. */}
           <span
             aria-hidden
-            className="relative h-6 w-11 shrink-0 rounded-full bg-zinc-300 transition-colors peer-checked:bg-emerald-700 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-600 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-5 dark:bg-zinc-700"
+            className="relative h-6 w-11 shrink-0 rounded-full bg-zinc-300 transition-colors peer-checked:bg-donate-700 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-600 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-5 dark:bg-zinc-700"
           />
         </label>
       </div>

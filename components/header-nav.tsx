@@ -11,7 +11,7 @@ import { cn } from "@/components/ui/cn";
 const activeTone = {
   brand: "bg-brand-100 text-brand-800 dark:bg-brand-800/40 dark:text-brand-100",
   adopt: "bg-adopt-100 text-adopt-900 dark:bg-adopt-900/50 dark:text-adopt-100",
-  donate: "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100",
+  donate: "bg-donate-100 text-donate-900 dark:bg-donate-900/50 dark:text-donate-100",
 } as const;
 
 const isActive = (pathname: string | null, href: string) =>

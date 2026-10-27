@@ -149,6 +149,9 @@ model Product {
   // Pode ser comprado para o abrigo (KAN-29).
   donationEligible Boolean   @default(false)
   active           Boolean   @default(true)
+  // Excluído pelo admin, mas com pedidos ou movimentos de estoque: some de todas as telas e fica
+  // só para o histórico.
+  archivedAt       DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

@@ -15,6 +15,7 @@ import { MAX_INSTALLMENTS } from "@/lib/validation/card";
 import { CardPaymentForm } from "./card-payment";
 import { PixCode, SimulatePixForm, StartPixForm } from "./pix-payment";
 import { ResendReceiptButton } from "./receipt-button";
+import { ImpactLink } from "@/components/donation/impact-link";
 import { noticeClasses } from "@/components/ui/notice";
 import { containerClasses } from "@/components/ui/layout";
 
@@ -123,6 +124,8 @@ async function OrderDetails({ params }: Pick<Props, "params">) {
             : orderStatusLabels[order.status]}
         </p>
       </header>
+
+      {donation && order.status === "DELIVERED" && <ImpactLink />}
 
       <PaymentSection
         orderNumber={order.number}

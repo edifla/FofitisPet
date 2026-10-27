@@ -33,9 +33,14 @@ export async function listBrands() {
   });
 }
 
-export async function listProducts() {
+// Produtos do admin (sem os arquivados), com foto, faixa de preço e saldo da loja para a tabela.
+export async function listProducts(q = "") {
   await requireAdmin();
-  return prisma.product.findMany({
+  const products = await prisma.product.findMany({
+    where: {
+      archivedAt: null,
+      ...(q && { name: { contains: q, mode: "insensitive" as const } }),
+    },
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
@@ -43,16 +48,39 @@ export async function listProducts() {
       slug: true,
       active: true,
       donationEligible: true,
+      updatedAt: true,
       category: { select: { name: true } },
       brand: { select: { name: true } },
-      _count: { select: { variants: { where: { active: true } } } },
+      images: {
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+        take: 1,
+        select: { url: true },
+      },
+      variants: {
+        where: { active: true },
+        select: {
+          priceCents: true,
+          stockLevels: { where: { location: "STORE" }, select: { quantity: true } },
+        },
+      },
     },
+  });
+  return products.map(({ variants, images, ...product }) => {
+    const prices = variants.map((v) => v.priceCents);
+    return {
+      ...product,
+      image: images[0]?.url ?? null,
+      activeVariants: variants.length,
+      minPriceCents: prices.length ? Math.min(...prices) : null,
+      maxPriceCents: prices.length ? Math.max(...prices) : null,
+      storeStock: variants.reduce((sum, v) => sum + (v.stockLevels[0]?.quantity ?? 0), 0),
+    };
   });
 }
 
 export async function getProduct(id: string) {
   await requireAdmin();
-  return prisma.product.findUnique({ where: { id } });
+  return prisma.product.findFirst({ where: { id, archivedAt: null } });
 }
 
 // Opções dos selects de categoria e marca nos formulários.
@@ -116,6 +144,7 @@ export async function getProductVariant(variantId: string) {
 export async function listStock(onlyLow: boolean) {
   await requireAdmin();
   const variants = await prisma.productVariant.findMany({
+    where: { product: { archivedAt: null } },
     orderBy: [{ product: { name: "asc" } }, { priceCents: "asc" }],
     select: {
       id: true,

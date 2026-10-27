@@ -4,7 +4,7 @@ import { cn } from "./cn";
 // Selos sobre fotos e etiquetas de características (KAN-77). Texto branco com contraste ≥ 5:1.
 
 const badgeTones = {
-  donate: "bg-emerald-700", // 5,4:1
+  donate: "bg-donate-700", // 5,9:1
   warning: "bg-amber-700", // 5,0:1
   neutral: "bg-zinc-900/85",
 } as const;

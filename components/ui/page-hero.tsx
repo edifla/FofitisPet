@@ -8,12 +8,12 @@ const tones = {
   brand: {
     bg: "from-brand-100 to-background dark:from-brand-800/30",
     eyebrow: "text-brand-800 dark:text-brand-300",
-    paw: "text-brand-200 dark:text-brand-800/40",
+    paw: "text-brand-200/80 dark:text-brand-900/60",
   },
   donate: {
-    bg: "from-emerald-100 to-background dark:from-emerald-950",
-    eyebrow: "text-emerald-800 dark:text-emerald-300",
-    paw: "text-emerald-200 dark:text-emerald-900",
+    bg: "from-donate-100 to-background dark:from-donate-950",
+    eyebrow: "text-donate-800 dark:text-donate-300",
+    paw: "text-donate-200 dark:text-donate-900",
   },
   adopt: {
     bg: "from-adopt-100 to-background dark:from-adopt-950",
@@ -27,12 +27,15 @@ export function PageHero({
   eyebrow,
   title,
   description,
+  wide = false,
   children,
 }: {
   tone?: keyof typeof tones;
   eyebrow?: string;
   title: ReactNode;
   description?: ReactNode;
+  // Ocupa toda a largura da coluna (telas com barra lateral), em vez de centralizar.
+  wide?: boolean;
   children?: ReactNode;
 }) {
   const t = tones[tone];
@@ -44,7 +47,12 @@ export function PageHero({
           t.paw,
         )}
       />
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 pt-10 pb-6 sm:pt-12">
+      <div
+        className={cn(
+          "relative flex w-full flex-col gap-3 px-4 pt-10 pb-6 sm:pt-12",
+          wide ? "md:px-8" : "mx-auto max-w-6xl",
+        )}
+      >
         {eyebrow && (
           <p className={cn("text-sm font-semibold tracking-wide uppercase", t.eyebrow)}>
             {eyebrow}

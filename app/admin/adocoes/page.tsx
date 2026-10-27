@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { listAdoptionRequests } from "@/lib/admin/adoptions";
+import { table, tableClasses } from "@/components/ui/table";
 import {
   adoptionStatusLabels,
   adoptionStatusSlug,
@@ -77,20 +78,20 @@ async function RequestList({ searchParams }: Pick<Props, "searchParams">) {
       {requests.length === 0 ? (
         <p className="text-zinc-500">Nenhuma solicitação aqui.</p>
       ) : (
-        <table className="w-full text-left text-sm">
-          <thead className="text-zinc-500">
+        <table className={table.table}>
+          <thead className={table.head}>
             <tr>
-              <th className="py-2 pr-4 font-normal">Recebida em</th>
-              <th className="py-2 pr-4 font-normal">Interessado</th>
-              <th className="py-2 pr-4 font-normal">Animal</th>
-              <th className="py-2 font-normal">Status</th>
+              <th className={tableClasses("th")}>Recebida em</th>
+              <th className={tableClasses("th")}>Interessado</th>
+              <th className={tableClasses("th")}>Animal</th>
+              <th className={tableClasses("th")}>Status</th>
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
-              <tr key={request.id} className="border-t border-zinc-200 dark:border-zinc-800">
-                <td className="py-2 pr-4">{date.format(request.createdAt)}</td>
-                <td className="py-2 pr-4">
+              <tr key={request.id} className={table.row}>
+                <td className={tableClasses("td")}>{date.format(request.createdAt)}</td>
+                <td className={tableClasses("td")}>
                   <Link href={`/admin/adocoes/${request.id}`} className="font-medium underline">
                     {request.applicantName}
                   </Link>
@@ -98,8 +99,8 @@ async function RequestList({ searchParams }: Pick<Props, "searchParams">) {
                     {request.applicantCity}/{request.applicantState}
                   </span>
                 </td>
-                <td className="py-2 pr-4">{request.animal.name}</td>
-                <td className="py-2">
+                <td className={tableClasses("td")}>{request.animal.name}</td>
+                <td className={tableClasses("td")}>
                   {adoptionStatusLabels[request.status]}
                   {request.status === "INTERVIEW" && request.interviewAt && (
                     <span className="block text-zinc-500">

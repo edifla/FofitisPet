@@ -7,6 +7,7 @@ import { formatBRL } from "@/lib/money";
 import { getShelterNeeds } from "@/lib/shelter";
 import { DonateButton } from "./donate-button";
 import { cardClasses } from "@/components/ui/card";
+import { ImpactLink } from "@/components/donation/impact-link";
 import { PageHero } from "@/components/ui/page-hero";
 import { containerClasses, gridClasses } from "@/components/ui/layout";
 
@@ -26,6 +27,7 @@ export default function ShelterPage() {
         description="Você compra o item na loja e ele vai direto para o estoque do abrigo, sem frete. Abaixo estão os itens que mais estão faltando agora."
       />
       <div className={containerClasses("default", "flex flex-col gap-8 pt-4")}>
+        <ImpactLink />
         <Suspense>
           <CampaignList />
         </Suspense>
@@ -40,13 +42,13 @@ export default function ShelterPage() {
         <p className="flex flex-wrap gap-3 text-sm">
           <Link
             href="/produtos?doacao=sim"
-            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-donate-300 dark:ring-zinc-800"
           >
             Ver todos os produtos que podem ser doados
           </Link>
           <Link
             href="/transparencia"
-            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-emerald-300 dark:ring-zinc-800"
+            className="rounded-full bg-surface px-4 py-2 font-medium shadow-sm ring-1 ring-zinc-200 hover:ring-donate-300 dark:ring-zinc-800"
           >
             Ver como as doações são usadas
           </Link>
@@ -105,7 +107,7 @@ async function NeedsList() {
                 aria-valuemax={need.target}
                 aria-valuenow={need.quantity}
               >
-                <div className="h-full bg-emerald-600" style={{ width: `${percent}%` }} />
+                <div className="h-full bg-donate-600" style={{ width: `${percent}%` }} />
               </div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 {need.quantity} de {need.target} no abrigo · faltam {need.missing}

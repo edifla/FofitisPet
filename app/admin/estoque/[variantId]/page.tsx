@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { getVariantStock } from "@/lib/admin/catalog";
 import { stockLocationLabels, stockMovementLabels } from "@/lib/labels";
 import { AdjustmentForm, RestockForm, ShelterTargetForm } from "./stock-forms";
+import { table, tableClasses } from "@/components/ui/table";
 
 export const metadata: Metadata = { title: "Movimentar estoque" };
 
@@ -67,30 +68,32 @@ async function VariantStock({ params }: Pick<Props, "params">) {
         {variant.stockMovements.length === 0 ? (
           <p className="text-sm text-zinc-500">Nenhum movimento ainda.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
+          <div className={table.wrap}>
+            <table className={table.table}>
+              <thead className={table.head}>
                 <tr>
-                  <th className="py-2 pr-4 font-medium">Quando</th>
-                  <th className="py-2 pr-4 font-medium">Tipo</th>
-                  <th className="py-2 pr-4 font-medium">De → Para</th>
-                  <th className="py-2 pr-4 text-right font-medium">Qtd.</th>
-                  <th className="py-2 font-medium">Detalhes</th>
+                  <th className={tableClasses("th")}>Quando</th>
+                  <th className={tableClasses("th")}>Tipo</th>
+                  <th className={tableClasses("th")}>De → Para</th>
+                  <th className={tableClasses("th", "text-right")}>Qtd.</th>
+                  <th className={tableClasses("th")}>Detalhes</th>
                 </tr>
               </thead>
               <tbody>
                 {variant.stockMovements.map((movement) => (
-                  <tr key={movement.id} className="border-b border-zinc-100 dark:border-zinc-900">
-                    <td className="py-2 pr-4 whitespace-nowrap">
+                  <tr key={movement.id} className={table.row}>
+                    <td className={tableClasses("td", "whitespace-nowrap")}>
                       {dateTime.format(movement.createdAt)}
                     </td>
-                    <td className="py-2 pr-4">{stockMovementLabels[movement.type]}</td>
-                    <td className="py-2 pr-4 whitespace-nowrap">
+                    <td className={tableClasses("td")}>{stockMovementLabels[movement.type]}</td>
+                    <td className={tableClasses("td", "whitespace-nowrap")}>
                       {movement.fromLocation ? stockLocationLabels[movement.fromLocation] : "—"} →{" "}
                       {movement.toLocation ? stockLocationLabels[movement.toLocation] : "—"}
                     </td>
-                    <td className="py-2 pr-4 text-right tabular-nums">{movement.quantity}</td>
-                    <td className="py-2 text-zinc-600 dark:text-zinc-400">
+                    <td className={tableClasses("td", "text-right tabular-nums")}>
+                      {movement.quantity}
+                    </td>
+                    <td className={tableClasses("td", "text-zinc-600 dark:text-zinc-400")}>
                       {[
                         movement.note,
                         movement.order && `pedido #${movement.order.number}`,

@@ -81,7 +81,7 @@ async function CartContents({ searchParams }: Pick<Props, "searchParams">) {
 
       {donation.length > 0 && (
         <section
-          className="flex flex-col gap-4 rounded-lg border border-emerald-300 p-4 dark:border-emerald-800"
+          className="flex flex-col gap-4 rounded-lg border border-donate-300 p-4 dark:border-donate-800"
           aria-labelledby="doacao"
         >
           <div>
@@ -99,7 +99,7 @@ async function CartContents({ searchParams }: Pick<Props, "searchParams">) {
             {donationCount > 0 && (
               <Link
                 href="/checkout/doacao"
-                className="mt-2 rounded-md bg-emerald-700 px-6 py-2 font-medium text-white"
+                className="mt-2 rounded-md bg-donate-700 px-6 py-2 font-medium text-white"
               >
                 Finalizar doação
               </Link>
@@ -146,7 +146,7 @@ function CartItems({ items }: { items: CartLine[] }) {
               <form action={moveCartItem.bind(null, item.id, !item.donation)}>
                 <button
                   type="submit"
-                  className="text-sm text-emerald-800 underline dark:text-emerald-300"
+                  className="text-sm text-donate-800 underline dark:text-donate-300"
                 >
                   {item.donation ? "Receber em casa em vez de doar" : "Doar para o abrigo"}
                   <span className="sr-only"> {item.productName}</span>

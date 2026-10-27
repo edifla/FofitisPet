@@ -199,20 +199,35 @@ export async function deleteProduct(productId: string): Promise<FormState> {
   });
   try {
     await prisma.product.delete({ where: { id: productId } });
+    // As linhas das imagens saem junto com o produto (cascade); os arquivos, só aqui.
+    await Promise.all(images.map((image) => storage.remove(image.storageKey)));
   } catch (error) {
-    // Variações já vendidas ou com movimento de estoque não podem sumir do histórico.
-    if (isPrismaError(error, "P2003")) {
-      return {
-        message:
-          "Este produto já tem pedidos ou movimentos de estoque. Desative-o em vez de excluir.",
-      };
-    }
-    throw error;
+    if (!isPrismaError(error, "P2003")) throw error;
+    // Já vendido ou com movimento de estoque: os pedidos antigos precisam dele. Arquiva: some da
+    // loja, do admin, do estoque e das metas do abrigo, e libera o slug para um produto novo.
+    await prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUniqueOrThrow({
+        where: { id: productId },
+        select: { slug: true },
+      });
+      await tx.product.update({
+        where: { id: productId },
+        data: {
+          active: false,
+          archivedAt: new Date(),
+          slug: `${product.slug}-excluido-${productId.slice(-6)}`,
+        },
+      });
+      await tx.productVariant.updateMany({ where: { productId }, data: { active: false } });
+      await tx.stockLevel.updateMany({
+        where: { variant: { productId } },
+        data: { targetQuantity: null },
+      });
+    });
   }
-  // As linhas das imagens saem junto com o produto (cascade); os arquivos, só aqui.
-  await Promise.all(images.map((image) => storage.remove(image.storageKey)));
   revalidatePath("/admin/produtos");
-  redirect("/admin/produtos");
+  revalidatePath("/produtos");
+  redirect("/admin/produtos?excluido=1");
 }
 
 // ---------------------------------------------------------------------------

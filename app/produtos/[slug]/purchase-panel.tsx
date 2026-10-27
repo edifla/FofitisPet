@@ -104,8 +104,8 @@ export function PurchasePanel({
         </button>
       </div>
       {donationEligible && !soldOut && (
-        <div className="flex flex-col gap-2 rounded-md border border-emerald-300 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950">
-          <p className="text-sm text-emerald-900 dark:text-emerald-200">
+        <div className="flex flex-col gap-2 rounded-md border border-donate-300 bg-donate-50 p-3 dark:border-donate-800 dark:bg-donate-950">
+          <p className="text-sm text-donate-900 dark:text-donate-200">
             Prefere ajudar? Compre este item para o abrigo da FofitisPet: sem frete, entregue direto
             aos nossos animais.
           </p>
@@ -114,7 +114,7 @@ export function PurchasePanel({
             name="destino"
             value="abrigo"
             disabled={pending}
-            className="self-start rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            className="self-start rounded-md bg-donate-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
             Doar este item
           </button>

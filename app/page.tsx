@@ -30,8 +30,8 @@ const PATHS = [
     title: "Ajudar o abrigo",
     text: "Doe um kit pronto ou um item que está faltando. Ele sai da loja direto para o abrigo.",
     cta: "Quero doar",
-    tone: "bg-emerald-50 ring-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:ring-emerald-900 dark:text-emerald-100",
-    icon: "bg-emerald-100 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100",
+    tone: "bg-donate-50 ring-donate-100 text-donate-900 dark:bg-donate-950/60 dark:ring-donate-900 dark:text-donate-100",
+    icon: "bg-donate-100 text-donate-900 dark:bg-donate-900 dark:text-donate-100",
   },
 ] as const;
 
@@ -107,7 +107,7 @@ export default function Home() {
       <section aria-labelledby="como-ajuda" className="mx-auto w-full max-w-6xl px-4 pb-14">
         <div className="flex flex-col gap-6 rounded-3xl bg-surface p-6 shadow-sm ring-1 ring-zinc-200/70 sm:p-8 dark:ring-zinc-800">
           <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100">
+            <span className="flex size-10 items-center justify-center rounded-full bg-donate-100 text-donate-900 dark:bg-donate-900 dark:text-donate-100">
               <HomeIcon />
             </span>
             <h2 id="como-ajuda" className="text-2xl font-bold">
