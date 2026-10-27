@@ -14,7 +14,7 @@ export function SortSelect({ value }: { value: CatalogSort }) {
         name="ordem"
         defaultValue={value}
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
-        className="rounded-md border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className="rounded-full border border-zinc-300 bg-surface px-3 py-1.5 text-sm outline-none focus:border-brand-600 dark:border-zinc-700"
       >
         {Object.entries(catalogSorts).map(([key, label]) => (
           <option key={key} value={key}>
