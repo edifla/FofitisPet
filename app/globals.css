@@ -23,6 +23,19 @@
   --on-primary: #ffffff;
   --brand-text: var(--brand-700); /* texto e logo da marca sobre o fundo: 5,2:1 */
   --focus-ring: var(--brand-600);
+
+  /* Área de adoção: azul, mais calma e acolhedora que a loja. Os mesmos papéis de cor mudam
+     dentro de .theme-adocao (app/adocao/layout.tsx). */
+  --adopt-50: #eff6ff;
+  --adopt-100: #dbeafe;
+  --adopt-200: #bfdbfe;
+  --adopt-300: #93c5fd;
+  --adopt-400: #60a5fa;
+  --adopt-600: #2563eb;
+  --adopt-700: #1d4ed8; /* branco sobre ele: 6,7:1 */
+  --adopt-800: #1e40af;
+  --adopt-900: #1e3a8a;
+  --adopt-950: #172554;
 }
 
 @theme inline {
@@ -40,6 +53,16 @@
   --color-primary-hover: var(--primary-hover);
   --color-on-primary: var(--on-primary);
   --color-brand-text: var(--brand-text);
+  --color-adopt-50: var(--adopt-50);
+  --color-adopt-100: var(--adopt-100);
+  --color-adopt-200: var(--adopt-200);
+  --color-adopt-300: var(--adopt-300);
+  --color-adopt-400: var(--adopt-400);
+  --color-adopt-600: var(--adopt-600);
+  --color-adopt-700: var(--adopt-700);
+  --color-adopt-800: var(--adopt-800);
+  --color-adopt-900: var(--adopt-900);
+  --color-adopt-950: var(--adopt-950);
   /* Fontes: Geist (next/font) para tudo; troque aqui e em app/layout.tsx. */
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-geist-sans);
@@ -61,6 +84,30 @@
     --color-zinc-500: #8a8a94;
     --color-red-600: #ff6467;
   }
+}
+
+/* Dentro da área de adoção, os componentes do design system ficam azuis. */
+.theme-adocao {
+  --primary: var(--adopt-700);
+  --primary-hover: var(--adopt-800);
+  --on-primary: #ffffff;
+  --brand-text: var(--adopt-700); /* 6,2:1 sobre adopt-50 */
+  --focus-ring: var(--adopt-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  .theme-adocao {
+    --primary: var(--adopt-400);
+    --primary-hover: var(--adopt-300);
+    --on-primary: #0b1220; /* 7,4:1 */
+    --brand-text: var(--adopt-300); /* 11:1 */
+    --focus-ring: var(--adopt-400);
+  }
+}
+
+/* Títulos da adoção com fonte arredondada (Nunito, carregada no layout da área). */
+.theme-adocao :is(h1, h2, h3, .font-display) {
+  font-family: var(--font-adocao), var(--font-sans), system-ui, sans-serif;
 }
 
 body {

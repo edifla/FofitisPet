@@ -72,6 +72,7 @@ export async function searchAnimals({
         sex: true,
         birthDate: true,
         temperament: true,
+        story: true,
         status: true,
         images: {
           orderBy: [{ position: "asc" }, { createdAt: "asc" }],
@@ -138,4 +139,37 @@ export async function getFoodReceivedGrams(animalId: string) {
     select: { quantity: true, variant: { select: { weightGrams: true } } },
   });
   return consumptions.reduce((sum, c) => sum + c.quantity * (c.variant.weightGrams ?? 0), 0);
+}
+
+// Outros animais disponíveis, para o fim do perfil ("também esperam por uma família").
+export async function getOtherAnimals(excludeId: string, take = 3) {
+  const { animals } = await searchAnimals({});
+  return animals.filter((a) => a.id !== excludeId && a.status === "AVAILABLE").slice(0, take);
+}
+
+type Describable = {
+  sex: "MALE" | "FEMALE";
+  size: "SMALL" | "MEDIUM" | "LARGE";
+  birthDate: Date | null;
+};
+
+const sizeWords = { SMALL: "porte pequeno", MEDIUM: "porte médio", LARGE: "porte grande" } as const;
+
+// Artigo do nome no texto: "a Mel", "o Thor".
+export const article = (sex: Describable["sex"]) => (sex === "FEMALE" ? "a" : "o");
+
+// "Fêmea, 2 anos, porte pequeno" — em frase, não em ficha técnica.
+export function describeAnimal(animal: Describable) {
+  const age = formatAge(animal.birthDate);
+  return [
+    animal.sex === "FEMALE" ? "Fêmea" : "Macho",
+    age === "Idade desconhecida" ? "idade desconhecida" : age.toLowerCase(),
+    sizeWords[animal.size],
+  ].join(", ");
+}
+
+// Primeira frase da história, para o card da listagem.
+export function storyTeaser(story: string, max = 110) {
+  const first = story.split(/(?<=[.!?])\s/)[0] ?? story;
+  return first.length > max ? `${first.slice(0, max - 1).trimEnd()}…` : first;
 }
