@@ -166,11 +166,15 @@ export async function saveProduct(
   });
   if (!parsed.success) return { errors: fieldErrors(parsed.error), values };
 
+  let createdId: string | null = null;
   try {
     if (productId) {
       await prisma.product.update({ where: { id: productId }, data: parsed.data });
     } else {
-      await prisma.product.create({ data: parsed.data });
+      ({ id: createdId } = await prisma.product.create({
+        data: parsed.data,
+        select: { id: true },
+      }));
     }
   } catch (error) {
     if (isPrismaError(error, "P2002")) {
@@ -183,7 +187,8 @@ export async function saveProduct(
   }
 
   revalidatePath("/admin/produtos");
-  redirect("/admin/produtos");
+  // Produto novo ainda não tem variação (preço e estoque): segue direto para cadastrar uma.
+  redirect(createdId ? `/admin/produtos/${createdId}#variacoes` : "/admin/produtos");
 }
 
 export async function deleteProduct(productId: string): Promise<FormState> {

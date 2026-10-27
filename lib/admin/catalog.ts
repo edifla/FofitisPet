@@ -45,7 +45,7 @@ export async function listProducts() {
       donationEligible: true,
       category: { select: { name: true } },
       brand: { select: { name: true } },
-      _count: { select: { variants: true } },
+      _count: { select: { variants: { where: { active: true } } } },
     },
   });
 }
