@@ -39,6 +39,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Pular para o conteúdo
         </a>
+        {/* Faixa do beta fechado (KAN-52): ligada com BETA_MODE=on. */}
+        {process.env.BETA_MODE === "on" && (
+          <p className="bg-brand-100 px-4 py-2 text-center text-sm text-brand-800">
+            Versão beta: estamos testando com poucas pessoas e os pagamentos são simulados.{" "}
+            <a href="/feedback" className="font-medium underline">
+              Conte o que achou
+            </a>
+          </p>
+        )}
         <SiteHeader />
         <div id="conteudo" tabIndex={-1} className="flex flex-1 flex-col outline-none">
           {children}

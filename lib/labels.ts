@@ -2,6 +2,9 @@ import type {
   AnimalSex,
   AnimalSize,
   AnimalStatus,
+  FeedbackKind,
+  FeedbackPriority,
+  FeedbackStatus,
   HousingType,
   OrderStatus,
   Species,
@@ -98,4 +101,25 @@ export const housingTypeLabels: Record<HousingType, string> = {
   APARTMENT: "Apartamento",
   FARM: "Chácara ou sítio",
   OTHER: "Outro",
+};
+
+// Feedback do beta (KAN-52).
+export const feedbackKindLabels: Record<FeedbackKind, string> = {
+  PROBLEM: "Problema",
+  SUGGESTION: "Sugestão",
+  PRAISE: "Elogio",
+  OTHER: "Outro",
+};
+
+export const feedbackStatusLabels: Record<FeedbackStatus, string> = {
+  NEW: "Novo",
+  PLANNED: "Planejado",
+  DONE: "Resolvido",
+  DISCARDED: "Descartado",
+};
+
+export const feedbackPriorityLabels: Record<FeedbackPriority, string> = {
+  HIGH: "Alta",
+  MEDIUM: "Média",
+  LOW: "Baixa",
 };

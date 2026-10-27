@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { FeedbackLink } from "@/components/feedback-link";
 
 // Rodapé com os links institucionais e legais (KAN-14).
 export function SiteFooter() {
@@ -12,6 +14,9 @@ export function SiteFooter() {
         <Link href="/termo-de-adocao">Termo de adoção</Link>
         <Link href="/termos">Termos de uso</Link>
         <Link href="/privacidade">Política de privacidade</Link>
+        <Suspense fallback={<Link href="/feedback">Enviar feedback</Link>}>
+          <FeedbackLink />
+        </Suspense>
       </nav>
     </footer>
   );
