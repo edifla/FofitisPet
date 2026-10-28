@@ -98,6 +98,19 @@ roda lá.
    ```
 3. Saia e entre de novo no site: o menu "Admin" aparece.
 
+### Conteúdo de demonstração (opcional)
+
+Para o beta não começar com a loja vazia, dá para colocar os produtos, animais, kits e fotos de
+exemplo. **Nenhuma conta é criada**: as contas de teste da seed têm senhas conhecidas e nunca vão
+para produção. No **Terminal** do site no Coolify:
+
+```bash
+npm run db:demo -- --confirmar
+```
+
+Rodar de novo não duplica nada nem mexe no que foi editado no admin. Os itens de exemplo podem ser
+editados ou excluídos pelo admin como qualquer outro.
+
 ## 7. Ligar a rotina (pedidos não pagos)
 
 A rotina `/api/pedidos/expirar` cancela pedidos não pagos fora do prazo, devolve o estoque e limpa
