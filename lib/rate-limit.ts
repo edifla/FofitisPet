@@ -22,6 +22,9 @@ export const LIMITS = {
   pixByUser: { limit: 20, windowSeconds: 10 * MINUTE },
   receiptByUser: { limit: 5, windowSeconds: HOUR },
   adoptionByIp: { limit: 10, windowSeconds: HOUR },
+  // Lya (KAN-127): cada pergunta custa uma chamada ao modelo.
+  lyaByIp: { limit: 40, windowSeconds: HOUR },
+  lyaByUser: { limit: 60, windowSeconds: HOUR },
 } satisfies Record<string, Limit>;
 
 export type RateLimitResult = { allowed: boolean; retryAfterSeconds: number };

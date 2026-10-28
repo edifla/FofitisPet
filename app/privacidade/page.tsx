@@ -92,7 +92,22 @@ export default function PrivacyPage() {
         <li>Transportadora, com nome e endereço de entrega, para enviar compras.</li>
         <li>Provedores de hospedagem, banco de dados e envio de e-mails, que operam o site.</li>
         <li>Autoridades, quando a lei exigir.</li>
+        <li>
+          Provedor do modelo de inteligência artificial da Lya (Anthropic), com as mensagens que
+          você escreve no chat. Veja abaixo.
+        </li>
       </ul>
+
+      <h3 id="lya">Assistente virtual (Lya)</h3>
+      <p>
+        A Lya é uma inteligência artificial que responde dúvidas pelo chat do site. Para responder,
+        as mensagens da conversa e, se você estiver conectado, o seu primeiro nome e os seus últimos
+        pedidos são enviados ao provedor do modelo de IA. A {LEGAL.companyName} não guarda as
+        conversas: elas ficam só no seu navegador enquanto a página estiver aberta. Mensagens com
+        número de cartão ou CPF não são enviadas à IA. Não escreva no chat dados de saúde, senhas ou
+        documentos. A Lya pode errar; para assuntos importantes, fale com a gente pelo{" "}
+        <Link href="/feedback">formulário de contato</Link>.
+      </p>
 
       <h2>6. Cookies</h2>
       <p>

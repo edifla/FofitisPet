@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { Suspense } from "react";
+import { LyaChat } from "@/components/lya/lya-chat";
 import { PageViews } from "@/components/monitoring/page-views";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -60,6 +61,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </div>
         <SiteFooter />
+        {/* Lya, a assistente de IA (KAN-127). usePathname só existe no pedido: fica em Suspense. */}
+        <Suspense fallback={null}>
+          <LyaChat />
+        </Suspense>
         {/* Tema claro/escuro antes da página aparecer, sem piscar (components/theme-toggle.tsx). */}
         <Script id="tema" strategy="beforeInteractive">
           {themeScript}
