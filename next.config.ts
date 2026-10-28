@@ -8,8 +8,11 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "12mb" },
   },
   images: {
-    // Imagens enviadas pelo admin, servidas por app/arquivos.
-    localPatterns: [{ pathname: "/arquivos/**", search: "" }],
+    // Imagens enviadas pelo admin, servidas por app/arquivos, e a foto da Lya (public/lya.webp).
+    localPatterns: [
+      { pathname: "/arquivos/**", search: "" },
+      { pathname: "/lya.webp", search: "" },
+    ],
   },
   cacheComponents: true,
   partialPrefetching: true,
