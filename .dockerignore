@@ -1,0 +1,14 @@
+# Fora da imagem de produção (Dockerfile).
+.git
+.github
+node_modules
+.next
+coverage
+storage
+.env*
+!.env.example
+*.log
+docs
+tests
+app/generated/prisma
+components/chat
