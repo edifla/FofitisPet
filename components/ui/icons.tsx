@@ -222,3 +222,24 @@ export const ArrowUpIcon = (p: IconProps) => (
     <path d="M7 17 17 7M8 7h9v9" />
   </Icon>
 );
+
+export const UserIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0 1 16 0" />
+  </Icon>
+);
+
+export const MapPinIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Z" />
+    <circle cx="12" cy="9" r="2.5" />
+  </Icon>
+);
+
+export const LockIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="4" y="10" width="16" height="11" rx="2" />
+    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+  </Icon>
+);
