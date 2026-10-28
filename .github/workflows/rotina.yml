@@ -1,0 +1,30 @@
+# Rotina periódica de produção (KAN-110, KAN-53): cancela pedidos não pagos fora do prazo e limpa
+# registros antigos, chamando /api/pedidos/expirar no site publicado.
+# Precisa de dois segredos do repositório (Settings > Secrets and variables > Actions):
+#   APP_URL      endereço do site, ex.: https://fofitispet.onrender.com
+#   CRON_SECRET  o mesmo valor da variável CRON_SECRET do Render
+# Sem os segredos, a rotina só avisa e não falha.
+name: Rotina
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  expirar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Chamar a rotina do site
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::warning::Defina os segredos APP_URL e CRON_SECRET para ligar a rotina."
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 60 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$APP_URL/api/pedidos/expirar"
