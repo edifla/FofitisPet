@@ -32,13 +32,21 @@ function writeHidden(hidden: boolean) {
   listeners.forEach((listener) => listener());
 }
 
+// Cor dos detalhes da barra: a da loja ou o azul da adoção.
+const accents = {
+  brand: "bg-brand-50 text-brand-800 dark:bg-brand-900/40 dark:text-brand-100",
+  adopt: "bg-adopt-50 text-adopt-800 dark:bg-adopt-900/50 dark:text-adopt-100",
+} as const;
+
 export function FilterLayout({
+  tone = "brand",
   panel,
   activeCount,
   header,
   toolbar,
   children,
 }: {
+  tone?: keyof typeof accents;
   panel: React.ReactNode;
   activeCount: number;
   // Topo da coluna de produtos (abertura e busca).
@@ -119,7 +127,10 @@ export function FilterLayout({
           <button
             type="button"
             onClick={() => writeHidden(false)}
-            className="relative flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-800 hover:bg-brand-100 dark:bg-brand-900/40 dark:text-brand-100"
+            className={cn(
+              "relative flex size-10 items-center justify-center rounded-xl hover:opacity-90",
+              accents[tone],
+            )}
           >
             <FilterIcon />
             <span className="sr-only">Mostrar {label.toLowerCase()}</span>
@@ -155,7 +166,9 @@ export function FilterLayout({
       >
         <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
           <h2 className="flex items-center gap-2 font-semibold">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-800 dark:bg-brand-900/40 dark:text-brand-100">
+            <span
+              className={cn("flex size-8 items-center justify-center rounded-lg", accents[tone])}
+            >
               <FilterIcon className="size-4" />
             </span>
             Filtros

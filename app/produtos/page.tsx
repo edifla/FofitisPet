@@ -7,6 +7,7 @@ import { SortSelect } from "@/components/catalog/sort-select";
 import { buttonClasses } from "@/components/ui/button";
 import { ChevronIcon, CloseIcon, SearchIcon } from "@/components/ui/icons";
 import { CategoryIcon } from "@/components/catalog/category-icon";
+import { FilterSection } from "@/components/catalog/filter-section";
 import { PageHero } from "@/components/ui/page-hero";
 import { getCatalogFilterOptions, searchCatalog } from "@/lib/catalog";
 import {
@@ -274,26 +275,6 @@ const chip =
   "cursor-pointer rounded-full border border-zinc-300 bg-surface px-3.5 py-1.5 text-sm transition-colors hover:border-brand-400 has-checked:border-brand-700 has-checked:bg-brand-700 has-checked:font-medium has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-brand-600 dark:border-zinc-700 dark:has-checked:border-brand-400 dark:has-checked:bg-brand-400 dark:has-checked:text-zinc-950";
 
 // Seção do painel que abre e fecha.
-function Section({
-  title,
-  open = true,
-  children,
-}: {
-  title: string;
-  open?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <details open={open} className="group border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
-      <summary className="flex cursor-pointer list-none items-center justify-between font-semibold [&::-webkit-details-marker]:hidden">
-        {title}
-        <ChevronIcon className="size-4 text-zinc-500 transition-transform group-open:rotate-90" />
-      </summary>
-      <div className="pt-3">{children}</div>
-    </details>
-  );
-}
-
 // Categorias como peças com ícone: "Todas" primeiro e as subcategorias logo depois da mãe, com o
 // nome dela em letra pequena.
 function categoryTiles(categories: Options["categories"]) {
@@ -325,7 +306,7 @@ function FilterForm({
     <form action="/produtos" className="flex flex-1 flex-col" aria-label="Filtros">
       <HiddenFilters filters={filters} omit="filters" />
 
-      <Section title="Para quem?">
+      <FilterSection title="Para quem?">
         <fieldset className="flex flex-wrap gap-2">
           <legend className="sr-only">Espécie</legend>
           <label className={chip}>
@@ -351,9 +332,9 @@ function FilterForm({
             </label>
           ))}
         </fieldset>
-      </Section>
+      </FilterSection>
 
-      <Section title="Categoria">
+      <FilterSection title="Categoria">
         <fieldset className="grid grid-cols-3 gap-1.5">
           <legend className="sr-only">Categoria</legend>
           {categoryTiles(options.categories).map((category) => (
@@ -378,10 +359,10 @@ function FilterForm({
             </label>
           ))}
         </fieldset>
-      </Section>
+      </FilterSection>
 
       {options.brands.length > 0 && (
-        <Section title="Marca" open={filters.brands.length > 0}>
+        <FilterSection title="Marca" open={filters.brands.length > 0}>
           <fieldset className="flex flex-wrap gap-2">
             <legend className="sr-only">Marca</legend>
             {options.brands.map((brand) => (
@@ -397,10 +378,10 @@ function FilterForm({
               </label>
             ))}
           </fieldset>
-        </Section>
+        </FilterSection>
       )}
 
-      <Section title="Preço" open={Boolean(filters.minPrice || filters.maxPrice)}>
+      <FilterSection title="Preço" open={Boolean(filters.minPrice || filters.maxPrice)}>
         <fieldset className="grid grid-cols-2 gap-2">
           <legend className="sr-only">Faixa de preço</legend>
           {(
@@ -429,7 +410,7 @@ function FilterForm({
             </label>
           ))}
         </fieldset>
-      </Section>
+      </FilterSection>
 
       <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
         <label className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium">
