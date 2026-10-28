@@ -16,6 +16,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
+    "db:demo": "node prisma/demo.mjs",
     "user:promote": "node scripts/promote-admin.mjs",
     "test": "vitest run"
   },
