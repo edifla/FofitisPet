@@ -7,6 +7,7 @@ import { CatFaceIcon, DogFaceIcon } from "@/components/adoption/species-icons";
 import { FilterLayout } from "@/components/catalog/filter-layout";
 import { PawIcon } from "@/components/brand/logo";
 import { buttonClasses } from "@/components/ui/button";
+import { cn } from "@/components/ui/cn";
 import { CloseIcon } from "@/components/ui/icons";
 import { ageGroups, searchAnimals } from "@/lib/adoption";
 import {
@@ -231,19 +232,21 @@ function Question({ title, children }: { title: string; children: React.ReactNod
   );
 }
 
-// Escolha única em chips, com "Tanto faz" primeiro.
+// Escolha única em chips, com a opção "todos" primeiro.
 function ChoiceChips({
   name,
   value,
+  anyLabel,
   options,
 }: {
   name: string;
   value: string | null;
+  anyLabel: string;
   options: { value: string; label: string; title?: string }[];
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      {[{ value: "", label: "Tanto faz" }, ...options].map((option) => (
+      {[{ value: "", label: anyLabel }, ...options].map((option) => (
         <label
           key={option.value || "todos"}
           className={chip}
@@ -264,9 +267,9 @@ function ChoiceChips({
 }
 
 const SPECIES_CHOICES = [
-  { value: "", label: "Tanto faz", Icon: PawIcon },
-  { value: "caes", label: "Um cachorro", Icon: DogFaceIcon },
-  { value: "gatos", label: "Um gato", Icon: CatFaceIcon },
+  { value: "", label: "Todos", Icon: PawIcon },
+  { value: "caes", label: "Cachorro", Icon: DogFaceIcon },
+  { value: "gatos", label: "Gato", Icon: CatFaceIcon },
 ] as const;
 
 function Filters({ filters, hasFilters }: { filters: AdoptionFilters; hasFilters: boolean }) {
@@ -277,12 +280,9 @@ function Filters({ filters, hasFilters }: { filters: AdoptionFilters; hasFilters
       </p>
 
       <Question title="Quem você procura?">
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {SPECIES_CHOICES.map(({ value, label, Icon }) => (
-            <label
-              key={value || "todos"}
-              className="group flex cursor-pointer flex-col items-center gap-1 rounded-2xl bg-white px-1 py-2.5 text-center text-xs font-medium text-adopt-900 ring-1 ring-adopt-100 transition hover:ring-adopt-300 has-checked:bg-adopt-600 has-checked:text-white has-checked:ring-adopt-600 has-focus-visible:ring-2 has-focus-visible:ring-adopt-600 dark:bg-adopt-900/40 dark:text-adopt-100 dark:ring-adopt-900 dark:has-checked:bg-adopt-400 dark:has-checked:text-adopt-950"
-            >
+            <label key={value || "todos"} className={cn(chip, "group flex items-center gap-1.5")}>
               <input
                 type="radio"
                 name="especie"
@@ -290,7 +290,7 @@ function Filters({ filters, hasFilters }: { filters: AdoptionFilters; hasFilters
                 defaultChecked={(filters.species ?? "") === value}
                 className="sr-only"
               />
-              <Icon className="size-6 text-adopt-600 group-has-checked:text-current dark:text-adopt-300" />
+              <Icon className="size-4 text-adopt-600 group-has-checked:text-current dark:text-adopt-300" />
               {label}
             </label>
           ))}
@@ -300,6 +300,7 @@ function Filters({ filters, hasFilters }: { filters: AdoptionFilters; hasFilters
       <Question title="De que tamanho?">
         <ChoiceChips
           name="porte"
+          anyLabel="Todos os tamanhos"
           value={filters.size}
           options={Object.entries(sizeSlugs).map(([slug, size]) => ({
             value: slug,
@@ -311,6 +312,7 @@ function Filters({ filters, hasFilters }: { filters: AdoptionFilters; hasFilters
       <Question title="Que idade?">
         <ChoiceChips
           name="idade"
+          anyLabel="Todas as idades"
           value={filters.age}
           options={Object.entries(ageGroups).map(([slug, group]) => ({
             value: slug,
