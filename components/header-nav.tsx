@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { NAV_LINKS } from "@/components/nav-links";
+import { isNavActive, NAV_LINKS } from "@/components/nav-links";
 import { CloseIcon, MenuIcon } from "@/components/ui/icons";
 import { cn } from "@/components/ui/cn";
 
@@ -14,15 +14,13 @@ const activeTone = {
   donate: "bg-donate-100 text-donate-900 dark:bg-donate-900/50 dark:text-donate-100",
 } as const;
 
-const isActive = (pathname: string | null, href: string) =>
-  Boolean(pathname && (pathname === href || pathname.startsWith(`${href}/`)));
-
 export function HeaderNav() {
   const pathname = usePathname();
   return (
     <nav aria-label="Principal" className="hidden items-center gap-1 md:flex">
-      {NAV_LINKS.map(({ href, label, Icon, tone }) => {
-        const active = isActive(pathname, href);
+      {NAV_LINKS.map((link) => {
+        const { href, label, Icon, tone } = link;
+        const active = isNavActive(pathname, link);
         return (
           <Link
             key={href}
@@ -85,8 +83,9 @@ export function MobileMenu({ account }: { account: { href: string; label: string
           className="absolute inset-x-0 top-full border-b border-zinc-200 bg-surface px-4 pt-2 pb-5 shadow-lg dark:border-zinc-800"
         >
           <nav aria-label="Principal" className="grid grid-cols-2 gap-2">
-            {NAV_LINKS.map(({ href, label, Icon, tone }) => {
-              const active = isActive(pathname, href);
+            {NAV_LINKS.map((link) => {
+              const { href, label, Icon, tone } = link;
+              const active = isNavActive(pathname, link);
               return (
                 <Link
                   key={href}

@@ -242,7 +242,7 @@ async function AnimalProfile({ params }: Pick<Props, "params">) {
                 <p>Toda a ração do abrigo vem de doações feitas na loja.</p>
               )}
               {animal.status !== "ADOPTED" && (
-                <Link href="/abrigo" className="font-medium underline">
+                <Link href="/compre-para-o-abrigo" className="font-medium underline">
                   Doar ração para o abrigo
                 </Link>
               )}

@@ -48,6 +48,11 @@ export default function PrivacyPage() {
           da equipe do abrigo sobre a solicitação.
         </li>
         <li>
+          <strong>Ajudar o abrigo (aba Doar):</strong> se você pedir para ser avisado da doação em
+          dinheiro ou se oferecer como voluntário, guardamos nome, e-mail e, se você informar,
+          telefone e a mensagem, só para a equipe do abrigo falar com você.
+        </li>
+        <li>
           <strong>Dados técnicos:</strong> endereço IP usado por pouco tempo para limitar tentativas
           de login e de pagamento (proteção contra abuso), registros de erros do servidor e
           contagens anônimas de páginas visitadas, sem identificar você.
@@ -124,6 +129,10 @@ export default function PrivacyPage() {
           eles ficam sem o seu nome e e-mail.
         </li>
         <li>Solicitações de adoção: até 2 anos após a decisão, para o histórico do abrigo.</li>
+        <li>
+          Contatos da aba Doar (voluntariado e aviso da doação em dinheiro): até 12 meses, ou antes
+          se você pedir.
+        </li>
         <li>Contadores de tentativas por IP: minutos ou horas.</li>
       </ul>
 

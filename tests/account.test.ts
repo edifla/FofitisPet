@@ -101,6 +101,25 @@ describe("dados da conta", () => {
     expect(request.events.at(-1)?.note).toBe("Conta excluída pelo interessado.");
   });
 
+  it("inclui e apaga os contatos da aba Doar com o mesmo e-mail", async () => {
+    const user = await createUser();
+    const other = await createUser();
+    await prisma.helpInterest.createMany({
+      data: [
+        { kind: "VOLUNTEER", name: user.name, email: user.email, message: "Passeios" },
+        { kind: "MONEY", name: other.name, email: other.email },
+      ],
+    });
+    const data = await exportUserData(user.id);
+    expect(data.helpInterests).toHaveLength(1);
+    expect(data.helpInterests[0]).toMatchObject({ kind: "VOLUNTEER", message: "Passeios" });
+
+    await deleteAccount(user.id);
+    expect(await prisma.helpInterest.count({ where: { email: user.email } })).toBe(0);
+    // O contato de outra pessoa continua.
+    expect(await prisma.helpInterest.count({ where: { email: other.email } })).toBe(1);
+  });
+
   it("não exclui conta de administrador nem a mesma conta duas vezes", async () => {
     const admin = await createUser("ADMIN");
     await expect(deleteAccount(admin.id)).rejects.toThrow(AccountError);

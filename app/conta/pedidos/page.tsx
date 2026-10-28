@@ -81,7 +81,10 @@ async function OrderList({ searchParams }: Pick<Props, "searchParams">) {
           <Link href="/produtos" className={buttonClasses({ size: "sm" })}>
             Ver produtos
           </Link>
-          <Link href="/doar" className={buttonClasses({ size: "sm", variant: "secondary" })}>
+          <Link
+            href="/compre-para-o-abrigo"
+            className={buttonClasses({ size: "sm", variant: "secondary" })}
+          >
             Doar ao abrigo
           </Link>
         </div>

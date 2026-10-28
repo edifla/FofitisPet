@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { expireStaleOrders } from "@/lib/orders";
 import { pruneMonitoring } from "@/lib/monitoring";
+import { prisma } from "@/lib/prisma";
 import { pruneRateLimits } from "@/lib/rate-limit";
 
 // Rotina periódica (cron) que cancela pedidos não pagos fora do prazo e devolve o estoque
@@ -21,7 +22,11 @@ async function handle(request: Request) {
   const rateLimitsPruned = await pruneRateLimits();
   // E registros antigos do monitoramento (KAN-51).
   const monitoringPruned = await pruneMonitoring();
-  return Response.json({ canceled, rateLimitsPruned, monitoringPruned });
+  // E os contatos da aba Doar com mais de 12 meses (política de privacidade).
+  const { count: helpInterestsPruned } = await prisma.helpInterest.deleteMany({
+    where: { createdAt: { lt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) } },
+  });
+  return Response.json({ canceled, rateLimitsPruned, monitoringPruned, helpInterestsPruned });
 }
 
 export { handle as GET, handle as POST };

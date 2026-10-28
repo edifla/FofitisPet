@@ -28,8 +28,8 @@ const PATHS = [
     href: "/doar",
     Icon: GiftIcon,
     title: "Ajudar o abrigo",
-    text: "Doe um kit pronto ou um item que está faltando. Ele sai da loja direto para o abrigo.",
-    cta: "Quero doar",
+    text: "Traga itens, seja voluntário ou compre na loja algo que está faltando no abrigo.",
+    cta: "Quero ajudar",
     tone: "bg-donate-50 ring-donate-100 text-donate-900 dark:bg-donate-950/60 dark:ring-donate-900 dark:text-donate-100",
     icon: "bg-donate-100 text-donate-900 dark:bg-donate-900 dark:text-donate-100",
   },
@@ -131,8 +131,8 @@ export default function Home() {
             ))}
           </ol>
           <div className="flex flex-wrap gap-3">
-            <Link href="/abrigo" className={buttonClasses({ variant: "donate" })}>
-              Ajudar o abrigo
+            <Link href="/compre-para-o-abrigo" className={buttonClasses({ variant: "donate" })}>
+              Compre para o abrigo
             </Link>
             <Link href="/transparencia" className={buttonClasses({ variant: "secondary" })}>
               Ver a transparência

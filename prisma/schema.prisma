@@ -811,3 +811,24 @@ model Feedback {
 
   @@index([status, priority, createdAt])
 }
+
+// Interesse em ajudar fora da loja (aba Doar): ser avisado quando a doação em dinheiro abrir
+// (KAN-46) ou ser voluntário. O abrigo entra em contato; o registro é apagado depois de 12 meses.
+enum HelpInterestKind {
+  MONEY
+  VOLUNTEER
+}
+
+model HelpInterest {
+  id          String           @id @default(cuid())
+  kind        HelpInterestKind
+  name        String
+  email       String
+  phone       String?
+  message     String?
+  createdAt   DateTime         @default(now())
+  // Marcado no admin quando o abrigo já falou com a pessoa.
+  contactedAt DateTime?
+
+  @@index([kind, createdAt])
+}
