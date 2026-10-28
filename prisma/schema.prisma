@@ -118,6 +118,8 @@ model Category {
   // Categoria pai, para subcategorias (ex.: Alimentação > Ração seca).
   parentId    String?
   position    Int      @default(0)
+  // Ícone mostrado no filtro da loja (chave de lib/category-icons.ts); nulo = escolhido pelo slug.
+  icon        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -299,10 +299,15 @@ function Section({
 function categoryTiles(categories: Options["categories"]) {
   let parent = "";
   return [
-    { slug: "", name: "Todas", parent: null as string | null },
+    { slug: "", name: "Todas", icon: null as string | null, parent: null as string | null },
     ...categories.map((category) => {
       if (category.depth === 0) parent = category.name;
-      return { slug: category.slug, name: category.name, parent: category.depth ? parent : null };
+      return {
+        slug: category.slug,
+        name: category.name,
+        icon: category.icon,
+        parent: category.depth ? parent : null,
+      };
     }),
   ];
 }
@@ -349,13 +354,13 @@ function FilterForm({
       </Section>
 
       <Section title="Categoria">
-        <fieldset className="grid grid-cols-3 gap-2">
+        <fieldset className="grid grid-cols-3 gap-1.5">
           <legend className="sr-only">Categoria</legend>
           {categoryTiles(options.categories).map((category) => (
             <label
               key={category.slug || "todas"}
               title={category.parent ? `${category.name} (em ${category.parent})` : category.name}
-              className="group flex cursor-pointer flex-col items-center gap-1.5 rounded-2xl bg-zinc-50 px-1 py-3 text-center ring-1 ring-zinc-200 transition hover:bg-brand-50 hover:ring-brand-200 has-checked:bg-brand-700 has-checked:text-white has-checked:shadow-md has-checked:ring-brand-700 has-focus-visible:ring-2 has-focus-visible:ring-brand-600 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:bg-brand-900/30 dark:has-checked:bg-brand-400 dark:has-checked:text-brand-950 dark:has-checked:ring-brand-400"
+              className="group flex cursor-pointer flex-col items-center gap-1 rounded-xl px-1 py-2 text-center text-[0.7rem] leading-tight font-medium ring-1 ring-zinc-200 transition hover:bg-brand-50 hover:ring-brand-200 has-checked:bg-brand-700 has-checked:text-white has-checked:ring-brand-700 has-focus-visible:ring-2 has-focus-visible:ring-brand-600 dark:ring-zinc-800 dark:hover:bg-brand-900/30 dark:has-checked:bg-brand-400 dark:has-checked:text-brand-950 dark:has-checked:ring-brand-400"
             >
               <input
                 type="radio"
@@ -364,15 +369,12 @@ function FilterForm({
                 defaultChecked={(filters.category ?? "") === category.slug}
                 className="sr-only"
               />
-              <span className="flex size-10 items-center justify-center rounded-xl bg-surface text-brand-700 shadow-sm group-has-checked:bg-white/15 group-has-checked:text-current group-has-checked:shadow-none dark:text-brand-300">
-                <CategoryIcon slug={category.slug} className="size-6" />
-              </span>
-              <span className="text-xs leading-tight font-medium">{category.name}</span>
-              {category.parent && (
-                <span className="-mt-1 text-[0.65rem] leading-tight text-zinc-500 group-has-checked:text-current group-has-checked:opacity-80">
-                  {category.parent}
-                </span>
-              )}
+              <CategoryIcon
+                slug={category.slug}
+                icon={category.icon}
+                className="size-5 text-brand-700 group-has-checked:text-current dark:text-brand-300"
+              />
+              {category.name}
             </label>
           ))}
         </fieldset>

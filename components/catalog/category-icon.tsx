@@ -1,7 +1,8 @@
 import type { SVGProps } from "react";
+import { isCategoryIcon, type CategoryIconKey } from "@/lib/category-icons";
 
-// Ícones das categorias da loja. As categorias vêm do admin, então o ícone é escolhido pelo slug:
-// primeiro o slug exato, depois palavras-chave, e por fim um ícone genérico.
+// Ícones das categorias da loja. O admin escolhe um da lista (lib/category-icons.ts); sem escolha,
+// o ícone sai do slug: primeiro o slug exato, depois palavras-chave, e por fim um genérico.
 
 type IconProps = SVGProps<SVGSVGElement> & { className?: string };
 
@@ -119,28 +120,89 @@ const TagIcon = (p: IconProps) => (
   </Icon>
 );
 
-const EXACT: Record<string, (p: IconProps) => React.JSX.Element> = {
-  "": AllIcon,
-  alimentacao: BowlIcon,
+// Peixe e pena, para as categorias de aquário e pássaros.
+const FishIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 12c3-4.5 7-6 11-6 3 0 5.5 2.5 7 6-1.5 3.5-4 6-7 6-4 0-8-1.5-11-6Z" />
+    <path d="M3 12 1 9M3 12l-2 3" />
+    <circle cx="16" cy="10.5" r="1" />
+  </Icon>
+);
+
+const FeatherIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20 4c-7 0-13 5-13 12v4" />
+    <path d="M20 4c0 8-5 13-13 13M10 14l-3 3M13 11l-2 2" />
+  </Icon>
+);
+
+const ICONS: Record<CategoryIconKey, (p: IconProps) => React.JSX.Element> = {
+  tigela: BowlIcon,
   "racao-seca": SackIcon,
   "racao-umida": CanIcon,
-  brinquedos: BallIcon,
+  petisco: BoneIcon,
+  brinquedo: BallIcon,
   higiene: BathIcon,
+  acessorio: CollarIcon,
+  caminha: BedIcon,
+  saude: HealthIcon,
+  aquario: FishIcon,
+  passaro: FeatherIcon,
+  etiqueta: TagIcon,
 };
 
-const KEYWORDS: [RegExp, (p: IconProps) => React.JSX.Element][] = [
-  [/umid|sache|lata|patê|pate/, CanIcon],
-  [/seca|racao/, SackIcon],
-  [/aliment|comida|comedouro|tigela/, BowlIcon],
-  [/petisc|osso|snack/, BoneIcon],
-  [/brinqued|bola|bolinha/, BallIcon],
-  [/higien|banho|shampoo|limpeza|areia/, BathIcon],
-  [/acessor|coleira|guia|roupa/, CollarIcon],
-  [/cama|caminha|casinha/, BedIcon],
-  [/saude|farmac|remedio|vacina/, HealthIcon],
+// Sem ícone escolhido no admin: pelo slug exato e depois por palavras-chave no começo de cada
+// palavra do slug ("decoracao" não vira ração).
+const BY_SLUG: Record<string, CategoryIconKey> = {
+  alimentacao: "tigela",
+  "racao-seca": "racao-seca",
+  "racao-umida": "racao-umida",
+  brinquedos: "brinquedo",
+  higiene: "higiene",
+};
+
+const KEYWORDS: [RegExp, CategoryIconKey][] = [
+  [/(?:^|-)(?:umid|sache|lata|pate)/, "racao-umida"],
+  [/(?:^|-)(?:seca|racao)/, "racao-seca"],
+  [/(?:^|-)(?:aliment|comida|comedouro|tigela)/, "tigela"],
+  [/(?:^|-)(?:petisc|osso|snack)/, "petisco"],
+  [/(?:^|-)(?:brinqued|bola|bolinha)/, "brinquedo"],
+  [/(?:^|-)(?:higien|banho|shampoo|limpeza|areia)/, "higiene"],
+  [/(?:^|-)(?:acessor|coleira|guia|roupa)/, "acessorio"],
+  [/(?:^|-)(?:cama|caminha|casinha)/, "caminha"],
+  [/(?:^|-)(?:saude|farmac|remedio|vacina)/, "saude"],
+  [/(?:^|-)(?:aquar|peixe)/, "aquario"],
+  [/(?:^|-)(?:passar|ave|gaiola)/, "passaro"],
 ];
 
-export function CategoryIcon({ slug, className }: { slug: string; className?: string }) {
-  const Match = EXACT[slug] ?? KEYWORDS.find(([re]) => re.test(slug))?.[1] ?? TagIcon;
+export function guessCategoryIcon(slug: string): CategoryIconKey {
+  return BY_SLUG[slug] ?? KEYWORDS.find(([re]) => re.test(slug))?.[1] ?? "etiqueta";
+}
+
+// Ícone da categoria: o escolhido no admin ou, sem escolha, o adivinhado pelo slug. O slug vazio é
+// a opção "Todas".
+export function CategoryIcon({
+  slug,
+  icon,
+  className,
+}: {
+  slug: string;
+  icon?: string | null;
+  className?: string;
+}) {
+  if (slug === "" && !icon) return <AllIcon className={className} />;
+  const Match = ICONS[isCategoryIcon(icon) ? icon : guessCategoryIcon(slug)];
+  return <Match className={className} />;
+}
+
+// Só o desenho de um ícone da lista (seletor do admin).
+export function CategoryIconGlyph({
+  icon,
+  className,
+}: {
+  icon: CategoryIconKey;
+  className?: string;
+}) {
+  const Match = ICONS[icon];
   return <Match className={className} />;
 }

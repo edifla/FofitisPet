@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { parseBRL, parseKg } from "@/lib/money";
 import { slugify } from "@/lib/slug";
+import { isCategoryIcon } from "@/lib/category-icons";
 
 export { fieldErrors, type FormState } from "./form";
 
@@ -41,6 +42,14 @@ export const categorySchema = z
       .transform((value) => value || null),
     parentId: optionalId,
     position: z.coerce.number({ error: "Informe um número." }).int().min(0).max(9999),
+    // Vazio = automático (pelo slug).
+    icon: z
+      .string()
+      .trim()
+      .refine((value) => value === "" || isCategoryIcon(value), {
+        error: "Escolha um ícone da lista.",
+      })
+      .transform((value) => value || null),
   })
   .transform(withSlug);
 

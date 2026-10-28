@@ -194,7 +194,7 @@ export async function getCatalogFilterOptions() {
         ],
       },
       orderBy: [{ position: "asc" }, { name: "asc" }],
-      select: { slug: true, name: true, parentId: true, id: true },
+      select: { slug: true, name: true, parentId: true, id: true, icon: true },
     }),
     prisma.brand.findMany({
       where: { products: { some: forSale } },
@@ -207,10 +207,10 @@ export async function getCatalogFilterOptions() {
     (c) => !c.parentId || !categories.some((p) => p.id === c.parentId),
   );
   const ordered = roots.flatMap((root) => [
-    { slug: root.slug, name: root.name, depth: 0 },
+    { slug: root.slug, name: root.name, icon: root.icon, depth: 0 },
     ...categories
       .filter((c) => c.parentId === root.id)
-      .map((child) => ({ slug: child.slug, name: child.name, depth: 1 })),
+      .map((child) => ({ slug: child.slug, name: child.name, icon: child.icon, depth: 1 })),
   ]);
   return { categories: ordered, brands };
 }

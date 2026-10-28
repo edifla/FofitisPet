@@ -10,6 +10,7 @@ import {
   TextAreaField,
 } from "@/components/form/field";
 import { saveCategory } from "../actions";
+import { IconPicker } from "./icon-picker";
 
 type Category = {
   id: string;
@@ -18,6 +19,7 @@ type Category = {
   description: string | null;
   parentId: string | null;
   position: number;
+  icon: string | null;
 };
 
 export function CategoryForm({
@@ -39,7 +41,7 @@ export function CategoryForm({
   };
 
   return (
-    <form action={action} className="flex max-w-xl flex-col gap-4" noValidate>
+    <form action={action} className="flex max-w-2xl flex-col gap-4" noValidate>
       <Field
         label="Nome"
         name="name"
@@ -64,6 +66,7 @@ export function CategoryForm({
         defaultValue={value("parentId")}
         errors={state?.errors?.parentId}
       />
+      <IconPicker value={value("icon")} errors={state?.errors?.icon} />
       <TextAreaField
         label="Descrição"
         name="description"
