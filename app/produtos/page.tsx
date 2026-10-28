@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/catalog/product-card";
 import { SortSelect } from "@/components/catalog/sort-select";
 import { buttonClasses } from "@/components/ui/button";
 import { ChevronIcon, CloseIcon, SearchIcon } from "@/components/ui/icons";
+import { CategoryIcon } from "@/components/catalog/category-icon";
 import { PageHero } from "@/components/ui/page-hero";
 import { getCatalogFilterOptions, searchCatalog } from "@/lib/catalog";
 import {
@@ -293,6 +294,19 @@ function Section({
   );
 }
 
+// Categorias como peças com ícone: "Todas" primeiro e as subcategorias logo depois da mãe, com o
+// nome dela em letra pequena.
+function categoryTiles(categories: Options["categories"]) {
+  let parent = "";
+  return [
+    { slug: "", name: "Todas", parent: null as string | null },
+    ...categories.map((category) => {
+      if (category.depth === 0) parent = category.name;
+      return { slug: category.slug, name: category.name, parent: category.depth ? parent : null };
+    }),
+  ];
+}
+
 function FilterForm({
   filters,
   options,
@@ -335,21 +349,30 @@ function FilterForm({
       </Section>
 
       <Section title="Categoria">
-        <fieldset className="flex flex-col gap-1">
+        <fieldset className="grid grid-cols-3 gap-2">
           <legend className="sr-only">Categoria</legend>
-          {[{ slug: "", name: "Todas", depth: 0 }, ...options.categories].map((category) => (
+          {categoryTiles(options.categories).map((category) => (
             <label
               key={category.slug || "todas"}
-              className={`flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-zinc-100 has-checked:bg-brand-100 has-checked:font-medium has-checked:text-brand-800 dark:hover:bg-zinc-800 dark:has-checked:bg-brand-800/40 dark:has-checked:text-brand-100 ${category.depth ? "ml-4" : ""}`}
+              title={category.parent ? `${category.name} (em ${category.parent})` : category.name}
+              className="group flex cursor-pointer flex-col items-center gap-1.5 rounded-2xl bg-zinc-50 px-1 py-3 text-center ring-1 ring-zinc-200 transition hover:bg-brand-50 hover:ring-brand-200 has-checked:bg-brand-700 has-checked:text-white has-checked:shadow-md has-checked:ring-brand-700 has-focus-visible:ring-2 has-focus-visible:ring-brand-600 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:bg-brand-900/30 dark:has-checked:bg-brand-400 dark:has-checked:text-brand-950 dark:has-checked:ring-brand-400"
             >
               <input
                 type="radio"
                 name="categoria"
                 value={category.slug}
                 defaultChecked={(filters.category ?? "") === category.slug}
-                className="size-4 accent-brand-600"
+                className="sr-only"
               />
-              {category.name}
+              <span className="flex size-10 items-center justify-center rounded-xl bg-surface text-brand-700 shadow-sm group-has-checked:bg-white/15 group-has-checked:text-current group-has-checked:shadow-none dark:text-brand-300">
+                <CategoryIcon slug={category.slug} className="size-6" />
+              </span>
+              <span className="text-xs leading-tight font-medium">{category.name}</span>
+              {category.parent && (
+                <span className="-mt-1 text-[0.65rem] leading-tight text-zinc-500 group-has-checked:text-current group-has-checked:opacity-80">
+                  {category.parent}
+                </span>
+              )}
             </label>
           ))}
         </fieldset>

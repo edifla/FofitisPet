@@ -50,6 +50,31 @@ export function FilterLayout({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // No computador a barra fica fixa na tela, logo abaixo do cabeçalho: a faixa de recado acima
+  // dele some ao rolar, então o topo da barra acompanha o fim do cabeçalho (--topo). O rodapé
+  // ganha um recuo do tamanho da barra (data-filtros no <body>, app/globals.css).
+  useEffect(() => {
+    const root = rootRef.current;
+    const header = document.querySelector("header");
+    if (!root || !header) return;
+    const place = () =>
+      root.style.setProperty("--topo", `${Math.max(0, header.getBoundingClientRect().bottom)}px`);
+    place();
+    window.addEventListener("scroll", place, { passive: true });
+    window.addEventListener("resize", place);
+    return () => {
+      window.removeEventListener("scroll", place);
+      window.removeEventListener("resize", place);
+    };
+  }, []);
+  useEffect(() => {
+    document.body.dataset.filtros = collapsed ? "recolhido" : "aberto";
+    return () => {
+      delete document.body.dataset.filtros;
+    };
+  }, [collapsed]);
 
   // Gaveta do celular: Esc fecha, foco vai para o botão de fechar e a página atrás não rola.
   useEffect(() => {
@@ -73,7 +98,12 @@ export function FilterLayout({
   const label = activeCount > 0 ? `Filtros (${activeCount})` : "Filtros";
 
   return (
-    <div className="flex flex-1 flex-col md:flex-row md:items-stretch">
+    <div ref={rootRef} className="flex flex-1 flex-col [--topo:4rem] md:flex-row">
+      {/* Reserva no fluxo da página o espaço da barra fixa. */}
+      <div
+        aria-hidden
+        className={cn("hidden shrink-0 md:block", collapsed ? "md:w-16" : "md:w-72 lg:w-80")}
+      />
       {drawerOpen && (
         <button
           type="button"
@@ -85,7 +115,7 @@ export function FilterLayout({
 
       {/* Trilho do computador quando a barra está recolhida. */}
       {collapsed && (
-        <div className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center gap-3 border-r border-zinc-200 bg-surface py-5 md:flex dark:border-zinc-800">
+        <div className="fixed top-(--topo) bottom-0 left-0 z-30 hidden w-16 flex-col items-center gap-3 border-r border-zinc-200 bg-surface py-5 md:flex dark:border-zinc-800">
           <button
             type="button"
             onClick={() => writeHidden(false)}
@@ -118,8 +148,8 @@ export function FilterLayout({
           // Celular: gaveta fixa à esquerda.
           "fixed inset-y-0 left-0 z-50 flex w-[86%] max-w-sm flex-col overflow-y-auto bg-surface shadow-2xl transition-transform duration-300",
           drawerOpen ? "translate-x-0" : "-translate-x-full",
-          // Computador: coluna colada na esquerda, fixa ao rolar, da altura da tela.
-          "md:sticky md:top-16 md:z-auto md:h-[calc(100vh-4rem)] md:w-72 md:max-w-none md:shrink-0 md:translate-x-0 md:border-r md:border-zinc-200 md:shadow-none lg:w-80 md:dark:border-zinc-800",
+          // Computador: coluna fixa na lateral esquerda, do cabeçalho até o pé da tela.
+          "md:top-(--topo) md:z-30 md:w-72 md:max-w-none md:translate-x-0 md:border-r md:border-zinc-200 md:shadow-none lg:w-80 md:dark:border-zinc-800",
           collapsed && "md:hidden",
         )}
       >

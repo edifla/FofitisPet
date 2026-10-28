@@ -215,6 +215,22 @@ h3 {
   outline-offset: 2px;
 }
 
+/* Loja: a barra de filtros fica fixa à esquerda (components/catalog/filter-layout.tsx); o rodapé
+   recua o mesmo tanto para não ficar por baixo dela. */
+@media (width >= 48rem) {
+  body[data-filtros="aberto"] > footer {
+    padding-left: 18rem;
+  }
+  body[data-filtros="recolhido"] > footer {
+    padding-left: 4rem;
+  }
+}
+@media (width >= 64rem) {
+  body[data-filtros="aberto"] > footer {
+    padding-left: 20rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
