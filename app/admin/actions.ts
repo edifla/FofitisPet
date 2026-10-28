@@ -42,6 +42,7 @@ function categoryValues(formData: FormData) {
     description: text(formData, "description"),
     parentId: text(formData, "parentId"),
     position: text(formData, "position") || "0",
+    icon: text(formData, "icon"),
   };
 }
 

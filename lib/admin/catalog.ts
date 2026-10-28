@@ -14,6 +14,7 @@ export async function listCategories() {
       slug: true,
       position: true,
       parentId: true,
+      icon: true,
       parent: { select: { name: true } },
       _count: { select: { products: true, children: true } },
     },

@@ -6,6 +6,7 @@ import { listCategories } from "@/lib/admin/catalog";
 import { deleteCategory } from "../actions";
 import { buttonClasses } from "@/components/ui/button";
 import { table, tableClasses } from "@/components/ui/table";
+import { CategoryIcon } from "@/components/catalog/category-icon";
 
 export const metadata: Metadata = { title: "Categorias" };
 
@@ -48,10 +49,26 @@ async function CategoryTable() {
           {categories.map((category) => (
             <tr key={category.id} className={table.row}>
               <td className={tableClasses("td")}>
-                <Link href={`/admin/categorias/${category.id}`} className="font-medium underline">
-                  {category.name}
-                </Link>
-                <span className="block text-zinc-500">/{category.slug}</span>
+                <div className="flex items-center gap-3">
+                  <span
+                    title={category.icon ? "Ícone escolhido" : "Ícone automático (pelo nome)"}
+                    className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-800 dark:bg-brand-900/40 dark:text-brand-100"
+                  >
+                    <CategoryIcon slug={category.slug} icon={category.icon} className="size-5" />
+                  </span>
+                  <span>
+                    <Link
+                      href={`/admin/categorias/${category.id}`}
+                      className="font-medium underline"
+                    >
+                      {category.name}
+                    </Link>
+                    <span className="block text-zinc-500">
+                      /{category.slug}
+                      {!category.icon && " · ícone automático"}
+                    </span>
+                  </span>
+                </div>
               </td>
               <td className={tableClasses("td")}>{category.parent?.name ?? "—"}</td>
               <td className={tableClasses("td")}>{category._count.products}</td>
