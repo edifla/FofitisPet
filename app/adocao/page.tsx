@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AnimalCard } from "@/components/adoption/animal-card";
 import { HowItWorks } from "@/components/adoption/how-it-works";
+import { CatFaceIcon, DogFaceIcon } from "@/components/adoption/species-icons";
 import { FilterLayout } from "@/components/catalog/filter-layout";
-import { FilterSection } from "@/components/catalog/filter-section";
 import { PawIcon } from "@/components/brand/logo";
 import { buttonClasses } from "@/components/ui/button";
 import { CloseIcon } from "@/components/ui/icons";
@@ -214,81 +214,103 @@ function activeFilters(filters: AdoptionFilters) {
   return chips;
 }
 
-// Opção em forma de "chip": a caixa fica escondida e o rótulo muda de cor quando marcado.
+// Opção em forma de "chip", suave e no azul da adoção: a caixa fica escondida e o rótulo se
+// preenche quando marcado (branco sobre adopt-600 = 5,2:1).
 const chip =
-  "cursor-pointer rounded-full border border-adopt-200 bg-surface px-3.5 py-1.5 text-sm text-adopt-900 transition-colors hover:border-adopt-400 has-checked:border-adopt-700 has-checked:bg-adopt-700 has-checked:font-medium has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-adopt-600 dark:border-adopt-900 dark:text-adopt-100 dark:has-checked:border-adopt-400 dark:has-checked:bg-adopt-400 dark:has-checked:text-adopt-950";
+  "cursor-pointer rounded-full bg-white px-3 py-1 text-sm text-adopt-900 ring-1 ring-adopt-100 transition hover:ring-adopt-300 has-checked:bg-adopt-600 has-checked:font-semibold has-checked:text-white has-checked:ring-adopt-600 has-focus-visible:ring-2 has-focus-visible:ring-adopt-600 dark:bg-adopt-900/40 dark:text-adopt-100 dark:ring-adopt-900 dark:has-checked:bg-adopt-400 dark:has-checked:text-adopt-950 dark:has-checked:ring-adopt-400";
 
-// Grupo de chips de escolha única, com "qualquer" primeiro.
+// Uma pergunta da conversa, com o título na fonte arredondada da adoção.
+function Question({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <fieldset className="flex flex-col px-5 py-3">
+      <legend className="mb-2.5 font-display text-[0.95rem] font-bold text-adopt-950 dark:text-white">
+        {title}
+      </legend>
+      {children}
+    </fieldset>
+  );
+}
+
+// Escolha única em chips, com "Tanto faz" primeiro.
 function ChoiceChips({
   name,
-  legend,
-  anyLabel,
   value,
   options,
 }: {
   name: string;
-  legend: string;
-  anyLabel: string;
   value: string | null;
   options: { value: string; label: string; title?: string }[];
 }) {
   return (
-    <fieldset className="flex flex-wrap gap-2">
-      <legend className="sr-only">{legend}</legend>
-      <label className={chip}>
-        <input type="radio" name={name} value="" defaultChecked={!value} className="sr-only" />
-        {anyLabel}
-      </label>
-      {options.map((option) => (
-        <label key={option.value} className={chip} title={option.title}>
+    <div className="flex flex-wrap gap-1.5">
+      {[{ value: "", label: "Tanto faz" }, ...options].map((option) => (
+        <label
+          key={option.value || "todos"}
+          className={chip}
+          title={"title" in option ? option.title : undefined}
+        >
           <input
             type="radio"
             name={name}
             value={option.value}
-            defaultChecked={value === option.value}
+            defaultChecked={(value ?? "") === option.value}
             className="sr-only"
           />
           {option.label}
         </label>
       ))}
-    </fieldset>
+    </div>
   );
 }
+
+const SPECIES_CHOICES = [
+  { value: "", label: "Tanto faz", Icon: PawIcon },
+  { value: "caes", label: "Um cachorro", Icon: DogFaceIcon },
+  { value: "gatos", label: "Um gato", Icon: CatFaceIcon },
+] as const;
 
 function Filters({ filters, hasFilters }: { filters: AdoptionFilters; hasFilters: boolean }) {
   return (
     <form action="/adocao" aria-label="Filtros" className="flex flex-1 flex-col">
-      <FilterSection title="Quem você procura?">
-        <ChoiceChips
-          name="especie"
-          legend="Espécie"
-          anyLabel="Todos"
-          value={filters.species}
-          options={SPECIES_FILTER.map((slug) => ({
-            value: slug,
-            label: speciesLabels[speciesSlugs[slug]],
-          }))}
-        />
-      </FilterSection>
+      <p className="px-5 pb-1 text-sm text-zinc-600 dark:text-zinc-400">
+        Conta pra gente o que você imagina. Dá para mudar quando quiser.
+      </p>
 
-      <FilterSection title="Porte">
+      <Question title="Quem você procura?">
+        <div className="grid grid-cols-3 gap-1.5">
+          {SPECIES_CHOICES.map(({ value, label, Icon }) => (
+            <label
+              key={value || "todos"}
+              className="group flex cursor-pointer flex-col items-center gap-1 rounded-2xl bg-white px-1 py-2.5 text-center text-xs font-medium text-adopt-900 ring-1 ring-adopt-100 transition hover:ring-adopt-300 has-checked:bg-adopt-600 has-checked:text-white has-checked:ring-adopt-600 has-focus-visible:ring-2 has-focus-visible:ring-adopt-600 dark:bg-adopt-900/40 dark:text-adopt-100 dark:ring-adopt-900 dark:has-checked:bg-adopt-400 dark:has-checked:text-adopt-950"
+            >
+              <input
+                type="radio"
+                name="especie"
+                value={value}
+                defaultChecked={(filters.species ?? "") === value}
+                className="sr-only"
+              />
+              <Icon className="size-6 text-adopt-600 group-has-checked:text-current dark:text-adopt-300" />
+              {label}
+            </label>
+          ))}
+        </div>
+      </Question>
+
+      <Question title="De que tamanho?">
         <ChoiceChips
           name="porte"
-          legend="Porte"
-          anyLabel="Qualquer"
           value={filters.size}
           options={Object.entries(sizeSlugs).map(([slug, size]) => ({
             value: slug,
             label: animalSizeLabels[size],
           }))}
         />
-      </FilterSection>
+      </Question>
 
-      <FilterSection title="Idade">
+      <Question title="Que idade?">
         <ChoiceChips
           name="idade"
-          legend="Idade"
-          anyLabel="Qualquer"
           value={filters.age}
           options={Object.entries(ageGroups).map(([slug, group]) => ({
             value: slug,
@@ -296,11 +318,10 @@ function Filters({ filters, hasFilters }: { filters: AdoptionFilters; hasFilters
             title: group.label,
           }))}
         />
-      </FilterSection>
+      </Question>
 
-      <FilterSection title="Que jeito combina com a sua casa?">
-        <fieldset className="flex flex-wrap gap-2">
-          <legend className="sr-only">Temperamento</legend>
+      <Question title="Qual jeitinho combina com você?">
+        <div className="flex flex-wrap gap-1.5">
           {Object.entries(temperamentSlugs).map(([slug, value]) => (
             <label key={slug} className={chip}>
               <input
@@ -313,12 +334,12 @@ function Filters({ filters, hasFilters }: { filters: AdoptionFilters; hasFilters
               {temperamentLabels[value]}
             </label>
           ))}
-        </fieldset>
-      </FilterSection>
+        </div>
+      </Question>
 
-      <div className="sticky bottom-0 mt-auto flex items-center gap-3 bg-surface px-5 py-4">
-        <button type="submit" className={buttonClasses({ block: true })}>
-          Mostrar animais
+      <div className="sticky bottom-0 mt-auto flex items-center gap-3 bg-adopt-50/95 px-5 py-4 backdrop-blur dark:bg-adopt-950/95">
+        <button type="submit" className={buttonClasses({ block: true, size: "sm" })}>
+          Ver quem combina
         </button>
         {hasFilters && (
           <Link
