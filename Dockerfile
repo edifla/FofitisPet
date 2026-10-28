@@ -16,6 +16,11 @@ COPY prisma ./prisma
 # compilar; os de verdade chegam pelas variáveis do Coolify quando o site sobe.
 RUN DATABASE_URL="postgresql://build:build@localhost:5432/build" npm ci
 COPY . .
+# Partes do site são montadas uma vez, na compilação (metadados, robots.txt, faixa do beta): o
+# endereço público e o modo beta precisam chegar aqui. No Coolify, marque essas duas variáveis
+# como "Available during build". Segredos não entram aqui.
+ARG APP_URL
+ARG BETA_MODE
 RUN DATABASE_URL="postgresql://build:build@localhost:5432/build" AUTH_SECRET="so-para-compilar" \
   npm run build
 
