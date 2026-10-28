@@ -1,0 +1,60 @@
+# Blueprint do Render (KAN-53): o site, o banco e o disco das fotos, criados juntos.
+# No painel: New > Blueprint > escolha este repositório. Passo a passo em docs/deploy-render.md.
+# Planos e preços mudam: confira no painel antes de confirmar.
+
+databases:
+  - name: fofitispet-db
+    databaseName: fofitispet
+    user: fofitispet
+    region: virginia
+    plan: 0.1c-256mb
+    postgresMajorVersion: "17"
+
+services:
+  - type: web
+    name: fofitispet
+    runtime: node
+    region: virginia
+    # Disco permanente para as fotos (STORAGE_DIR): precisa de um plano pago, e o serviço não
+    # escala para mais de uma instância.
+    plan: 0.5c-512mb
+    buildCommand: npm ci && npm run build
+    # As migrações rodam antes de cada versão nova entrar no ar.
+    preDeployCommand: npx prisma migrate deploy
+    startCommand: npm run start
+    healthCheckPath: /api/saude
+    autoDeployTrigger: checksPass
+    disk:
+      name: arquivos
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fofitispet-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      # O Render fica atrás de um proxy: o Auth.js confia no endereço que chega dele.
+      - key: AUTH_TRUST_HOST
+        value: "true"
+      # Endereço público do site (links dos e-mails, SEO). Ex.: https://fofitispet.onrender.com
+      - key: APP_URL
+        sync: false
+      - key: STORAGE_DIR
+        value: /var/data/arquivos
+      # Rotina /api/pedidos/expirar, chamada pelo GitHub Actions (.github/workflows/rotina.yml).
+      - key: CRON_SECRET
+        generateValue: true
+      - key: PAYMENT_WEBHOOK_SECRET
+        generateValue: true
+      # Beta fechado com pagamento simulado, até o pagamento real (KAN-55).
+      - key: BETA_MODE
+        value: "on"
+      - key: ALLOW_SIMULATED_PAYMENTS
+        value: "true"
+      # Lya (KAN-127). Pode ficar vazia: o chat avisa que ela está indisponível.
+      - key: ANTHROPIC_API_KEY
+        sync: false
