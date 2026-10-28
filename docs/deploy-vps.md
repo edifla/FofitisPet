@@ -50,31 +50,37 @@ O que roda na VPS:
    **master**.
 2. **Build Pack**: **Dockerfile**. **Porta**: `3000`.
 3. Em **Environment Variables**, cadastre os valores abaixo. Gere cada segredo com
-   `openssl rand -base64 32`, no Terminal do Coolify ou no seu computador. Nenhum deles é "Build
-   Variable": todos são usados só quando o site roda.
+   `openssl rand -hex 32`, no Terminal do Coolify ou no seu computador: o resultado só tem letras e
+   números, então não atrapalha a interpolação de variáveis. Em todas, deixe **Runtime: Available in
+   the container**. O campo **Build time** muda: só `APP_URL` e `BETA_MODE` precisam estar
+   disponíveis na compilação, porque partes do site (metadados, robots.txt, faixa do beta) são
+   montadas nessa hora. **Segredos nunca na compilação.**
 
-   | Variável                   | Valor                                                          |
-   | -------------------------- | -------------------------------------------------------------- |
-   | `DATABASE_URL`             | a URL interna do passo 4                                       |
-   | `AUTH_SECRET`              | um segredo gerado                                              |
-   | `AUTH_TRUST_HOST`          | `true`                                                         |
-   | `APP_URL`                  | o endereço do site (passo 6), ex.: `https://fofitispet.com.br` |
-   | `CRON_SECRET`              | outro segredo gerado                                           |
-   | `PAYMENT_WEBHOOK_SECRET`   | outro segredo gerado                                           |
-   | `BETA_MODE`                | `on`                                                           |
-   | `ALLOW_SIMULATED_PAYMENTS` | `true`                                                         |
-   | `ANTHROPIC_API_KEY`        | a chave da Lya (pode ficar para depois)                        |
+   | Variável                   | Valor                                                          | Build time |
+   | -------------------------- | -------------------------------------------------------------- | ---------- |
+   | `DATABASE_URL`             | a URL interna do passo 4                                       | Não        |
+   | `AUTH_SECRET`              | um segredo gerado                                              | Não        |
+   | `AUTH_TRUST_HOST`          | `true`                                                         | Não        |
+   | `APP_URL`                  | o endereço do site (passo 6), ex.: `https://fofitispet.com.br` | **Sim**    |
+   | `CRON_SECRET`              | outro segredo gerado                                           | Não        |
+   | `PAYMENT_WEBHOOK_SECRET`   | outro segredo gerado                                           | Não        |
+   | `BETA_MODE`                | `on`                                                           | **Sim**    |
+   | `ALLOW_SIMULATED_PAYMENTS` | `true`                                                         | Não        |
+   | `ANTHROPIC_API_KEY`        | a chave da Lya (pode ficar para depois)                        | Não        |
 
 4. Em **Persistent Storage**, adicione um volume com destino `/app/storage`. Sem ele, as fotos
    somem a cada versão nova.
-5. Em **Health Check**, use o caminho `/api/saude` (o `Dockerfile` já traz essa verificação).
+5. Em **Health Check**, deixe **desligado**: a verificação do Coolify usa `curl` ou `wget` dentro do
+   contêiner, que a imagem não tem. O próprio `Dockerfile` já verifica `/api/saude` a cada 30
+   segundos, e o Coolify espera essa verificação passar antes de trocar a versão.
 6. Em **Domains**:
    - **Antes do domínio próprio**: use o endereço que o Coolify sugere, do tipo
      `https://algo.IP.sslip.io`.
    - **Com o domínio**: no registro.br, crie um registro **A** de `fofitispet.com.br` (e `www`)
      apontando para o IP da VPS. Depois coloque `https://fofitispet.com.br` aqui. O certificado
      HTTPS sai sozinho.
-   - Sempre que trocar o domínio, troque também o `APP_URL`.
+   - Sempre que trocar o domínio, troque também o `APP_URL` e publique de novo (**Redeploy**),
+     para o site ser recompilado com o endereço novo.
 7. Clique em **Deploy**. O site está no ar quando `https://SEU-ENDERECO/api/saude` responde
    `{"ok":true}`.
 
