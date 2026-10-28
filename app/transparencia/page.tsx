@@ -330,7 +330,7 @@ async function Report() {
             Fazer uma doação
           </Link>
           <Link
-            href="/abrigo"
+            href="/compre-para-o-abrigo"
             className={buttonClasses({ variant: "secondary", className: "bg-surface" })}
           >
             Ver o que está faltando

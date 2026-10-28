@@ -104,6 +104,12 @@ export async function exportUserData(userId: string) {
       createdAt: true,
     },
   });
+  // Contatos deixados na aba Doar com o mesmo e-mail (não precisam de conta).
+  const helpInterests = await prisma.helpInterest.findMany({
+    where: { email: user.email },
+    orderBy: { createdAt: "asc" },
+    select: { kind: true, name: true, email: true, phone: true, message: true, createdAt: true },
+  });
   return {
     exportedAt: new Date().toISOString(),
     controller: { name: LEGAL.companyName, contact: LEGAL.contactEmail },
@@ -118,6 +124,7 @@ export async function exportUserData(userId: string) {
     addresses: user.addresses,
     orders: user.orders,
     adoptionRequests,
+    helpInterests,
   };
 }
 
@@ -189,6 +196,7 @@ export async function deleteAccount(userId: string) {
     }
 
     await tx.address.deleteMany({ where: { userId } });
+    await tx.helpInterest.deleteMany({ where: { email: user.email } });
     await tx.cart.deleteMany({ where: { userId } });
     await tx.passwordResetToken.deleteMany({ where: { userId } });
     await tx.user.update({

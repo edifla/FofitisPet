@@ -8,7 +8,7 @@ const COLUMNS = [
     title: "Loja",
     links: [
       { href: "/produtos", label: "Produtos" },
-      { href: "/produtos?doacao=sim", label: "Doáveis ao abrigo" },
+      { href: "/compre-para-o-abrigo", label: "Compre para o abrigo" },
       { href: "/carrinho", label: "Carrinho" },
       { href: "/conta/pedidos", label: "Meus pedidos" },
     ],
@@ -17,7 +17,7 @@ const COLUMNS = [
     title: "Abrigo",
     links: [
       { href: "/adocao", label: "Adotar" },
-      { href: "/abrigo", label: "O que está faltando" },
+      { href: "/abrigo", label: "Sobre o abrigo" },
       { href: "/doar", label: "Doar" },
       { href: "/transparencia", label: "Transparência" },
     ],

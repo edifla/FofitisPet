@@ -19,6 +19,7 @@ import {
   PawOutlineIcon,
   TagIcon,
   BagIcon,
+  UserIcon,
 } from "@/components/ui/icons";
 
 // Menu da área administrativa, agrupado por assunto, com a página atual em destaque.
@@ -46,6 +47,7 @@ export const ADMIN_SECTIONS = [
       { href: "/admin/campanhas", label: "Campanhas", Icon: MegaphoneIcon },
       { href: "/admin/kits", label: "Kits", Icon: GiftIcon },
       { href: "/admin/transparencia", label: "Transparência", Icon: EyeIcon },
+      { href: "/admin/interessados", label: "Interessados", Icon: UserIcon },
     ],
   },
   {

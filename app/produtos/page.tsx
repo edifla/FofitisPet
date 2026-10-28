@@ -5,7 +5,7 @@ import { FilterLayout } from "@/components/catalog/filter-layout";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SortSelect } from "@/components/catalog/sort-select";
 import { buttonClasses } from "@/components/ui/button";
-import { ChevronIcon, CloseIcon, SearchIcon } from "@/components/ui/icons";
+import { ChevronIcon, CloseIcon, GiftIcon, SearchIcon } from "@/components/ui/icons";
 import { CategoryIcon } from "@/components/catalog/category-icon";
 import { FilterSection } from "@/components/catalog/filter-section";
 import { PageHero } from "@/components/ui/page-hero";
@@ -99,6 +99,13 @@ async function Catalog({ searchParams }: Pick<Props, "searchParams">) {
                 Buscar
               </button>
             </form>
+            <Link
+              href="/compre-para-o-abrigo"
+              className="inline-flex w-fit items-center gap-2 rounded-full bg-donate-50 px-3.5 py-1.5 text-sm font-medium text-donate-900 ring-1 ring-donate-200 hover:bg-donate-100 dark:bg-donate-950 dark:text-donate-100 dark:ring-donate-900"
+            >
+              <GiftIcon className="size-4" />
+              Compre para o abrigo: itens em falta e kits prontos →
+            </Link>
           </Hero>
         }
         panel={<FilterForm filters={filters} options={options} hasFilters={active.length > 0} />}

@@ -5,7 +5,7 @@ export const LEGAL = {
   // Enquanto for true, as páginas legais mostram o aviso de rascunho.
   draft: true,
   // Data da versão em vigor. Ao mudar um texto, atualize; o consentimento guarda a versão (KAN-124).
-  version: "2026-10-28",
+  version: "2026-10-29",
   companyName: "FofitisPet",
   // Preenchidos com a abertura do MEI (KAN-13).
   cnpj: "a definir",

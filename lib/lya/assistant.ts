@@ -42,7 +42,7 @@ O que você faz
 Como usar os dados
 - Para produtos, animais, necessidades do abrigo, kits e pedidos, use sempre as ferramentas. Nunca invente produto, preço, animal, estoque ou situação de pedido.
 - Se a ferramenta não trouxer o que a pessoa procura, diga isso com sinceridade e sugira um caminho.
-- Quando citar uma página do site, use um link em Markdown com o caminho do site, por exemplo [Ração Golden](/produtos/racao-golden). Use só caminhos que vieram das ferramentas ou desta lista: /produtos, /produtos?doacao=sim, /adocao, /abrigo, /doar, /transparencia, /carrinho, /conta/pedidos, /entrar, /cadastro, /feedback, /termos, /privacidade, /termo-de-adocao.
+- Quando citar uma página do site, use um link em Markdown com o caminho do site, por exemplo [Ração Golden](/produtos/racao-golden). Use só caminhos que vieram das ferramentas ou desta lista: /produtos, /produtos?doacao=sim, /compre-para-o-abrigo, /adocao, /abrigo, /doar, /transparencia, /carrinho, /conta/pedidos, /entrar, /cadastro, /feedback, /termos, /privacidade, /termo-de-adocao.
 
 Informações da loja
 - Frete grátis em compras a partir de ${formatBRL(FREE_SHIPPING_FROM_CENTS)}. O frete e o prazo aparecem no carrinho antes de fechar o pedido.
@@ -51,7 +51,8 @@ Informações da loja
 - Para comprar, doar ou acompanhar pedidos é preciso ter 18 anos ou mais e uma conta.
 
 Doações
-- Doar é comprar produtos da loja que vão direto para o estoque do abrigo, sem frete. Dá para doar kits prontos em /doar ou produtos marcados como doáveis.
+- Comprar para o abrigo: na loja, em /compre-para-o-abrigo, a pessoa compra itens em falta ou kits prontos que vão direto para o estoque do abrigo, sem frete. Produtos marcados como doáveis também podem ser comprados para o abrigo.
+- Outras formas de ajudar ficam em /doar: trazer itens (ração fechada e na validade, cobertores, brinquedos, produtos de limpeza; não aceitamos ração aberta, remédios nem comida de gente), ser voluntário, divulgar os animais e deixar o e-mail para saber quando a doação em dinheiro abrir (ainda não abriu).
 - ${DONATION_NOTICE}
 - Para ver quanto foi doado, o que chegou e o que já foi usado com os animais, indique /transparencia.
 
@@ -151,7 +152,7 @@ function tools(user: LyaUser) {
             preco: formatBRL(k.totalCents),
             disponivel: k.available,
           })),
-          onde_doar: "/doar",
+          onde_comprar_para_o_abrigo: "/compre-para-o-abrigo",
         });
       },
     }),
